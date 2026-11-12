@@ -1,0 +1,93 @@
+{
+  "stage": "M3.2 baseline preparation only",
+  "recorded_date": "2026-11-11",
+  "provider_changes": false,
+  "live_benchmark_rerun": false,
+  "baseline_contract": "Current APIs, schemas, immutable citations and evidence permissions retained.",
+  "file_sha256": {
+    "code/apps/api/app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "code/apps/api/app/artifacts.py": "200760fed15835fe4b4932766b1b573a44c575c51b9c5b2390bf4b426be403a0",
+    "code/apps/api/app/conflict_detection.py": "a784c9656a097e2e07331f7eb5db43077bb95bab3d395f6952ecc11a27e9b951",
+    "code/apps/api/app/contracts.py": "b998aded760a729bd054cdcf6cc117dfd12e0384e4fc50d204f8d9eadf9c756b",
+    "code/apps/api/app/db.py": "8e2cff541f05ec4e855f9b950435444480696386a9c2323efd48f5aa55359b4d",
+    "code/apps/api/app/fixture_provider.py": "b61b437547ce62457af6e9c02aef7cb40858280ad9035bd855819dd19934a5d7",
+    "code/apps/api/app/main.py": "2ca74a0a1068e13458944142da78a5864f31cf7c4c5d2b601a607f0cbd38f3ae",
+    "code/apps/api/app/model_limits.py": "706f23f15ce7695af560ddb9a858c96887fa92e2d9e9be51287e3b23db8eb375",
+    "code/apps/api/app/parsers.py": "71536c28a4186bd41848c9efd8148d2c7d6659738019461b52d032a2e3683893",
+    "code/apps/api/app/processing.py": "c37c33a9c3e9713bc2a892f2af538120af5ea7de78d34ddf9667e83e5a7b92a6",
+    "code/apps/api/app/processing_periods.py": "95367e484c97a62e5463917b1cff816f50695fe038be1efe226c29aa3247d0d4",
+    "code/apps/api/app/providers.py": "7ca2b63a0f105a8f630e5c20464a81bf08950b78a6a3a14e2ded6b06ec48cc4f",
+    "code/apps/api/app/resolution.py": "69876b3e1d6fb1ce19273e4fcf1c3d30ec8d9ed9773af97a01fac7da7afd1cc4",
+    "code/apps/api/app/retrieval.py": "8d39c5d448541600e6c798e50e7b9859fef150fa98e361b7415d822351fd52d4",
+    "code/apps/api/tests/benchmark.py": "892b55760db2e0411890884e0ab6be386f08639ef7db2730b8d002a2882ab1a3",
+    "code/apps/api/tests/diagnose_answer.py": "417438b1ca5b46944b39aec47c3f4cea03cf90c56b10d9001a0f137d04c13bfa",
+    "code/apps/api/tests/diagnose_extraction.py": "6ec3f1def52286f298429473f2090860d6d38b32c71dbe668415fb61d2473061",
+    "code/apps/api/tests/test_answer_policy.py": "01dcb21bfade359bf9f906f509519f62de9c79bfd830513706faf8f3fa391b4f",
+    "code/apps/api/tests/test_grounding.py": "75f3608c208de746434754d71ac75996684d2604ba42c5bd2d58136677451ea2",
+    "code/apps/api/tests/test_integrity.py": "0dead72b6160421a005238a35829a01c2955e0222d237406f300bbe36f504726",
+    "code/apps/api/tests/test_legacy_retry.py": "f12ee1c5204b81de42856df5a65cb5d00d733231a8d62823f6a6fd7e8da81df0",
+    "code/apps/api/tests/test_m1.py": "564f369c81683be083053ea72e7a47db81d377e5fd600048db336eb0153e40fc",
+    "code/apps/api/tests/test_m2.py": "b7eebf7a2ccbb2d264c6c4aad75caf1549786cfa827b5edd198b7882c61d917e",
+    "code/apps/api/tests/test_model_limits.py": "ed4eb790dd4210d7e2c6436e173cf89f31b9556940b51f678a6ec7f7822f9069",
+    "code/apps/api/tests/test_pdf.py": "c5d5cff2aabc2618ed2384ba09a5cab43ca1e99209c6823049684f91c62c9a00",
+    "code/apps/api/tests/test_resolution.py": "5489a8a545dd0e34d20e3b03038e4b86126a143b350b157312d64b0a1176e26b",
+    "code/apps/api/tests/test_retrieval.py": "10f3eef92055861fbd3a2ccd18dc2ba7d02ff6558894ab4f03122f368bcc9338",
+    "code/apps/api/tests/test_retry.py": "0d6dec997a423c3f2f9f441acc7169ec311e628b2aa8cde12244bc6e2e4a6261",
+    "code/apps/api/tests/verify_targeted.py": "27c1e9362ac54c846ac2c9b57224b285229814680ce99d7b6854ceb51de19f60",
+    "code/fixtures/benchmark/alpha-architecture.md": "a4f0c049247abaa9c2c166ac1ad2a31a8cd69a013bca49d659500e250cb7a61b",
+    "code/fixtures/benchmark/alpha-charter.md": "52a9006307e5b33be88af060e3aa2d14fc4e3c87a9cb0f47a98e3956154dc859",
+    "code/fixtures/benchmark/alpha-decision.md": "04dbea5c7e5020b9542577f8cb14a32b4262f6a37c21d4abaa357fd29c56bb5b",
+    "code/fixtures/benchmark/alpha-history.md": "012c93a959e8e0a1a4896b1214f91294eefc8bda8ba0ab2aae0ee59c0660ecef",
+    "code/fixtures/benchmark/alpha-private.md": "92dda2774b1b39f8184fcaaafadb445899dbf13ab92910f866117641f101a901",
+    "code/fixtures/benchmark/alpha-review.md": "0e4e46fd69b6d346d5473a4e38b378e4cfffaf7081cc5cc024a6955ebbea90fa",
+    "code/fixtures/benchmark/alpha-revision.md": "8620574acfc610c76cb83ec18f8f8de0d4549263443ecbb56caac72400077226",
+    "code/fixtures/benchmark/alpha-task.md": "e4f1d3d8a8bfae0fb31dceb392c22404e573d40912337c568a624b65ec2c97e1",
+    "code/fixtures/benchmark/ambiguous-alpha.md": "f84d32c551e243f2af79f04fd4e17ea080a591df422abf0afdba0df826a77af7",
+    "code/fixtures/benchmark/cedar-charter.md": "624aa5c0222955de2a4bcc0da98f71c95eb9d46a5c7e69b6854d7c3b75b80daf",
+    "code/fixtures/benchmark/cedar-complement.md": "b383fda38843ab620679d6586c84ef38299731db1880913cc779027d59c54099",
+    "code/fixtures/benchmark/manifest.json": "ee4a2dfcda24d178ad33599c0ee57ff9041d8cae1bf6a4cb5def139557aec520",
+    "code/fixtures/benchmark/missing-info.md": "a232a7ff06950d1c32ec5341c8cfedc519a71ea2dce095a4a1cfa20b8d0c4f28"
+  },
+  "baseline_dataset": {
+    "documents": 12,
+    "questions": 30,
+    "review_status": "Draft benchmark: expected records inspected during implementation; independent human review pending."
+  },
+  "current_automated_regressions": {
+    "api_passed": 25,
+    "api_duration_seconds": 9.14,
+    "environment": "isolated mock-mode Compose project linkmind-ui-validation"
+  },
+  "historical_live_benchmark": {
+    "provider": "bedrock",
+    "review_status": "Draft benchmark: expected records inspected during implementation; independent human review pending.",
+    "expected_entity_recall": {
+      "matched": 17,
+      "total": 18
+    },
+    "expected_claim_recall": {
+      "matched": 13,
+      "total": 13
+    },
+    "citation_validation": {
+      "passed": 30,
+      "total": 30
+    },
+    "automated_answer_rubric": {
+      "passed": 28,
+      "total": 28
+    },
+    "limitations": [
+      "Draft expected records require independent human review.",
+      "Claim scoring accepts deadline/launch_date aliases when the source explicitly says launch date. Decision content and approval metadata may be separate claims. Other equivalent wording can score as a miss.",
+      "Citation-span checks do not prove semantic entailment. Bedrock separately verifies assertions.",
+      "Revision/deletion and history suppression are tested by stateful integration tests."
+    ]
+  },
+  "pending": [
+    "Independent review of expected records and representative company documents",
+    "Reproduce the real PDF exact-quote failure with authorized content",
+    "Agree quality, latency and cost targets before backend optimization",
+    "Measure current live provider latency and costs when a live evaluation is authorized"
+  ]
+}

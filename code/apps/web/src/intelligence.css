@@ -1,0 +1,89 @@
+.reading-width { max-width: 1150px; margin-inline: auto; }
+.intelligence-search { display: flex; gap: 12px; margin-bottom: 24px; }
+.intelligence-search .search-field { flex: 1; }
+.search-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.search-filters label { display: grid; gap: 5px; color: var(--muted-foreground); font-size: 11px; min-width: 130px; max-width: 100%; }
+.search-filters input { border: 1px solid var(--border); padding: 9px; border-radius: var(--radius); background: var(--card); }
+.knowledge-stack { display: grid; gap: 16px; }
+.knowledge-card, .process-card { padding: 22px; min-width: 0; }
+.knowledge-card h2, .process-card h2 { font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+.knowledge-card > p { margin-block: 10px; }
+.eyebrow { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-foreground); }
+.result-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-block: 12px; color: var(--muted-foreground); font-size: 13px; }
+.result-meta .text-action { display: inline-flex; align-items: center; gap: 6px; }
+.passage-excerpt, .source-quote { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
+.source-quote { padding: 18px; background: var(--muted); border-left: 3px solid var(--primary); max-height: 60dvh; overflow: auto; }
+.citation-action { min-height: 30px; padding: 4px 8px; font-size: 12px; color: var(--brand-strong); background: var(--brand-subtle); text-align: start; white-space: normal; }
+.evidence-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.wiki-layout { display: grid; grid-template-columns: 260px minmax(0,1fr); gap: 20px; align-items: start; }
+.wiki-index { padding: 14px; max-height: calc(100dvh - 200px); overflow: auto; }
+.wiki-index nav, .chat-history nav { display: grid; gap: 4px; margin-top: 16px; }
+.wiki-index nav button, .chat-history nav button { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: var(--radius); text-align: start; overflow-wrap: anywhere; min-width: 0; }
+.wiki-index nav button svg { flex-shrink: 0; margin-top: 2px; }
+.wiki-index nav button small { display: block; font-size: 11px; color: var(--muted-foreground); }
+.wiki-index nav button:hover, .chat-history nav button:hover { background: var(--muted); }
+.wiki-index nav button[aria-current], .chat-history nav button[aria-current] { background: var(--brand-subtle); color: var(--brand-strong); }
+.wiki-content { padding: 32px; min-width: 0; }
+.wiki-title { font-size: 28px; font-weight: 650; margin-bottom: 12px; }
+.wiki-claim { padding-block: 24px; border-bottom: 1px solid var(--border); }
+.wiki-claim h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted-foreground); margin-bottom: 8px; }
+.wiki-claim p { font-size: 16px; line-height: 1.8; }
+.wiki-claim > small { display: block; margin-top: 8px; }
+.review-banner { background: var(--warning-surface); color: var(--warning); padding: 14px; margin-top: 20px; border-radius: var(--radius); }
+.review-banner a { text-decoration: underline; }
+.knowledge-empty { padding: 50px 24px; text-align: center; color: var(--muted-foreground); display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.knowledge-empty h2 { color: var(--foreground); font-size: 22px; font-weight: 600; }
+.knowledge-empty p { max-width: 470px; line-height: 1.8; }
+.knowledge-empty label { display: grid; gap: 8px; margin-top: 12px; width: min(350px,100%); text-align: start; }
+.metric-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; margin-bottom: 24px; }
+.metric { padding: 20px; }
+.metric span { color: var(--muted-foreground); font-size: 12px; }
+.metric strong { display: block; font-size: 28px; margin-top: 6px; }
+.process-heading, .action-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center; }
+.process-heading { margin-bottom: 16px; }
+.process-stages { display: flex; flex-wrap: wrap; gap: 10px 18px; color: var(--muted-on-tint); font-size: 12px; margin-block: 14px; }
+.process-stages span { display: inline-flex; gap: 6px; align-items: center; }
+.process-card > p { font-size: 12px; margin-bottom: 16px; }
+.action-row { justify-content: flex-start; margin-top: 16px; }
+.status-pill.processing { color: var(--brand-strong); background: var(--brand-subtle); }
+.status-pill.cancelled { color: var(--muted-foreground); background: var(--muted); }
+.chat-layout { display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 20px; align-items: start; }
+.chat-history { padding: 18px 12px; max-height: calc(100dvh - 200px); overflow: auto; }
+.chat-history h2 { padding-inline: 10px; font-size: 12px; color: var(--muted-foreground); }
+.chat-history button { width: 100%; font-size: 13px; }
+.chat-panel { min-height: calc(100dvh - 200px); display: flex; flex-direction: column; min-width: 0; }
+.chat-turns { padding: 28px; flex: 1; max-height: calc(100dvh - 340px); min-height: 300px; overflow: auto; }
+.chat-turn { margin-bottom: 28px; }
+.question-bubble { padding: 12px 18px; margin: 0 0 24px 15%; border-radius: var(--radius); background: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.answer-block { margin-bottom: 24px; }
+.answer-statement { margin-top: 18px; }
+.answer-statement p { line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; }
+.chat-composer { border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px; padding: 18px; background: var(--card); border-radius: 0 0 var(--radius) var(--radius); }
+.chat-composer textarea { min-height: 60px; max-height: 180px; resize: vertical; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); width: 100%; }
+.chat-composer small { grid-column: 1/-1; color: var(--muted-foreground); font-size: 11px; }
+.conflict-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-block: 20px; }
+.conflict-sides > div { padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); }
+.conflict-sides small { color: var(--muted-foreground); }
+.conflict-sides p { margin-block: 10px; }
+.model-name { overflow-wrap: anywhere; font-family: ui-monospace,monospace; font-size: 12px; }
+.upload-form textarea { border: 1px solid var(--input); border-radius: var(--radius); min-height: 140px; padding: 12px; }
+.source-controls { display: flex; flex-wrap: wrap; gap: 4px; }
+.source-controls button { min-height: 30px; font-size: 12px; }
+@media(max-width:1100px) {
+ .wiki-layout, .chat-layout { grid-template-columns: 200px minmax(0,1fr); gap: 12px; }
+ .wiki-content, .chat-turns { padding: 22px; }
+}
+@media(max-width:700px) {
+ .wiki-layout, .chat-layout { grid-template-columns: minmax(0,1fr); }
+ .wiki-index, .chat-history { max-height: 230px; }
+ .wiki-content { padding: 20px; }
+ .metric-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+ .metric { padding: 16px; }
+ .process-card, .knowledge-card { padding: 16px; }
+ .conflict-sides { grid-template-columns: 1fr; }
+ .chat-turns { max-height: 60dvh; padding: 18px; }
+ .chat-panel { min-height: 460px; }
+ .intelligence-search { gap: 8px; }
+ .question-bubble { margin-left: 5%; }
+ .result-meta { flex-wrap: wrap; }
+}

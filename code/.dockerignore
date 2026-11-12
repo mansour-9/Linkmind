@@ -1,0 +1,10 @@
+**
+!apps/
+!apps/api/
+!apps/api/**
+!apps/worker/
+!apps/worker/**
+!fixtures/
+!fixtures/**
+**/__pycache__
+**/.pytest_cache

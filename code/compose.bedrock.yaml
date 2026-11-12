@@ -1,0 +1,34 @@
+# Optional local SDK authentication. Never mount this into hosted containers.
+x-bedrock-env: &bedrock-env
+  AI_PROVIDER: bedrock
+  AWS_PROFILE: ${AWS_PROFILE:-default}
+  AWS_REGION: ${AWS_REGION:-us-east-1}
+  BEDROCK_EXTRACTION_MODEL: ${BEDROCK_EXTRACTION_MODEL:-us.anthropic.claude-sonnet-4-6}
+  BEDROCK_ANSWER_MODEL: ${BEDROCK_ANSWER_MODEL:-us.anthropic.claude-sonnet-4-6}
+  BEDROCK_EMBEDDING_MODEL: ${BEDROCK_EMBEDDING_MODEL:-amazon.titan-embed-text-v2:0}
+  BEDROCK_EMBEDDING_DIMENSIONS: "256"
+  BEDROCK_REQUESTS_PER_MINUTE: ${BEDROCK_REQUESTS_PER_MINUTE:-9}
+  BEDROCK_RATES_JSON: ${BEDROCK_RATES_JSON:-{}}
+services:
+  api:
+    environment: *bedrock-env
+    volumes:
+      - type: bind
+        source: ${AWS_CONFIG_HOME:?Set AWS_CONFIG_HOME to your local .aws directory}
+        target: /root/.aws
+        read_only: true
+      - type: bind
+        source: ${AWS_CONFIG_HOME}/login/cache
+        target: /root/.aws/login/cache
+        read_only: false
+  worker:
+    environment: *bedrock-env
+    volumes:
+      - type: bind
+        source: ${AWS_CONFIG_HOME:?Set AWS_CONFIG_HOME to your local .aws directory}
+        target: /root/.aws
+        read_only: true
+      - type: bind
+        source: ${AWS_CONFIG_HOME}/login/cache
+        target: /root/.aws/login/cache
+        read_only: false

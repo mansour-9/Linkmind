@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-12",
+  "api_tests_passed": 33,
+  "browser_tests_passed": 19,
+  "frontend_typecheck_build": "passed",
+  "main_documents_before": 45,
+  "main_documents_after": 47,
+  "main_ai_usage_before": 634,
+  "main_ai_usage_after": 634,
+  "original_rows_preserved": {
+    "ai_usage": true,
+    "chunks": true,
+    "claims": true,
+    "document_versions": true,
+    "documents": true,
+    "entities": true,
+    "relationships": true
+  },
+  "unchanged_components_and_benchmark_files": [
+    "code\\apps\\web\\src\\GraphWorkspace.tsx",
+    "code\\apps\\web\\src\\GraphPanels.tsx",
+    "code\\apps\\web\\src\\ExplorerCanvas.tsx",
+    "code\\apps\\web\\src\\graphExplorer.ts",
+    "code\\fixtures\\benchmark\\alpha-architecture.md",
+    "code\\fixtures\\benchmark\\alpha-charter.md",
+    "code\\fixtures\\benchmark\\alpha-decision.md",
+    "code\\fixtures\\benchmark\\alpha-history.md",
+    "code\\fixtures\\benchmark\\alpha-private.md",
+    "code\\fixtures\\benchmark\\alpha-review.md",
+    "code\\fixtures\\benchmark\\alpha-revision.md",
+    "code\\fixtures\\benchmark\\alpha-task.md",
+    "code\\fixtures\\benchmark\\ambiguous-alpha.md",
+    "code\\fixtures\\benchmark\\cedar-charter.md",
+    "code\\fixtures\\benchmark\\cedar-complement.md",
+    "code\\fixtures\\benchmark\\manifest.json",
+    "code\\fixtures\\benchmark\\missing-info.md"
+  ]
+}

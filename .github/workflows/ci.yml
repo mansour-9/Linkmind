@@ -1,0 +1,61 @@
+name: Validate Linkmind
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mock-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BRAIN_WEB_PORT: '5175'
+      BRAIN_URL: http://127.0.0.1:5175
+      BRAIN_E2E_DISPOSABLE: '1'
+      COMPOSE_PROJECT_NAME: linkmind-ci
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22.19.0'
+          cache: npm
+          cache-dependency-path: code/e2e/package-lock.json
+      - name: Verify deterministic graph fixtures
+        run: python3 code/fixtures/generate_graph_demo.py --check
+      - name: Build and start disposable mock application
+        run: docker compose -f code/compose.yaml up -d --build --wait
+      - name: Run API and permission regressions
+        run: docker compose -f code/compose.yaml run --rm --no-deps api pytest -q apps/api/tests
+      - name: Install browser tests
+        working-directory: code/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps msedge
+      - name: Run browser and responsive workflows
+        working-directory: code/e2e
+        run: npm test
+      - name: Save test artifacts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mock-validation-results
+          path: code/e2e/results/
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Show failure diagnostics
+        if: failure()
+        run: docker compose -f code/compose.yaml logs --no-color --tail 120
+      - name: Remove disposable mock application
+        if: always()
+        run: docker compose -f code/compose.yaml down --volumes

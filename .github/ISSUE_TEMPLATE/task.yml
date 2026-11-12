@@ -1,0 +1,21 @@
+name: Milestone task
+description: Track a scoped implementation or validation task.
+body:
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone and checkpoint
+      placeholder: M3.2A
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome and scope
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance checks
+      description: Define evidence of completion and identify dependent or deferred work.
+    validations:
+      required: true

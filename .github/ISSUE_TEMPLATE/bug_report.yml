@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a reproducible Linkmind problem.
+labels: [bug]
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Actual and expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps and environment
+      description: Include the route, document type and mock/Bedrock mode. Use synthetic or authorized content.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and validation
+      description: Add sanitized errors, source locations or screenshots. Exclude credentials and private source content.

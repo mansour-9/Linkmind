@@ -1,0 +1,40 @@
+{
+  "ready": true,
+  "source_count": 2,
+  "entity_count": 38,
+  "entity_occurrence_count": 76,
+  "relationship_count": 105,
+  "documents": [
+    {
+      "document_id": "6e26c1fa-3bd3-4c66-8911-02d8000358d8",
+      "job_id": "bd46f65b-4b47-4141-b96b-25f58a78f1fa",
+      "filename": "graph-demo-operations.md",
+      "status": "ready",
+      "provider": "graph-demo-fixture",
+      "visibility": "team"
+    },
+    {
+      "document_id": "935a90e3-e7b9-48c4-aea3-cf3dbb95dd1c",
+      "job_id": "359b4c9e-54f4-41ff-85fa-ce56146accd5",
+      "filename": "graph-demo-connections.md",
+      "status": "ready",
+      "provider": "graph-demo-fixture",
+      "visibility": "team"
+    }
+  ],
+  "atlas_one_hop_nodes": 12,
+  "atlas_three_hop_nodes": 38,
+  "atlas_three_hop_edges": 78,
+  "amal_canonical_matches": 1,
+  "amal_projects": [
+    "Project Atlas",
+    "Project Delta"
+  ],
+  "evidence": {
+    "filename": "graph-demo-connections.md",
+    "line": 51,
+    "quote": "Amal contributes to Project Delta.",
+    "download_matches_source": true,
+    "sha256": "dce64de2ec8062eaa434fb363c4eb707806389a95204ac5bb55f6b8e8af92a81"
+  }
+}

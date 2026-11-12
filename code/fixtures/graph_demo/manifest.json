@@ -1,0 +1,1759 @@
+{
+  "version": 2,
+  "description": "Clearly labeled synthetic graph demo; independent of benchmark expectations.",
+  "entity_count": 38,
+  "entity_occurrence_count": 76,
+  "relationship_count": 105,
+  "fixtures": [
+    {
+      "filename": "graph-demo-operations.md",
+      "entities": [
+        {
+          "key": "project-atlas",
+          "kind": "project",
+          "name": "Project Atlas",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/project/project-atlas"
+            },
+            {
+              "namespace": "project_key",
+              "value": "DEMO-ATLAS"
+            }
+          ],
+          "line": 7
+        },
+        {
+          "key": "project-beacon",
+          "kind": "project",
+          "name": "Project Beacon",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/project/project-beacon"
+            },
+            {
+              "namespace": "project_key",
+              "value": "DEMO-BEACON"
+            }
+          ],
+          "line": 8
+        },
+        {
+          "key": "project-cedar",
+          "kind": "project",
+          "name": "Project Cedar",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/project/project-cedar"
+            },
+            {
+              "namespace": "project_key",
+              "value": "DEMO-CEDAR"
+            }
+          ],
+          "line": 9
+        },
+        {
+          "key": "project-delta",
+          "kind": "project",
+          "name": "Project Delta",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/project/project-delta"
+            },
+            {
+              "namespace": "project_key",
+              "value": "DEMO-DELTA"
+            }
+          ],
+          "line": 10
+        },
+        {
+          "key": "amal",
+          "kind": "person",
+          "name": "Amal",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/amal"
+            },
+            {
+              "namespace": "email",
+              "value": "amal@demo.linkmind.local"
+            }
+          ],
+          "line": 11
+        },
+        {
+          "key": "omar",
+          "kind": "person",
+          "name": "Omar",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/omar"
+            },
+            {
+              "namespace": "email",
+              "value": "omar@demo.linkmind.local"
+            }
+          ],
+          "line": 12
+        },
+        {
+          "key": "nadia",
+          "kind": "person",
+          "name": "Nadia",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/nadia"
+            },
+            {
+              "namespace": "email",
+              "value": "nadia@demo.linkmind.local"
+            }
+          ],
+          "line": 13
+        },
+        {
+          "key": "lina",
+          "kind": "person",
+          "name": "Lina",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/lina"
+            },
+            {
+              "namespace": "email",
+              "value": "lina@demo.linkmind.local"
+            }
+          ],
+          "line": 14
+        },
+        {
+          "key": "priya",
+          "kind": "person",
+          "name": "Priya",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/priya"
+            },
+            {
+              "namespace": "email",
+              "value": "priya@demo.linkmind.local"
+            }
+          ],
+          "line": 15
+        },
+        {
+          "key": "sam",
+          "kind": "person",
+          "name": "Sam",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/sam"
+            },
+            {
+              "namespace": "email",
+              "value": "sam@demo.linkmind.local"
+            }
+          ],
+          "line": 16
+        },
+        {
+          "key": "jonas",
+          "kind": "person",
+          "name": "Jonas",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/jonas"
+            },
+            {
+              "namespace": "email",
+              "value": "jonas@demo.linkmind.local"
+            }
+          ],
+          "line": 17
+        },
+        {
+          "key": "mira",
+          "kind": "person",
+          "name": "Mira",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/mira"
+            },
+            {
+              "namespace": "email",
+              "value": "mira@demo.linkmind.local"
+            }
+          ],
+          "line": 18
+        },
+        {
+          "key": "noor",
+          "kind": "person",
+          "name": "Noor",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/noor"
+            },
+            {
+              "namespace": "email",
+              "value": "noor@demo.linkmind.local"
+            }
+          ],
+          "line": 19
+        },
+        {
+          "key": "rami",
+          "kind": "person",
+          "name": "Rami",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/rami"
+            },
+            {
+              "namespace": "email",
+              "value": "rami@demo.linkmind.local"
+            }
+          ],
+          "line": 20
+        },
+        {
+          "key": "sara",
+          "kind": "person",
+          "name": "Sara",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/sara"
+            },
+            {
+              "namespace": "email",
+              "value": "sara@demo.linkmind.local"
+            }
+          ],
+          "line": 21
+        },
+        {
+          "key": "tarek",
+          "kind": "person",
+          "name": "Tarek",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/tarek"
+            },
+            {
+              "namespace": "email",
+              "value": "tarek@demo.linkmind.local"
+            }
+          ],
+          "line": 22
+        },
+        {
+          "key": "platform-engineering",
+          "kind": "team",
+          "name": "Platform Engineering",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/platform-engineering"
+            }
+          ],
+          "line": 23
+        },
+        {
+          "key": "data-platform",
+          "kind": "team",
+          "name": "Data Platform",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/data-platform"
+            }
+          ],
+          "line": 24
+        },
+        {
+          "key": "finance-operations",
+          "kind": "team",
+          "name": "Finance Operations",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/finance-operations"
+            }
+          ],
+          "line": 25
+        },
+        {
+          "key": "customer-success",
+          "kind": "team",
+          "name": "Customer Success",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/customer-success"
+            }
+          ],
+          "line": 26
+        },
+        {
+          "key": "compliance-and-trust",
+          "kind": "team",
+          "name": "Compliance and Trust",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/compliance-and-trust"
+            }
+          ],
+          "line": 27
+        },
+        {
+          "key": "knowledge-experience",
+          "kind": "team",
+          "name": "Knowledge Experience",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/knowledge-experience"
+            }
+          ],
+          "line": 28
+        },
+        {
+          "key": "gd-atlas-101-migrate-customer-records",
+          "kind": "task",
+          "name": "GD-ATLAS-101 · Migrate customer records",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-atlas-101-migrate-customer-records"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-ATLAS-101"
+            }
+          ],
+          "line": 29
+        },
+        {
+          "key": "gd-atlas-102-validate-rollback-plan",
+          "kind": "task",
+          "name": "GD-ATLAS-102 · Validate rollback plan",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-atlas-102-validate-rollback-plan"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-ATLAS-102"
+            }
+          ],
+          "line": 30
+        },
+        {
+          "key": "gd-beacon-201-index-support-articles",
+          "kind": "task",
+          "name": "GD-BEACON-201 · Index support articles",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-beacon-201-index-support-articles"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-BEACON-201"
+            }
+          ],
+          "line": 31
+        },
+        {
+          "key": "gd-beacon-202-measure-search-relevance",
+          "kind": "task",
+          "name": "GD-BEACON-202 · Measure search relevance",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-beacon-202-measure-search-relevance"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-BEACON-202"
+            }
+          ],
+          "line": 32
+        },
+        {
+          "key": "gd-cedar-301-reconcile-cost-centers",
+          "kind": "task",
+          "name": "GD-CEDAR-301 · Reconcile cost centers",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-cedar-301-reconcile-cost-centers"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-CEDAR-301"
+            }
+          ],
+          "line": 33
+        },
+        {
+          "key": "gd-cedar-302-audit-monthly-close",
+          "kind": "task",
+          "name": "GD-CEDAR-302 · Audit monthly close",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-cedar-302-audit-monthly-close"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-CEDAR-302"
+            }
+          ],
+          "line": 34
+        },
+        {
+          "key": "gd-delta-401-archive-resolved-tickets",
+          "kind": "task",
+          "name": "GD-DELTA-401 · Archive resolved tickets",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-delta-401-archive-resolved-tickets"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-DELTA-401"
+            }
+          ],
+          "line": 35
+        },
+        {
+          "key": "gd-delta-402-review-retention-policy",
+          "kind": "task",
+          "name": "GD-DELTA-402 · Review retention policy",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-delta-402-review-retention-policy"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-DELTA-402"
+            }
+          ],
+          "line": 36
+        },
+        {
+          "key": "decision-retain-source-files",
+          "kind": "decision",
+          "name": "Decision · Retain source files",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/decision/decision-retain-source-files"
+            }
+          ],
+          "line": 37
+        },
+        {
+          "key": "decision-launch-relevance-pilot",
+          "kind": "decision",
+          "name": "Decision · Launch relevance pilot",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/decision/decision-launch-relevance-pilot"
+            }
+          ],
+          "line": 38
+        },
+        {
+          "key": "decision-automate-close-checklist",
+          "kind": "decision",
+          "name": "Decision · Automate close checklist",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/decision/decision-automate-close-checklist"
+            }
+          ],
+          "line": 39
+        },
+        {
+          "key": "decision-adopt-retention-tiers",
+          "kind": "decision",
+          "name": "Decision · Adopt retention tiers",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/decision/decision-adopt-retention-tiers"
+            }
+          ],
+          "line": 40
+        },
+        {
+          "key": "amazon-rds-for-postgresql",
+          "kind": "technology",
+          "name": "Amazon RDS for PostgreSQL",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/technology/amazon-rds-for-postgresql"
+            }
+          ],
+          "line": 41
+        },
+        {
+          "key": "amazon-opensearch-service",
+          "kind": "technology",
+          "name": "Amazon OpenSearch Service",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/technology/amazon-opensearch-service"
+            }
+          ],
+          "line": 42
+        },
+        {
+          "key": "amazon-redshift",
+          "kind": "technology",
+          "name": "Amazon Redshift",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/technology/amazon-redshift"
+            }
+          ],
+          "line": 43
+        },
+        {
+          "key": "amazon-s3",
+          "kind": "technology",
+          "name": "Amazon S3",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/technology/amazon-s3"
+            }
+          ],
+          "line": 44
+        }
+      ],
+      "claims": [],
+      "relationships": [
+        {
+          "source_key": "project-atlas",
+          "target_key": "amal",
+          "predicate": "owned_by",
+          "line": 48
+        },
+        {
+          "source_key": "project-atlas",
+          "target_key": "platform-engineering",
+          "predicate": "managed_by",
+          "line": 49
+        },
+        {
+          "source_key": "project-atlas",
+          "target_key": "amazon-rds-for-postgresql",
+          "predicate": "uses",
+          "line": 50
+        },
+        {
+          "source_key": "amazon-rds-for-postgresql",
+          "target_key": "platform-engineering",
+          "predicate": "operated_by",
+          "line": 51
+        },
+        {
+          "source_key": "project-beacon",
+          "target_key": "nadia",
+          "predicate": "owned_by",
+          "line": 52
+        },
+        {
+          "source_key": "project-beacon",
+          "target_key": "data-platform",
+          "predicate": "managed_by",
+          "line": 53
+        },
+        {
+          "source_key": "project-beacon",
+          "target_key": "amazon-opensearch-service",
+          "predicate": "uses",
+          "line": 54
+        },
+        {
+          "source_key": "amazon-opensearch-service",
+          "target_key": "data-platform",
+          "predicate": "operated_by",
+          "line": 55
+        },
+        {
+          "source_key": "project-cedar",
+          "target_key": "omar",
+          "predicate": "owned_by",
+          "line": 56
+        },
+        {
+          "source_key": "project-cedar",
+          "target_key": "finance-operations",
+          "predicate": "managed_by",
+          "line": 57
+        },
+        {
+          "source_key": "project-cedar",
+          "target_key": "amazon-redshift",
+          "predicate": "uses",
+          "line": 58
+        },
+        {
+          "source_key": "amazon-redshift",
+          "target_key": "finance-operations",
+          "predicate": "operated_by",
+          "line": 59
+        },
+        {
+          "source_key": "project-delta",
+          "target_key": "lina",
+          "predicate": "owned_by",
+          "line": 60
+        },
+        {
+          "source_key": "project-delta",
+          "target_key": "customer-success",
+          "predicate": "managed_by",
+          "line": 61
+        },
+        {
+          "source_key": "project-delta",
+          "target_key": "amazon-s3",
+          "predicate": "uses",
+          "line": 62
+        },
+        {
+          "source_key": "amazon-s3",
+          "target_key": "customer-success",
+          "predicate": "operated_by",
+          "line": 63
+        },
+        {
+          "source_key": "gd-atlas-101-migrate-customer-records",
+          "target_key": "amal",
+          "predicate": "assigned_to",
+          "line": 64
+        },
+        {
+          "source_key": "gd-atlas-101-migrate-customer-records",
+          "target_key": "project-atlas",
+          "predicate": "belongs_to",
+          "line": 65
+        },
+        {
+          "source_key": "gd-atlas-102-validate-rollback-plan",
+          "target_key": "omar",
+          "predicate": "assigned_to",
+          "line": 66
+        },
+        {
+          "source_key": "gd-atlas-102-validate-rollback-plan",
+          "target_key": "project-atlas",
+          "predicate": "belongs_to",
+          "line": 67
+        },
+        {
+          "source_key": "gd-beacon-201-index-support-articles",
+          "target_key": "nadia",
+          "predicate": "assigned_to",
+          "line": 68
+        },
+        {
+          "source_key": "gd-beacon-201-index-support-articles",
+          "target_key": "project-beacon",
+          "predicate": "belongs_to",
+          "line": 69
+        },
+        {
+          "source_key": "gd-beacon-202-measure-search-relevance",
+          "target_key": "priya",
+          "predicate": "assigned_to",
+          "line": 70
+        },
+        {
+          "source_key": "gd-beacon-202-measure-search-relevance",
+          "target_key": "project-beacon",
+          "predicate": "belongs_to",
+          "line": 71
+        },
+        {
+          "source_key": "gd-cedar-301-reconcile-cost-centers",
+          "target_key": "omar",
+          "predicate": "assigned_to",
+          "line": 72
+        },
+        {
+          "source_key": "gd-cedar-301-reconcile-cost-centers",
+          "target_key": "project-cedar",
+          "predicate": "belongs_to",
+          "line": 73
+        },
+        {
+          "source_key": "gd-cedar-302-audit-monthly-close",
+          "target_key": "lina",
+          "predicate": "assigned_to",
+          "line": 74
+        },
+        {
+          "source_key": "gd-cedar-302-audit-monthly-close",
+          "target_key": "project-cedar",
+          "predicate": "belongs_to",
+          "line": 75
+        },
+        {
+          "source_key": "gd-delta-401-archive-resolved-tickets",
+          "target_key": "lina",
+          "predicate": "assigned_to",
+          "line": 76
+        },
+        {
+          "source_key": "gd-delta-401-archive-resolved-tickets",
+          "target_key": "project-delta",
+          "predicate": "belongs_to",
+          "line": 77
+        },
+        {
+          "source_key": "gd-delta-402-review-retention-policy",
+          "target_key": "sam",
+          "predicate": "assigned_to",
+          "line": 78
+        },
+        {
+          "source_key": "gd-delta-402-review-retention-policy",
+          "target_key": "project-delta",
+          "predicate": "belongs_to",
+          "line": 79
+        },
+        {
+          "source_key": "decision-retain-source-files",
+          "target_key": "amal",
+          "predicate": "approved_by",
+          "line": 80
+        },
+        {
+          "source_key": "decision-retain-source-files",
+          "target_key": "project-atlas",
+          "predicate": "belongs_to",
+          "line": 81
+        },
+        {
+          "source_key": "decision-retain-source-files",
+          "target_key": "compliance-and-trust",
+          "predicate": "supported_by",
+          "line": 82
+        },
+        {
+          "source_key": "decision-launch-relevance-pilot",
+          "target_key": "priya",
+          "predicate": "approved_by",
+          "line": 83
+        },
+        {
+          "source_key": "decision-launch-relevance-pilot",
+          "target_key": "project-beacon",
+          "predicate": "belongs_to",
+          "line": 84
+        },
+        {
+          "source_key": "decision-launch-relevance-pilot",
+          "target_key": "knowledge-experience",
+          "predicate": "supported_by",
+          "line": 85
+        },
+        {
+          "source_key": "decision-automate-close-checklist",
+          "target_key": "lina",
+          "predicate": "approved_by",
+          "line": 86
+        },
+        {
+          "source_key": "decision-automate-close-checklist",
+          "target_key": "project-cedar",
+          "predicate": "belongs_to",
+          "line": 87
+        },
+        {
+          "source_key": "decision-automate-close-checklist",
+          "target_key": "finance-operations",
+          "predicate": "supported_by",
+          "line": 88
+        },
+        {
+          "source_key": "decision-adopt-retention-tiers",
+          "target_key": "sam",
+          "predicate": "approved_by",
+          "line": 89
+        },
+        {
+          "source_key": "decision-adopt-retention-tiers",
+          "target_key": "project-delta",
+          "predicate": "belongs_to",
+          "line": 90
+        },
+        {
+          "source_key": "decision-adopt-retention-tiers",
+          "target_key": "compliance-and-trust",
+          "predicate": "supported_by",
+          "line": 91
+        },
+        {
+          "source_key": "amal",
+          "target_key": "platform-engineering",
+          "predicate": "member_of",
+          "line": 92
+        },
+        {
+          "source_key": "omar",
+          "target_key": "platform-engineering",
+          "predicate": "member_of",
+          "line": 93
+        },
+        {
+          "source_key": "jonas",
+          "target_key": "platform-engineering",
+          "predicate": "member_of",
+          "line": 94
+        },
+        {
+          "source_key": "mira",
+          "target_key": "platform-engineering",
+          "predicate": "member_of",
+          "line": 95
+        },
+        {
+          "source_key": "rami",
+          "target_key": "platform-engineering",
+          "predicate": "member_of",
+          "line": 96
+        },
+        {
+          "source_key": "nadia",
+          "target_key": "data-platform",
+          "predicate": "member_of",
+          "line": 97
+        },
+        {
+          "source_key": "priya",
+          "target_key": "data-platform",
+          "predicate": "member_of",
+          "line": 98
+        },
+        {
+          "source_key": "jonas",
+          "target_key": "data-platform",
+          "predicate": "member_of",
+          "line": 99
+        },
+        {
+          "source_key": "sara",
+          "target_key": "data-platform",
+          "predicate": "member_of",
+          "line": 100
+        },
+        {
+          "source_key": "omar",
+          "target_key": "finance-operations",
+          "predicate": "member_of",
+          "line": 101
+        },
+        {
+          "source_key": "lina",
+          "target_key": "finance-operations",
+          "predicate": "member_of",
+          "line": 102
+        },
+        {
+          "source_key": "sam",
+          "target_key": "finance-operations",
+          "predicate": "member_of",
+          "line": 103
+        },
+        {
+          "source_key": "lina",
+          "target_key": "customer-success",
+          "predicate": "member_of",
+          "line": 104
+        },
+        {
+          "source_key": "sam",
+          "target_key": "customer-success",
+          "predicate": "member_of",
+          "line": 105
+        },
+        {
+          "source_key": "noor",
+          "target_key": "customer-success",
+          "predicate": "member_of",
+          "line": 106
+        },
+        {
+          "source_key": "mira",
+          "target_key": "customer-success",
+          "predicate": "member_of",
+          "line": 107
+        },
+        {
+          "source_key": "tarek",
+          "target_key": "customer-success",
+          "predicate": "member_of",
+          "line": 108
+        },
+        {
+          "source_key": "priya",
+          "target_key": "compliance-and-trust",
+          "predicate": "member_of",
+          "line": 109
+        },
+        {
+          "source_key": "noor",
+          "target_key": "compliance-and-trust",
+          "predicate": "member_of",
+          "line": 110
+        },
+        {
+          "source_key": "mira",
+          "target_key": "compliance-and-trust",
+          "predicate": "member_of",
+          "line": 111
+        },
+        {
+          "source_key": "amal",
+          "target_key": "knowledge-experience",
+          "predicate": "member_of",
+          "line": 112
+        },
+        {
+          "source_key": "nadia",
+          "target_key": "knowledge-experience",
+          "predicate": "member_of",
+          "line": 113
+        },
+        {
+          "source_key": "priya",
+          "target_key": "knowledge-experience",
+          "predicate": "member_of",
+          "line": 114
+        },
+        {
+          "source_key": "rami",
+          "target_key": "knowledge-experience",
+          "predicate": "member_of",
+          "line": 115
+        },
+        {
+          "source_key": "amal",
+          "target_key": "platform-engineering",
+          "predicate": "leads",
+          "line": 116
+        },
+        {
+          "source_key": "nadia",
+          "target_key": "data-platform",
+          "predicate": "leads",
+          "line": 117
+        },
+        {
+          "source_key": "omar",
+          "target_key": "finance-operations",
+          "predicate": "leads",
+          "line": 118
+        },
+        {
+          "source_key": "lina",
+          "target_key": "customer-success",
+          "predicate": "leads",
+          "line": 119
+        },
+        {
+          "source_key": "priya",
+          "target_key": "compliance-and-trust",
+          "predicate": "leads",
+          "line": 120
+        }
+      ]
+    },
+    {
+      "filename": "graph-demo-connections.md",
+      "entities": [
+        {
+          "key": "project-atlas",
+          "kind": "project",
+          "name": "Project Atlas",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/project/project-atlas"
+            },
+            {
+              "namespace": "project_key",
+              "value": "DEMO-ATLAS"
+            }
+          ],
+          "line": 9
+        },
+        {
+          "key": "project-beacon",
+          "kind": "project",
+          "name": "Project Beacon",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/project/project-beacon"
+            },
+            {
+              "namespace": "project_key",
+              "value": "DEMO-BEACON"
+            }
+          ],
+          "line": 10
+        },
+        {
+          "key": "project-cedar",
+          "kind": "project",
+          "name": "Project Cedar",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/project/project-cedar"
+            },
+            {
+              "namespace": "project_key",
+              "value": "DEMO-CEDAR"
+            }
+          ],
+          "line": 11
+        },
+        {
+          "key": "project-delta",
+          "kind": "project",
+          "name": "Project Delta",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/project/project-delta"
+            },
+            {
+              "namespace": "project_key",
+              "value": "DEMO-DELTA"
+            }
+          ],
+          "line": 12
+        },
+        {
+          "key": "amal",
+          "kind": "person",
+          "name": "Amal",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/amal"
+            },
+            {
+              "namespace": "email",
+              "value": "amal@demo.linkmind.local"
+            }
+          ],
+          "line": 13
+        },
+        {
+          "key": "omar",
+          "kind": "person",
+          "name": "Omar",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/omar"
+            },
+            {
+              "namespace": "email",
+              "value": "omar@demo.linkmind.local"
+            }
+          ],
+          "line": 14
+        },
+        {
+          "key": "nadia",
+          "kind": "person",
+          "name": "Nadia",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/nadia"
+            },
+            {
+              "namespace": "email",
+              "value": "nadia@demo.linkmind.local"
+            }
+          ],
+          "line": 15
+        },
+        {
+          "key": "lina",
+          "kind": "person",
+          "name": "Lina",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/lina"
+            },
+            {
+              "namespace": "email",
+              "value": "lina@demo.linkmind.local"
+            }
+          ],
+          "line": 16
+        },
+        {
+          "key": "priya",
+          "kind": "person",
+          "name": "Priya",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/priya"
+            },
+            {
+              "namespace": "email",
+              "value": "priya@demo.linkmind.local"
+            }
+          ],
+          "line": 17
+        },
+        {
+          "key": "sam",
+          "kind": "person",
+          "name": "Sam",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/sam"
+            },
+            {
+              "namespace": "email",
+              "value": "sam@demo.linkmind.local"
+            }
+          ],
+          "line": 18
+        },
+        {
+          "key": "jonas",
+          "kind": "person",
+          "name": "Jonas",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/jonas"
+            },
+            {
+              "namespace": "email",
+              "value": "jonas@demo.linkmind.local"
+            }
+          ],
+          "line": 19
+        },
+        {
+          "key": "mira",
+          "kind": "person",
+          "name": "Mira",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/mira"
+            },
+            {
+              "namespace": "email",
+              "value": "mira@demo.linkmind.local"
+            }
+          ],
+          "line": 20
+        },
+        {
+          "key": "noor",
+          "kind": "person",
+          "name": "Noor",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/noor"
+            },
+            {
+              "namespace": "email",
+              "value": "noor@demo.linkmind.local"
+            }
+          ],
+          "line": 21
+        },
+        {
+          "key": "rami",
+          "kind": "person",
+          "name": "Rami",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/rami"
+            },
+            {
+              "namespace": "email",
+              "value": "rami@demo.linkmind.local"
+            }
+          ],
+          "line": 22
+        },
+        {
+          "key": "sara",
+          "kind": "person",
+          "name": "Sara",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/sara"
+            },
+            {
+              "namespace": "email",
+              "value": "sara@demo.linkmind.local"
+            }
+          ],
+          "line": 23
+        },
+        {
+          "key": "tarek",
+          "kind": "person",
+          "name": "Tarek",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/person/tarek"
+            },
+            {
+              "namespace": "email",
+              "value": "tarek@demo.linkmind.local"
+            }
+          ],
+          "line": 24
+        },
+        {
+          "key": "platform-engineering",
+          "kind": "team",
+          "name": "Platform Engineering",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/platform-engineering"
+            }
+          ],
+          "line": 25
+        },
+        {
+          "key": "data-platform",
+          "kind": "team",
+          "name": "Data Platform",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/data-platform"
+            }
+          ],
+          "line": 26
+        },
+        {
+          "key": "finance-operations",
+          "kind": "team",
+          "name": "Finance Operations",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/finance-operations"
+            }
+          ],
+          "line": 27
+        },
+        {
+          "key": "customer-success",
+          "kind": "team",
+          "name": "Customer Success",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/customer-success"
+            }
+          ],
+          "line": 28
+        },
+        {
+          "key": "compliance-and-trust",
+          "kind": "team",
+          "name": "Compliance and Trust",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/compliance-and-trust"
+            }
+          ],
+          "line": 29
+        },
+        {
+          "key": "knowledge-experience",
+          "kind": "team",
+          "name": "Knowledge Experience",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/team/knowledge-experience"
+            }
+          ],
+          "line": 30
+        },
+        {
+          "key": "gd-atlas-101-migrate-customer-records",
+          "kind": "task",
+          "name": "GD-ATLAS-101 · Migrate customer records",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-atlas-101-migrate-customer-records"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-ATLAS-101"
+            }
+          ],
+          "line": 31
+        },
+        {
+          "key": "gd-atlas-102-validate-rollback-plan",
+          "kind": "task",
+          "name": "GD-ATLAS-102 · Validate rollback plan",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-atlas-102-validate-rollback-plan"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-ATLAS-102"
+            }
+          ],
+          "line": 32
+        },
+        {
+          "key": "gd-beacon-201-index-support-articles",
+          "kind": "task",
+          "name": "GD-BEACON-201 · Index support articles",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-beacon-201-index-support-articles"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-BEACON-201"
+            }
+          ],
+          "line": 33
+        },
+        {
+          "key": "gd-beacon-202-measure-search-relevance",
+          "kind": "task",
+          "name": "GD-BEACON-202 · Measure search relevance",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-beacon-202-measure-search-relevance"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-BEACON-202"
+            }
+          ],
+          "line": 34
+        },
+        {
+          "key": "gd-cedar-301-reconcile-cost-centers",
+          "kind": "task",
+          "name": "GD-CEDAR-301 · Reconcile cost centers",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-cedar-301-reconcile-cost-centers"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-CEDAR-301"
+            }
+          ],
+          "line": 35
+        },
+        {
+          "key": "gd-cedar-302-audit-monthly-close",
+          "kind": "task",
+          "name": "GD-CEDAR-302 · Audit monthly close",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-cedar-302-audit-monthly-close"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-CEDAR-302"
+            }
+          ],
+          "line": 36
+        },
+        {
+          "key": "gd-delta-401-archive-resolved-tickets",
+          "kind": "task",
+          "name": "GD-DELTA-401 · Archive resolved tickets",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-delta-401-archive-resolved-tickets"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-DELTA-401"
+            }
+          ],
+          "line": 37
+        },
+        {
+          "key": "gd-delta-402-review-retention-policy",
+          "kind": "task",
+          "name": "GD-DELTA-402 · Review retention policy",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/task/gd-delta-402-review-retention-policy"
+            },
+            {
+              "namespace": "issue_key",
+              "value": "GD-DELTA-402"
+            }
+          ],
+          "line": 38
+        },
+        {
+          "key": "decision-retain-source-files",
+          "kind": "decision",
+          "name": "Decision · Retain source files",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/decision/decision-retain-source-files"
+            }
+          ],
+          "line": 39
+        },
+        {
+          "key": "decision-launch-relevance-pilot",
+          "kind": "decision",
+          "name": "Decision · Launch relevance pilot",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/decision/decision-launch-relevance-pilot"
+            }
+          ],
+          "line": 40
+        },
+        {
+          "key": "decision-automate-close-checklist",
+          "kind": "decision",
+          "name": "Decision · Automate close checklist",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/decision/decision-automate-close-checklist"
+            }
+          ],
+          "line": 41
+        },
+        {
+          "key": "decision-adopt-retention-tiers",
+          "kind": "decision",
+          "name": "Decision · Adopt retention tiers",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/decision/decision-adopt-retention-tiers"
+            }
+          ],
+          "line": 42
+        },
+        {
+          "key": "amazon-rds-for-postgresql",
+          "kind": "technology",
+          "name": "Amazon RDS for PostgreSQL",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/technology/amazon-rds-for-postgresql"
+            }
+          ],
+          "line": 43
+        },
+        {
+          "key": "amazon-opensearch-service",
+          "kind": "technology",
+          "name": "Amazon OpenSearch Service",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/technology/amazon-opensearch-service"
+            }
+          ],
+          "line": 44
+        },
+        {
+          "key": "amazon-redshift",
+          "kind": "technology",
+          "name": "Amazon Redshift",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/technology/amazon-redshift"
+            }
+          ],
+          "line": 45
+        },
+        {
+          "key": "amazon-s3",
+          "kind": "technology",
+          "name": "Amazon S3",
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://graph-demo.linkmind.invalid/technology/amazon-s3"
+            }
+          ],
+          "line": 46
+        }
+      ],
+      "claims": [],
+      "relationships": [
+        {
+          "source_key": "amal",
+          "target_key": "project-atlas",
+          "predicate": "contributes_to",
+          "line": 50
+        },
+        {
+          "source_key": "amal",
+          "target_key": "project-delta",
+          "predicate": "contributes_to",
+          "line": 51
+        },
+        {
+          "source_key": "omar",
+          "target_key": "project-atlas",
+          "predicate": "contributes_to",
+          "line": 52
+        },
+        {
+          "source_key": "omar",
+          "target_key": "project-cedar",
+          "predicate": "contributes_to",
+          "line": 53
+        },
+        {
+          "source_key": "nadia",
+          "target_key": "project-beacon",
+          "predicate": "contributes_to",
+          "line": 54
+        },
+        {
+          "source_key": "nadia",
+          "target_key": "project-delta",
+          "predicate": "contributes_to",
+          "line": 55
+        },
+        {
+          "source_key": "lina",
+          "target_key": "project-cedar",
+          "predicate": "contributes_to",
+          "line": 56
+        },
+        {
+          "source_key": "lina",
+          "target_key": "project-delta",
+          "predicate": "contributes_to",
+          "line": 57
+        },
+        {
+          "source_key": "priya",
+          "target_key": "project-atlas",
+          "predicate": "contributes_to",
+          "line": 58
+        },
+        {
+          "source_key": "priya",
+          "target_key": "project-beacon",
+          "predicate": "contributes_to",
+          "line": 59
+        },
+        {
+          "source_key": "sam",
+          "target_key": "project-cedar",
+          "predicate": "contributes_to",
+          "line": 60
+        },
+        {
+          "source_key": "sam",
+          "target_key": "project-delta",
+          "predicate": "contributes_to",
+          "line": 61
+        },
+        {
+          "source_key": "jonas",
+          "target_key": "project-atlas",
+          "predicate": "contributes_to",
+          "line": 62
+        },
+        {
+          "source_key": "jonas",
+          "target_key": "project-beacon",
+          "predicate": "contributes_to",
+          "line": 63
+        },
+        {
+          "source_key": "mira",
+          "target_key": "project-atlas",
+          "predicate": "contributes_to",
+          "line": 64
+        },
+        {
+          "source_key": "mira",
+          "target_key": "project-delta",
+          "predicate": "contributes_to",
+          "line": 65
+        },
+        {
+          "source_key": "noor",
+          "target_key": "project-beacon",
+          "predicate": "contributes_to",
+          "line": 66
+        },
+        {
+          "source_key": "noor",
+          "target_key": "project-delta",
+          "predicate": "contributes_to",
+          "line": 67
+        },
+        {
+          "source_key": "rami",
+          "target_key": "project-atlas",
+          "predicate": "contributes_to",
+          "line": 68
+        },
+        {
+          "source_key": "rami",
+          "target_key": "project-delta",
+          "predicate": "contributes_to",
+          "line": 69
+        },
+        {
+          "source_key": "sara",
+          "target_key": "project-beacon",
+          "predicate": "contributes_to",
+          "line": 70
+        },
+        {
+          "source_key": "sara",
+          "target_key": "project-delta",
+          "predicate": "contributes_to",
+          "line": 71
+        },
+        {
+          "source_key": "tarek",
+          "target_key": "project-cedar",
+          "predicate": "contributes_to",
+          "line": 72
+        },
+        {
+          "source_key": "tarek",
+          "target_key": "project-delta",
+          "predicate": "contributes_to",
+          "line": 73
+        },
+        {
+          "source_key": "decision-retain-source-files",
+          "target_key": "decision-adopt-retention-tiers",
+          "predicate": "informs",
+          "line": 74
+        },
+        {
+          "source_key": "decision-launch-relevance-pilot",
+          "target_key": "decision-automate-close-checklist",
+          "predicate": "informs",
+          "line": 75
+        },
+        {
+          "source_key": "decision-automate-close-checklist",
+          "target_key": "decision-adopt-retention-tiers",
+          "predicate": "informs",
+          "line": 76
+        },
+        {
+          "source_key": "platform-engineering",
+          "target_key": "data-platform",
+          "predicate": "collaborates_with",
+          "line": 77
+        },
+        {
+          "source_key": "data-platform",
+          "target_key": "knowledge-experience",
+          "predicate": "collaborates_with",
+          "line": 78
+        },
+        {
+          "source_key": "finance-operations",
+          "target_key": "customer-success",
+          "predicate": "collaborates_with",
+          "line": 79
+        },
+        {
+          "source_key": "compliance-and-trust",
+          "target_key": "platform-engineering",
+          "predicate": "advises",
+          "line": 80
+        },
+        {
+          "source_key": "compliance-and-trust",
+          "target_key": "finance-operations",
+          "predicate": "advises",
+          "line": 81
+        }
+      ]
+    }
+  ]
+}
