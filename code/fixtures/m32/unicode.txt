@@ -1,0 +1,5 @@
+Clearly labeled synthetic M3.2 evaluation fixture.
+Project Echo has project key M32-ECHO.
+Renée has email renee@m32.example.
+Project Echo is owned by Renée.
+Project Echo status is Active.

@@ -1,0 +1,57 @@
+{
+  "manifest_sha256": "3681ecd9c3d96bd586205919025cc39bc2bda1cd2d8a2169c78ea791cea2b0f7",
+  "extraction_schema_sha256": "3050dfaf4488d56cf32c783225d3654d1ff5f173c3b7b84a534970d61939f4c4",
+  "prompt_sha256": "1337d498236de710accc3d05a78130b997a51923c53afe53fade91d440fb5b28",
+  "source_passages": [
+    {
+      "id": "simple_pdf",
+      "source_sha256": "5fec327b7048775fa9bb88903bb379d32b75b06800aee72e9a7302034a9722fd",
+      "passage_sha256": "c3e1ef448ab95557cae8e57228d8422bf1e3e3c16b4debfdb585cb98e0d76004",
+      "passages": 1
+    },
+    {
+      "id": "typography_pdf",
+      "source_sha256": "2d68006d9389916463ac8787afcce4fcffc2eb1b077922cb3fdab8f2e2f0d36e",
+      "passage_sha256": "a19bfc72cc5de8d137542477d17102cbd9a65f5696a9cc54b4c4d6d70bed51ec",
+      "passages": 1
+    },
+    {
+      "id": "docx_table",
+      "source_sha256": "e410a3618966cd00200b70ac0369d6b9367eeeb2ea385ec78f35d060080bdd81",
+      "passage_sha256": "eeb95359a39915d8737fcae351282d27a039c5f672c4727731692a4c18bac252",
+      "passages": 7
+    },
+    {
+      "id": "markdown_sections",
+      "source_sha256": "e6b9665b9b461ccec8954af3f13a0f4d6f9cf2fabe1dfecb275b7c1f6af4664b",
+      "passage_sha256": "16f6794d29a67d36a4b03828dacbef809672cc36ef2b48fbe55ce45c36209355",
+      "passages": 11
+    },
+    {
+      "id": "unicode_crlf",
+      "source_sha256": "c8566ea9fcecd870109146398ae1d0cc53b3152707f321d3e922d2ba12689f2c",
+      "passage_sha256": "3ab50eca7ad2fc796eb83baf917555d73d893c2188dfa3648ce0b19f4e2c6ef9",
+      "passages": 5
+    },
+    {
+      "id": "temporal_untrusted",
+      "source_sha256": "9256b49c456f53d0f2ec7249f1ad487a016b3fd9e27b1fea737ec0bf1aa1f0d4",
+      "passage_sha256": "f33895d8e8380407deb035bc30886dc5fcca27b6947a7149be465253a9f87778",
+      "passages": 8
+    }
+  ],
+  "settings": {
+    "region": "us-east-1",
+    "models": [
+      "google.gemma-4-31b",
+      "us.anthropic.claude-sonnet-4-6"
+    ],
+    "max_attempts": 24,
+    "projected_usd_limit": "5",
+    "temperature": 0,
+    "extraction_max_output": 6000,
+    "verification_max_output": 1024,
+    "automatic_retries": 0,
+    "repair_calls": 0
+  }
+}

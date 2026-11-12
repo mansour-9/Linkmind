@@ -6,3 +6,6 @@
 *.woff2 binary
 *.pdf binary
 *.zip binary
+
+*.docx binary
+code/fixtures/m32/unicode.txt -text

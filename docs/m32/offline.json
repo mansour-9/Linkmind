@@ -1,0 +1,379 @@
+{
+  "format_matrix": {
+    "cases": [
+      {
+        "id": "simple_pdf",
+        "expected": "readable",
+        "actual": "readable",
+        "passed": true,
+        "passages": 1,
+        "locators": [
+          {
+            "kind": "pdf",
+            "page": 1,
+            "offset": 0
+          }
+        ],
+        "source_sha256": "5fec327b7048775fa9bb88903bb379d32b75b06800aee72e9a7302034a9722fd"
+      },
+      {
+        "id": "typography_pdf",
+        "expected": "readable",
+        "actual": "readable",
+        "passed": true,
+        "passages": 1,
+        "locators": [
+          {
+            "kind": "pdf",
+            "page": 1,
+            "offset": 0
+          }
+        ],
+        "source_sha256": "2d68006d9389916463ac8787afcce4fcffc2eb1b077922cb3fdab8f2e2f0d36e"
+      },
+      {
+        "id": "docx_table",
+        "expected": "readable",
+        "actual": "readable",
+        "passed": true,
+        "passages": 7,
+        "locators": [
+          {
+            "kind": "docx",
+            "paragraph": 1,
+            "offset": 0
+          },
+          {
+            "kind": "docx",
+            "paragraph": 2,
+            "offset": 0
+          },
+          {
+            "kind": "docx",
+            "paragraph": 3,
+            "offset": 0
+          },
+          {
+            "kind": "docx",
+            "paragraph": 4,
+            "offset": 0
+          },
+          {
+            "kind": "docx",
+            "paragraph": 5,
+            "offset": 0
+          },
+          {
+            "kind": "docx",
+            "table": 1,
+            "row": 1,
+            "offset": 0
+          },
+          {
+            "kind": "docx",
+            "table": 1,
+            "row": 2,
+            "offset": 0
+          }
+        ],
+        "source_sha256": "e410a3618966cd00200b70ac0369d6b9367eeeb2ea385ec78f35d060080bdd81"
+      },
+      {
+        "id": "markdown_sections",
+        "expected": "readable",
+        "actual": "readable",
+        "passed": true,
+        "passages": 11,
+        "locators": [
+          {
+            "kind": "text",
+            "line": 1,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 2,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 3,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 4,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 5,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 6,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 7,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 8,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 9,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 10,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 10,
+            "offset": 2400
+          }
+        ],
+        "source_sha256": "e6b9665b9b461ccec8954af3f13a0f4d6f9cf2fabe1dfecb275b7c1f6af4664b"
+      },
+      {
+        "id": "unicode_crlf",
+        "expected": "readable",
+        "actual": "readable",
+        "passed": true,
+        "passages": 5,
+        "locators": [
+          {
+            "kind": "text",
+            "line": 1,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 2,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 3,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 4,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 5,
+            "offset": 0
+          }
+        ],
+        "source_sha256": "c8566ea9fcecd870109146398ae1d0cc53b3152707f321d3e922d2ba12689f2c"
+      },
+      {
+        "id": "temporal_untrusted",
+        "expected": "readable",
+        "actual": "readable",
+        "passed": true,
+        "passages": 8,
+        "locators": [
+          {
+            "kind": "text",
+            "line": 1,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 2,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 3,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 4,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 5,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 6,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 7,
+            "offset": 0
+          },
+          {
+            "kind": "text",
+            "line": 8,
+            "offset": 0
+          }
+        ],
+        "source_sha256": "9256b49c456f53d0f2ec7249f1ad487a016b3fd9e27b1fea737ec0bf1aa1f0d4"
+      },
+      {
+        "id": "empty_txt",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "The file must contain UTF-8 plain text."
+      },
+      {
+        "id": "empty_md",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "The file must contain UTF-8 plain text."
+      },
+      {
+        "id": "empty_docx",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "No readable content was found."
+      },
+      {
+        "id": "malformed_pdf",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "The PDF is damaged or unreadable."
+      },
+      {
+        "id": "bad_signature",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "The PDF signature is invalid."
+      },
+      {
+        "id": "scanned_pdf",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "Page 1 has no readable text. Use a text-based PDF."
+      },
+      {
+        "id": "encrypted_pdf",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "Password-protected PDFs are unsupported."
+      },
+      {
+        "id": "too_many_pages",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "PDF exceeds the 100-page limit."
+      },
+      {
+        "id": "malformed_docx",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "The Word document is invalid."
+      },
+      {
+        "id": "invalid_utf8",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "UnicodeDecodeError",
+        "error": "'utf-8' codec can't decode byte 0xff in position 0: invalid start byte"
+      },
+      {
+        "id": "control_character",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "The file must contain UTF-8 plain text."
+      },
+      {
+        "id": "too_many_lines",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "The file exceeds the 5,000-line limit."
+      },
+      {
+        "id": "too_much_text",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "Extracted text exceeds the 500,000-character limit."
+      },
+      {
+        "id": "too_many_passages",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "Document exceeds the processing passage limit."
+      },
+      {
+        "id": "unsupported",
+        "expected": "rejected",
+        "actual": "rejected",
+        "passed": true,
+        "error_type": "ValueError",
+        "error": "Supported formats are PDF, DOCX, TXT and Markdown."
+      },
+      {
+        "id": "long_section_roundtrip",
+        "expected": "exact original slices",
+        "actual": "exact original slices",
+        "passed": true,
+        "passages": 3
+      },
+      {
+        "id": "upload_20mib",
+        "expected": 413,
+        "actual": 413,
+        "passed": true
+      }
+    ],
+    "passed": 23,
+    "total": 23
+  },
+  "synthetic_reproduction": {
+    "classification": "Synthetic reproduction of the recorded error, not recovery of the original model response.",
+    "failure": "Evidence quote does not exist in its passage",
+    "source_quote": "Project Birch is owned by\nNora.",
+    "altered_model_quote": "Project Birch is owned by Nora.",
+    "operations_reached": [
+      "extraction"
+    ],
+    "finding": "Exact quote validation raises before the semantic-verification/correction branch. Original raw model output is not retained.",
+    "original_root_cause": "Unconfirmed; retained PDF passages match a current parse, and original sources have no character-boundary splits."
+  }
+}
