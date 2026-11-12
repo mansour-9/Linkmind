@@ -11,7 +11,7 @@ M4.1 Jira first. The next release is local and quality-first. Sync, measured
 orchestration, more sources, hosted deployment and Arabic follow in that order.
 Keep implementation validation separate from user visual acceptance. The latest user instruction permits independent follow-up work without waiting for manual screen tests.
 
-On 2026-11-12 the user approved the current UI checkpoint and requested GitHub organization plus [M3.2 planning](docs/M3_2_PLAN.md). M3.2 stays one milestone with checkpoints A/B; implementation has not started.
+On 2026-11-12 the user approved the current UI checkpoint and requested GitHub organization plus [M3.2 planning](docs/M3_2_PLAN.md). M3.2 stays one milestone with checkpoints A/B. M3.2A diagnostics and the capped Gemma pilot are complete; use docs/M3_2A_RESULTS.md and docs/M3_2B_PLAN.md. B remains proposed, and production providers/schemas/data are unchanged.
 
 ## Read first
 - `docs/PROJECT_SCOPE.md`: current requirements, proposed defaults, and open decisions.

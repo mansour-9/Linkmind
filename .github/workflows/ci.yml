@@ -35,6 +35,8 @@ jobs:
         run: python3 code/fixtures/generate_graph_demo.py --check
       - name: Build and start disposable mock application
         run: docker compose -f code/compose.yaml up -d --build --wait
+      - name: Verify frozen M3.2 diagnostic sources
+        run: docker compose -f code/compose.yaml run --rm --no-deps api python fixtures/generate_m32_cases.py --check
       - name: Run API and permission regressions
         run: docker compose -f code/compose.yaml run --rm --no-deps api pytest -q apps/api/tests
       - name: Install browser tests

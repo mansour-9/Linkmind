@@ -1,0 +1,35 @@
+{
+  "original_tables_unchanged": {
+    "ai_usage": true,
+    "chunks": true,
+    "claims": true,
+    "conversation_turns": true,
+    "conversations": true,
+    "document_versions": true,
+    "documents": true,
+    "entities": true,
+    "processing_jobs": true,
+    "relationships": true
+  },
+  "runtime_unchanged": {
+    "api": {
+      "same_container": true,
+      "same_configuration": true
+    },
+    "worker": {
+      "same_container": true,
+      "same_configuration": true
+    },
+    "web": {
+      "same_container": true,
+      "same_configuration": true
+    },
+    "db": {
+      "same_container": true,
+      "same_configuration": true
+    }
+  },
+  "main_ai_usage_records": 635,
+  "main_documents": 47,
+  "production_source_unchanged": true
+}

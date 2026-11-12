@@ -1,6 +1,6 @@
 # M3.2 — Document-processing reliability
 
-Planning checkpoint: 2026-11-12. Implementation has not started.
+Planning checkpoint: 2026-11-12. M3.2A diagnostics completed; M3.2B implementation pending approval.
 
 ## Decision
 
@@ -84,3 +84,16 @@ Each checkpoint updates its issue with changed behavior, commands/results, sourc
 locators/screenshots when relevant, and limitations. Code changes use focused pull
 requests. M3.2 closes after both checkpoints and the outstanding quality review are
 complete; a green synthetic test suite alone does not establish live model quality.
+
+
+## M3.2A completed — 2026-11-12
+
+The approved expanded A scope included the six-case Gemma/Sonnet pilot with 24
+maximum inference attempts and a US$5 projected-spend guard. It completed with
+17 attempts and US$0.12665844 estimated token cost. The results do not justify a
+production Gemma switch. The main application and its data remain unchanged.
+
+Read [A findings and validation](M3_2A_RESULTS.md) and the
+[proposed M3.2B implementation plan](M3_2B_PLAN.md). B has not started. The baseline
+and error-class reproduction are complete; the original private-PDF response bodies
+are unavailable, so their precise invalid quotations remain unconfirmed.

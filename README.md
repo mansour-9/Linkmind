@@ -12,7 +12,7 @@ exploration, relationship evidence, and a **Canvas only** fullscreen view.
 The optional synthetic graph demo has 38 canonical entities, 76 cited occurrences,
 and 105 relationships across two explicitly labeled source documents.
 
-Latest recorded validation: **33 API tests**, **20 browser workflows**, and the
+Latest recorded validation: **48 API tests**, **20 browser workflows**, and the
 TypeScript/Vite production build passed. These checks establish deterministic
 behavior and permissions; live-model quality is tracked separately. See
 [Graph validation](docs/GRAPH_EXPLORER_UPDATE.md) and the
@@ -57,8 +57,8 @@ real model calls incur provider usage. Default CI uses mock mode and no AWS cred
 | M4.1 | One approved read-only Jira integration with original references |
 | M4.2 | Persistent sync, freshness, deletion and permission reconciliation |
 
-M3.2 remains **one milestone with two checkpoints**: diagnosis/baseline, then
-implementation/validation. Read the [M3.2 plan](docs/M3_2_PLAN.md) and the
+M3.2 remains **one milestone with two checkpoints**. [A findings](docs/M3_2A_RESULTS.md)
+are complete; [B implementation](docs/M3_2B_PLAN.md) is proposed for approval. Read the [M3.2 plan](docs/M3_2_PLAN.md) and the
 [complete roadmap](docs/IMPLEMENTATION_PLAN.md). Jira, named saved graph collections,
 additional sources, hosted deployment and Arabic remain future work.
 

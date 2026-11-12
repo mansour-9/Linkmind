@@ -11,7 +11,7 @@ quality acceptance and pending upgrades.
 | Order | Milestone | Status |
 | --- | --- | --- |
 | 1 | M3.1 — Linkmind UI redesign and validation | Implemented and validated; user approved proceeding to M3.2 planning on 2026-11-12 |
-| 2 | M3.2 — Baseline and document-processing reliability | Planned as checkpoints A/B; M3.2A next |
+| 2 | M3.2 — Baseline and document-processing reliability | A diagnostics/pilot complete; B proposal pending approval |
 | 3 | M3.3 — Retrieval quality and entity resolution | Pending |
 | 4 | M3.4 — Verified multi-hop GraphRAG | Pending |
 | 5 | M4.1 — Read-only Jira integration | Pending local quality gates |
@@ -181,6 +181,8 @@ See [UI redesign and validation](M3_1_UI_REDESIGN.md).
 See [Graph explorer implementation and validation](GRAPH_EXPLORER_UPDATE.md).
 
 ## M3.2 — Architecture baseline and document-processing reliability
+
+M3.2A completed on 2026-11-12: [findings](M3_2A_RESULTS.md), 48 API / 20 browser checks, 17 capped live attempts. [M3.2B proposal](M3_2B_PLAN.md) is not implemented; original private-PDF quotations remain unconfirmed.
 
 Use the [M3.2 plan](M3_2_PLAN.md): **one milestone, two sequential checkpoints** (A: reproduction/baseline; B: implementation/validation). Backend implementation has not started.
 
