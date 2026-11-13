@@ -113,3 +113,17 @@ def test_final_answer_fallback_is_clean_and_diagnostics_are_bounded(monkeypatch)
     result=providers.answer("Who owns Project Alpha?",[dict(id="source",text="Project Alpha exists.")],{})
     assert result.statements==[] and result.insufficient_evidence
     assert "validation_diagnostics" not in result.model_dump()
+
+
+def test_local_validation_error_is_recorded_as_a_type_not_an_exception_object():
+    from app.contracts import EvidenceValidationError
+    import time
+    operation='test-validation-'+uuid4().hex
+    diagnostic=dict(code='identifier_not_in_evidence',entity_key='qa',namespace='project_key',value='QA-101')
+    providers.record(dict(org=UUID('00000000-0000-4000-8000-000000000001')),operation,'test',
+        time.monotonic(),{},EvidenceValidationError(diagnostic),diagnostic)
+    with engine.begin() as conn:
+        row=sql(conn,'SELECT error_code,diagnostic,status,input_tokens FROM ai_usage WHERE operation=:op',op=operation).mappings().one()
+        assert row.error_code=='EvidenceValidationError' and row.diagnostic==diagnostic
+        assert row.status=='failed' and row.input_tokens is None
+        sql(conn,'DELETE FROM ai_usage WHERE operation=:op',op=operation)

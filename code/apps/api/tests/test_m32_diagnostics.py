@@ -53,7 +53,7 @@ def test_fixture_gold_is_frozen_and_format_matrix_is_honest():
     assert all(c['expected']['entities'] and c['passages'] for c in loaded)
     result=run();assert result['format_matrix']['passed']==result['format_matrix']['total']
     assert result['format_matrix']['total']>=23
-    assert result['synthetic_reproduction']['operations_reached']==['extraction']
+    assert result['synthetic_reproduction']['operations_reached']==['extraction','extraction']
     assert 'Unconfirmed' in result['synthetic_reproduction']['original_root_cause']
 
 

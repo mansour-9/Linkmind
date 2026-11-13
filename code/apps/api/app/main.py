@@ -24,7 +24,7 @@ PREFIX="/api/v1"
 # Explicit opt-in for the isolated local preview; does not apply to the production path.
 LOCAL_PREVIEW = os.environ.get("COMPANY_BRAIN_COMPANY_PREVIEW") == "1"
 PREVIEW_SECRET = os.environ.get("COMPANY_BRAIN_PREVIEW_SECRET", "")
-ANSWER_VALIDATION_VERSION="grounded-v5-bounded-evidence"
+ANSWER_VALIDATION_VERSION="grounded-v6-source-identifiers"
 DEMO_USERS={f"demo-{name}":UUID(f"00000000-0000-4000-8000-00000000010{i}") for i,name in enumerate(["amal","omar","nour"],1)}
 bearer=HTTPBearer(auto_error=False)
 

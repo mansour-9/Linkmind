@@ -37,6 +37,13 @@ implemented and backported to the user's schema-0010 Sonnet preview without a
 database migration or paid evaluation. See [persona behavior and checks](ASSISTANT_PERSONA.md).
 It does not start F2 or authorize the pending main cutover.
 
+2026-11-13/14 focused Lantern repair: identifier/citation diagnostics, bounded complete
+correction and extraction-call accounting are locally verified. The separately approved
+Sonnet check spent USD 0.62187180 on the existing ledger and stopped on a semantic
+verdict-count mismatch. Real four-document activation/chat acceptance and Main rollout
+remain pending; no F2 work started. See
+[repair evidence](LANTERN_IDENTIFIER_REPAIR_RESULTS.md).
+
 ## Status and evidence rules
 
 - **Completed:** a bounded delivered feature/checkpoint with recorded evidence.

@@ -3,6 +3,11 @@
 Implemented and locally tested on 2026-11-13, on `m3.2/baseline-gemma`.
 This is a focused offline repair, not a rollout or real-model acceptance claim.
 
+Subsequent identifier investigation and authorized bounded Sonnet results are in
+[LANTERN_IDENTIFIER_REPAIR_RESULTS.md](LANTERN_IDENTIFIER_REPAIR_RESULTS.md).
+Real end-to-end acceptance remains incomplete; the later report supersedes this
+document's pending-paid-acceptance status, not its historical offline evidence.
+
 ## Root causes and evidence
 
 - **Extraction:** the processor grouped eight passages regardless of source size. All

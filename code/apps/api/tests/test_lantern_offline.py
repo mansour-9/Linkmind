@@ -69,7 +69,7 @@ def test_lantern_originals_cover_bounded_batches_and_truncation(monkeypatch):
         assert [p["id"] for batch in batches for p in batch]==[p["id"] for p in passages]
         assert all(len(batch)<=3 and sum(len(p["text"]) for p in batch)<=9000 for batch in batches)
         calls=[]
-        def verified(batch,scope,payload,repair_allowed):
+        def verified(batch,scope,payload,repair_allowed,**kwargs):
             calls.append(batch)
             if len(calls)==1:
                 raise providers.ModelResponseError("output_truncated","max_tokens")

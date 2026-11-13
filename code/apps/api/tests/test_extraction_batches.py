@@ -35,7 +35,7 @@ def test_batches_bound_count_and_input_size_without_losing_passages():
 def test_real_truncation_splits_once_preserves_coverage_and_local_key_mapping(monkeypatch):
     source=passages(3)
     calls=[]
-    def verified(batch,scope,payload,repair_allowed):
+    def verified(batch,scope,payload,repair_allowed,**kwargs):
         calls.append([p["id"] for p in batch])
         if len(calls)==1:
             raise providers.ModelResponseError("output_truncated","max_tokens")

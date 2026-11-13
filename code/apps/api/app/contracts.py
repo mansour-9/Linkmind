@@ -81,22 +81,43 @@ def validate_extraction(result: Extraction, passages: list[dict]) -> Extraction:
         raise ValueError("Duplicate entity key")
     if len(result.entities) > 100 or len(result.claims) > 200 or len(result.relationships) > 200:
         raise ValueError("Extraction exceeds batch limits")
-    for entity in result.entities:
-        validate_citations(entity.evidence, passage_map)
-        for identifier in entity.identifiers:
+    issues = []
+    def check_evidence(citations, item_kind, item_index):
+        for citation_index, citation in enumerate(citations or [None]):
+            try:
+                validate_citations([citation] if citation else [], passage_map)
+            except EvidenceValidationError as exc:
+                issues.append({**exc.diagnostic, "item_kind":item_kind, "item_index":item_index,
+                    **({"citation_index":citation_index} if citation else {})})
+    for entity_index, entity in enumerate(result.entities):
+        check_evidence(entity.evidence, "entity", entity_index)
+        for identifier_index, identifier in enumerate(entity.identifiers):
+            diagnostic = dict(entity_index=entity_index, entity_key=entity.key[:200],
+                entity_name=entity.name[:200], identifier_index=identifier_index,
+                namespace=identifier.namespace, value=identifier.value[:200],
+                evidence=[dict(passage_id=c.passage_id, quote=c.quote[:500]) for c in entity.evidence[:4]])
             if identifier.namespace=="project_key" and entity.kind not in {"project","decision"} or identifier.namespace=="issue_key" and entity.kind!="task":
-                raise ValueError("Identifier namespace is incompatible with the entity type")
-            if not identifier.value.strip() or not any(
-                identifier.value.casefold() in citation.quote.casefold() for citation in entity.evidence):
-                raise ValueError("Identifier lacks source evidence")
-    for claim in result.claims:
+                issues.append(dict(code="identifier_namespace_mismatch", **diagnostic))
+                continue
+            # Match the same conservative normalization used by identity persistence.
+            # Keep the supplied value and the exact original quote unchanged. Aliases,
+            # punctuation changes and URL rewrites need their own literal source support.
+            value = identifier.value.strip().casefold()
+            if not value or not any(value in citation.quote.casefold() for citation in entity.evidence):
+                issues.append(dict(code="identifier_not_in_evidence", **diagnostic))
+    for claim_index, claim in enumerate(result.claims):
         if claim.entity_key not in keys:
             raise ValueError("Claim references an unknown entity")
-        validate_citations(claim.evidence, passage_map)
-    for relationship in result.relationships:
+        check_evidence(claim.evidence, "claim", claim_index)
+    for relationship_index, relationship in enumerate(result.relationships):
         if relationship.source_key not in keys or relationship.target_key not in keys:
             raise ValueError("Relationship references an unknown entity")
-        validate_citations(relationship.evidence, passage_map)
+        check_evidence(relationship.evidence, "relationship", relationship_index)
+    if issues:
+        if len(issues)==1:
+            raise EvidenceValidationError(issues[0])
+        code="invalid_identifiers" if all(i["code"].startswith("identifier_") for i in issues) else "invalid_extraction_evidence"
+        raise EvidenceValidationError(dict(code=code, issue_count=len(issues), issues=issues[:12]))
     return result
 
 def validate_citations(citations: list[Citation], passages: dict[str,str], statement_index=None):

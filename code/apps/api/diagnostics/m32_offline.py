@@ -59,14 +59,14 @@ def reproduction():
     calls=[]
     def structured(*args,**kwargs):calls.append(args[4]);return result
     caught=None
-    with patch.object(providers,'structured',structured):
+    with patch.object(providers,'structured',structured), patch.object(providers,'record'):
         try:providers.extract_bedrock(case['passages'],{})
         except ValueError as exc:caught=exc
-    assert caught.diagnostic["code"]=="quote_not_in_passage" and caught.diagnostic["quote"]==altered and calls==['extraction']
+    assert caught.diagnostic["code"]=="quote_not_in_passage" and caught.diagnostic["quote"]==altered and calls==['extraction','extraction']
     validate_citations([type(result.entities[0].evidence[0])(passage_id=passage['id'],quote=exact)],{passage['id']:passage['text']})
     return dict(classification='Synthetic reproduction of the recorded error, not recovery of the original model response.',
         failure=caught.diagnostic,source_quote=exact,altered_model_quote=altered,operations_reached=calls,
-        finding='Exact quote validation raises before the semantic-verification/correction branch. Original raw model output is not retained.',
+        finding='Exact quote validation rejects both the original and one bounded correction before semantic verification. Original historical raw model output is not retained.',
         original_root_cause='Unconfirmed; retained PDF passages match a current parse, and original sources have no character-boundary splits.')
 
 

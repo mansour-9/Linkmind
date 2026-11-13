@@ -27,7 +27,12 @@ version's graph/claims from current views even while new enrichment is pending.
 The configured Bedrock provider requests JSON-schema output using boto3 Converse. Extraction is not a regex pipeline.
 Pydantic validates the schema and references. Every quoted span must occur verbatim in the referenced original passage.
 A separate model check evaluates entities, identifiers, claims, relationships and effective periods.
-One bounded correction is allowed for semantic rejection; schema/exact-quote failures currently raise before that correction path. Failed extraction prevents enrichment publication while valid source text remains searchable. The correction gap diagnosed by M3.2A remains F1.2 work.
+One bounded extraction correction is shared by typed local citation/identifier failures
+and semantic rejection. Schema/provider failures still fail closed. Local evidence
+feedback includes bounded samples across entities, claims and relationships; exact
+quotes are never whitespace-normalized. Failed extraction prevents enrichment
+publication while valid source text remains searchable. See the
+[identifier repair and remaining real-model gate](LANTERN_IDENTIFIER_REPAIR_RESULTS.md).
 The deterministic provider only recognizes exact checked-in fixture bytes.
 
 Strong identifiers resolve entity identities under an organization advisory lock. Same-name matches become review candidates.

@@ -54,7 +54,7 @@ def test_staged_activation_keeps_search_citations_and_invalidates_prior_answers(
     assert sql(workspace,'SELECT count(*) FROM entities WHERE version_id=:id',id=job.version_id).scalar()==2*len(prior['entities'])
 
 
-@pytest.mark.parametrize('failure',['extraction','exact_quote','conflict','empty'])
+@pytest.mark.parametrize('failure',['extraction','exact_quote','identifier','conflict','empty'])
 def test_failed_staging_retains_live_facts_and_can_retry(workspace,monkeypatch,failure):
     job=enriched(workspace)
     prior=snapshot(workspace,job.version_id)
@@ -69,6 +69,13 @@ def test_failed_staging_retains_live_facts_and_can_retry(workspace,monkeypatch,f
         monkeypatch.setattr(processing,'mock_extract',bad)
     elif failure=='empty':
         monkeypatch.setattr(processing,'mock_extract',lambda *args:Extraction(entities=[],claims=[],relationships=[]))
+    elif failure=='identifier':
+        from app.contracts import Identifier
+        def bad_identifier(content,passages):
+            result=original(content,passages)
+            result.entities[0].identifiers=[Identifier(namespace='email',value='unsupported@example.invalid')]
+            return result
+        monkeypatch.setattr(processing,'mock_extract',bad_identifier)
     else:
         monkeypatch.setattr(processing,'configured',lambda:True)
         monkeypatch.setattr(processing,'extract_bedrock_batches',lambda passages,scope:[original(FIXTURES['cloud-migration'].path.read_bytes(),passages)])
@@ -166,3 +173,29 @@ def test_failed_refresh_does_not_reduce_available_company_knowledge(workspace,mo
     monkeypatch.setattr(processing,'mock_extract',fail)
     assert processing.process_one()
     assert main.company_status(workspace,viewer())['enriched']==before
+
+
+def test_valid_identifier_activation_keeps_entity_source_version_and_exact_span(workspace,monkeypatch):
+    def extracted(content,passages):
+        return Extraction(entities=[dict(key='qa',kind='project',name='QA project',
+            identifiers=[dict(namespace='project_key',value='  qa-101  ')],
+            evidence=[dict(passage_id=passages[0]['id'],quote='Project QA-101 is managed by Mira.')])],
+            claims=[],relationships=[])
+    monkeypatch.setattr(processing,'mock_extract',extracted)
+    job=source(workspace,b'Project QA-101 is managed by Mira.')
+    assert processing.process_one()
+    original_chunks=sql(workspace,'SELECT id,text FROM chunks WHERE version_id=:id',id=job.version_id).all()
+    staged=main.reprocess(job.id,viewer())['staged_version_id']
+    assert processing.process_one()
+    assert main.job(job.id,viewer())['active_enrichment_version_id']==staged
+    rows=sql(workspace,"""SELECT i.value,e.version_id,e.enrichment_version_id,ce.chunk_id,ce.quote,
+        ce.span_start,ce.span_end,c.text,c.version_id AS chunk_version FROM live_entities e
+        JOIN entity_identifiers i ON i.canonical_id=e.canonical_id
+        JOIN entity_evidence ce ON ce.entity_id=e.id JOIN chunks c ON c.id=ce.chunk_id
+        WHERE e.version_id=:id""",id=job.version_id).mappings().all()
+    assert len(rows)==1
+    row=rows[0]
+    assert row.value=='qa-101' and row.version_id==row.chunk_version==job.version_id
+    assert row.enrichment_version_id==staged
+    assert row.text[row.span_start:row.span_end]==row.quote
+    assert sql(workspace,'SELECT id,text FROM chunks WHERE version_id=:id',id=job.version_id).all()==original_chunks
