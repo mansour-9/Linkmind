@@ -78,6 +78,11 @@ excluded. Preserve useful existing journeys and URLs while evolving them.
   attribution. Clearly distinguish owner-only from organization access.
 - Reflect real processing stages and errors. Separate expired AWS credentials from
   source-evidence validation failures. Unknown usage/cost values stay unknown.
+- Refresh knowledge is a separate, explained same-source action. Search remains
+  available; pending/failed replacement work must not imply that prior verified
+  enrichment disappeared. Show retained knowledge only when it actually exists
+  on the still-current source. Candidate failure is recoverable through retry;
+  do not imply that arbitrary mock uploads received real AI extraction.
 - The T1 testing journey labels mock excerpts and Sonnet answers before submission.
   Greetings return nonfactual guidance without fabricated evidence. A selected-file
   overview uses authorized bounded source context even when the question has no

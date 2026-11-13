@@ -65,7 +65,9 @@ def test_runner_checkpoints_and_resumes_without_replaying_questions(tmp_path,mon
     assert report['status']=='stopped'
     result,report,answers=run_runner(tmp_path,monkeypatch,old_report=True)
     assert result==0
-    assert len(report['questions'])==15
+    from app.company_demo import MANIFEST
+    expected=[index+1 for index,item in enumerate(MANIFEST['questions']) if item.get('mode')!='revision']
+    assert [item['number'] for item in report['questions']]==expected
     assert report['checkpoint_complete']
     assert len(answers)==16
 

@@ -24,7 +24,7 @@ def response(viewer,question,previous,document_ids,engine,search,answer,configur
     def authorize_prior():
         with engine.connect() as conn:
             for turn in previous:
-                if not dependencies_allowed(conn,viewer,turn["dependency_ids"]) or not catalog.allowed(conn,viewer,turn["response"].get("source_matches",[])):
+                if not dependencies_allowed(conn,viewer,turn["dependency_ids"],turn["response"].get("enrichment_dependencies",[])) or not catalog.allowed(conn,viewer,turn["response"].get("source_matches",[])):
                     raise HTTPException(409,"Source access or versions changed. Ask again.")
 
     chosen=catalog.choose(question,previous_matches,source_document_id) if previous_matches else []
@@ -40,7 +40,8 @@ def response(viewer,question,previous,document_ids,engine,search,answer,configur
         # A choice can include a factual follow-up, e.g. 'the second one, who owns it?'.
         if not source_document_id and re.search(r"\b(who|when|why|deadline|owner|status|compare|difference)\b|مين|متى|ليش|الموعد|قارن|الفرق",question.casefold()):
             routing=dict(route="answer",query=question,use_previous=True,planning="local")
-    elif quick_matches and (quick_matches[0]["score"]>=0.98 or any(word.isupper() and len(word)>=4 for word in re.findall(r"\w+",question))):
+    elif quick_matches and (re.fullmatch(r"[A-Z][A-Z0-9_-]{2,30}[?!؟ ]*",question.strip())
+            or re.search(r"\.(pdf|docx|txt|md)\s*[?!؟]*$",question.strip(),re.IGNORECASE)):
         routing=dict(route="find_sources",query=question,use_previous=False,planning="local")
     else:
         routing=plan(question,previous,scope,authorize_prior)
@@ -125,10 +126,15 @@ def response(viewer,question,previous,document_ids,engine,search,answer,configur
     if used_previous and not message:
         dependencies.update(id for turn in previous for id in turn["dependency_ids"])
     dependencies=sorted(dependencies)
+    generations={(str(p["version_id"]),p.get("enrichment_version_id")) for p in evidence}
+    if used_previous and not message:
+        generations.update((item["source_version_id"],item.get("generation_id")) for turn in previous
+            for item in turn["response"].get("enrichment_dependencies",[]))
+    generation_dependencies=[dict(source_version_id=source,generation_id=generation) for source,generation in sorted(generations,key=str)]
 
     def authorize():
         with engine.connect() as conn:
-            if not dependencies_allowed(conn,viewer,dependencies) or not catalog.allowed(conn,viewer,matches):
+            if not dependencies_allowed(conn,viewer,dependencies,generation_dependencies) or not catalog.allowed(conn,viewer,matches):
                 raise HTTPException(409,"Source access or versions changed. Ask again.")
     authorize()
     if not message and not evidence:
@@ -139,6 +145,8 @@ def response(viewer,question,previous,document_ids,engine,search,answer,configur
         [dict(id=p["id"],text=p["text"],filename=p["filename"],locator=p["locator"],entities=p.get("entities",[])) for p in evidence],scope,
         history=[{"question":t["question"],"statements":t["response"].get("statements",[])} for t in reversed(previous)] if used_previous else [],authorize=authorize)
     result={**result.model_dump(),"evidence":evidence,"provider":"system" if message else "bedrock" if configured() else "mock-extractive"}
+    if generation_dependencies:
+        result["enrichment_dependencies"]=generation_dependencies
     if message:
         result["message"]=message
     if matches:

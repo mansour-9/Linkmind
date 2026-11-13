@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "scope": "F1.3 single fictional-source extraction and verification",
+  "filename": "atlas-charter.md",
+  "sha256": "69e7e22acf67bcc5ebb4690c7c0ab75c2e95f93ba400f8ef7253ad044f6556fb",
+  "budget_before": {
+    "id": "northstar-sonnet-2026-11-12",
+    "limit_usd": "10.0000000000",
+    "spent_usd": "2.0724137200",
+    "reserved_usd": "0.0566168200",
+    "paused": false
+  },
+  "passages": [
+    {
+      "id": "e449c63c-2fd7-5be1-9f9c-9d3bb89fa1cc",
+      "text": "# Northstar Labs (synthetic) \u2014 Atlas charter",
+      "locator": {
+        "kind": "text",
+        "line": 1,
+        "offset": 0
+      }
+    },
+    {
+      "id": "1bd963e8-ff14-594d-bd61-1a0c0791ff7c",
+      "text": "This is fictional demonstration data.",
+      "locator": {
+        "kind": "text",
+        "line": 2,
+        "offset": 0
+      }
+    },
+    {
+      "id": "744118dc-ad91-55ae-a900-37e421575f70",
+      "text": "Project Atlas (project key NS-ATLAS) is owned by Lina Faris (lina@northstar.example).",
+      "locator": {
+        "kind": "text",
+        "line": 3,
+        "offset": 0
+      }
+    },
+    {
+      "id": "c1cea266-d889-515e-8d51-5691bd27d547",
+      "text": "Project Atlas (NS-ATLAS) is managed by the Platform team (https://northstar.example/teams/atlas).",
+      "locator": {
+        "kind": "text",
+        "line": 4,
+        "offset": 0
+      }
+    },
+    {
+      "id": "ab3563a5-8826-5826-b1df-68b7bc2f5dda",
+      "text": "Project Atlas (NS-ATLAS) plans to launch on 2026-12-03.",
+      "locator": {
+        "kind": "text",
+        "line": 5,
+        "offset": 0
+      }
+    },
+    {
+      "id": "439365b6-27e2-5709-9343-73c2d6f8beff",
+      "text": "The objective of NS-ATLAS is a reliable platform knowledge handover for internal employees.",
+      "locator": {
+        "kind": "text",
+        "line": 6,
+        "offset": 0
+      }
+    }
+  ],
+  "status": "verified",
+  "result": {
+    "entities": [
+      {
+        "key": "project_atlas",
+        "kind": "project",
+        "name": "Project Atlas",
+        "identifiers": [
+          {
+            "namespace": "project_key",
+            "value": "NS-ATLAS"
+          }
+        ],
+        "evidence": [
+          {
+            "passage_id": "744118dc-ad91-55ae-a900-37e421575f70",
+            "quote": "Project Atlas (project key NS-ATLAS) is owned by Lina Faris (lina@northstar.example)."
+          }
+        ]
+      },
+      {
+        "key": "lina_faris",
+        "kind": "person",
+        "name": "Lina Faris",
+        "identifiers": [
+          {
+            "namespace": "email",
+            "value": "lina@northstar.example"
+          }
+        ],
+        "evidence": [
+          {
+            "passage_id": "744118dc-ad91-55ae-a900-37e421575f70",
+            "quote": "Project Atlas (project key NS-ATLAS) is owned by Lina Faris (lina@northstar.example)."
+          }
+        ]
+      },
+      {
+        "key": "platform_team",
+        "kind": "team",
+        "name": "Platform team",
+        "identifiers": [
+          {
+            "namespace": "url",
+            "value": "https://northstar.example/teams/atlas"
+          }
+        ],
+        "evidence": [
+          {
+            "passage_id": "c1cea266-d889-515e-8d51-5691bd27d547",
+            "quote": "Project Atlas (NS-ATLAS) is managed by the Platform team (https://northstar.example/teams/atlas)."
+          }
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "entity_key": "project_atlas",
+        "predicate": "owner",
+        "value": "Lina Faris (lina@northstar.example)",
+        "asserted_by": null,
+        "effective_from": null,
+        "effective_to": null,
+        "evidence": [
+          {
+            "passage_id": "744118dc-ad91-55ae-a900-37e421575f70",
+            "quote": "Project Atlas (project key NS-ATLAS) is owned by Lina Faris (lina@northstar.example)."
+          }
+        ]
+      },
+      {
+        "entity_key": "project_atlas",
+        "predicate": "managed_by",
+        "value": "Platform team",
+        "asserted_by": null,
+        "effective_from": null,
+        "effective_to": null,
+        "evidence": [
+          {
+            "passage_id": "c1cea266-d889-515e-8d51-5691bd27d547",
+            "quote": "Project Atlas (NS-ATLAS) is managed by the Platform team (https://northstar.example/teams/atlas)."
+          }
+        ]
+      },
+      {
+        "entity_key": "project_atlas",
+        "predicate": "launch_date",
+        "value": "2026-12-03",
+        "asserted_by": null,
+        "effective_from": null,
+        "effective_to": null,
+        "evidence": [
+          {
+            "passage_id": "ab3563a5-8826-5826-b1df-68b7bc2f5dda",
+            "quote": "Project Atlas (NS-ATLAS) plans to launch on 2026-12-03."
+          }
+        ]
+      },
+      {
+        "entity_key": "project_atlas",
+        "predicate": "objective",
+        "value": "a reliable platform knowledge handover for internal employees",
+        "asserted_by": null,
+        "effective_from": null,
+        "effective_to": null,
+        "evidence": [
+          {
+            "passage_id": "439365b6-27e2-5709-9343-73c2d6f8beff",
+            "quote": "The objective of NS-ATLAS is a reliable platform knowledge handover for internal employees."
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "source_key": "project_atlas",
+        "target_key": "lina_faris",
+        "predicate": "owner",
+        "effective_from": null,
+        "effective_to": null,
+        "evidence": [
+          {
+            "passage_id": "744118dc-ad91-55ae-a900-37e421575f70",
+            "quote": "Project Atlas (project key NS-ATLAS) is owned by Lina Faris (lina@northstar.example)."
+          }
+        ]
+      },
+      {
+        "source_key": "project_atlas",
+        "target_key": "platform_team",
+        "predicate": "managed_by",
+        "effective_from": null,
+        "effective_to": null,
+        "evidence": [
+          {
+            "passage_id": "c1cea266-d889-515e-8d51-5691bd27d547",
+            "quote": "Project Atlas (NS-ATLAS) is managed by the Platform team (https://northstar.example/teams/atlas)."
+          }
+        ]
+      }
+    ]
+  },
+  "counts": {
+    "entities": 3,
+    "claims": 4,
+    "relationships": 2
+  },
+  "budget_after": {
+    "id": "northstar-sonnet-2026-11-12",
+    "limit_usd": "10.0000000000",
+    "spent_usd": "2.0997707200",
+    "reserved_usd": "0.0566168200",
+    "paused": false
+  }
+}

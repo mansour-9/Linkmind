@@ -4,9 +4,13 @@ This runbook describes the current implemented runtime, not the target capabilit
 The [main roadmap](../docs/IMPLEMENTATION_PLAN.md) owns production-quality phased delivery;
 [scope](../docs/PROJECT_SCOPE.md) owns product decisions. F1.1 separates searchable
 source publication from knowledge enrichment and is validated in an isolated stack.
-The original running database/application has not been migrated; review the
+F1.3 has not been rolled out to the original running application; review the
 [F1.1 rollout boundary](../docs/F1_1_RESULTS.md) before updating valuable local data.
-F1.2/F1.3 remain planned. Existing local/demo limits are not product ceilings.
+F1.2 and F1.3 are implemented locally. The F1.3 preview is
+http://127.0.0.1:5181; see [results](../docs/F1_3_RESULTS.md) and the
+[reviewed rollout procedure](../docs/MAIN_DATA_ROLLOUT.md). Read-only inspection
+found the main schema at 0010; F1.3 cutover remains pending. Existing local/demo
+limits are not product ceilings.
 
 
 Application code lives under `code/`. Planning and durable agent/design rules live in the repository root and `docs/`.
@@ -44,8 +48,9 @@ Production authentication is planned in F2/H1 (legacy M5) and required before re
 
 For the new Northstar test pack and separate mock/Sonnet previews, follow
 [COMPANY_TESTING.md](../docs/COMPANY_TESTING.md). Its approved US$10 budget is tied to
-one persistent run, not a reusable allowance. The real run is currently paused on an
-expired AWS session; do not reset its budget or copy existing F1.1 uploads into it.
+one persistent run, not a reusable allowance. The session was renewed and the same
+run resumed with explicit approval on 2026-11-13; use the runtime status for current
+availability. Do not reset its budget or copy existing F1.1 uploads into it.
 
 AWS CLI sign-in and local SDK access were verified with the default profile and `us-east-1`.
 Sign in through your approved local CLI flow when the short-lived session expires. Do not put credentials in this repository.

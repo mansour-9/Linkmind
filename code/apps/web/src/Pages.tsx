@@ -59,7 +59,7 @@ export function Sources() {
         {jobs.isSuccess && !visible.length && <div className="panel-padding"><p className="muted">No uploads are visible in this workspace.</p></div>}
         {visible.length > 0 && !filtered.length && <Feedback>No documents match your search.</Feedback>}
         {visible.length > 0 && <ul className="upload-list">
-          {filtered.map((job) => <li key={job.id}>
+          {filtered.map((job) => <li key={job.id} data-source-id={job.document_id}>
             <span className="tile-icon"><FileText size={18} /></span>
             <div className="file-details"><strong>{job.filename}</strong>
               <small>{job.visibility === "private" ? "Only me · owner access" : "My organization"}</small>{job.error && <details className="source-error"><summary>View processing error</summary><p>{job.error}</p><Link className="text-action" to="/admin/processing">Open Processing</Link></details>}

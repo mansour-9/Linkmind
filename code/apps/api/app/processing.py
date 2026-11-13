@@ -11,6 +11,7 @@ from app.fixture_provider import recognize
 from app.parsers import parse_document
 from app.providers import configured, extract_bedrock, embed, ProviderUnavailable
 from app.inference_budget import BudgetStopped
+from app import enrichment_staging as staging
 
 log=logging.getLogger(__name__)
 MAX_ATTEMPTS=3
@@ -92,6 +93,17 @@ def canonical(conn,job,item):
             value=identifier.value.strip().casefold()).scalar_one_or_none()
         if existing:
             found.add(existing)
+    if not found and not item.identifiers and getattr(job,"staged_version_id",None):
+        # Exact anchors in the same immutable source preserve reviewed identity;
+        # similar names across sources remain unconfirmed.
+        anchored={(UUID(c.passage_id),c.quote) for c in item.evidence}
+        prior=sql(conn,"""SELECT id,canonical_id FROM live_entities WHERE organization_id=:org
+            AND version_id=:source AND kind=:kind AND name=:name""",org=job.organization_id,
+            source=job.version_id,kind=item.kind,name=item.name).mappings()
+        for occurrence in prior:
+            evidence=set(sql(conn,'SELECT chunk_id,quote FROM entity_evidence WHERE entity_id=:id',id=occurrence.id).all())
+            if evidence==anchored:
+                found.add(occurrence.canonical_id)
     # Ambiguous identifiers are never merged automatically.
     entity_id=next(iter(found)) if len(found)==1 else uuid4()
     if not found or len(found)>1:
@@ -114,11 +126,13 @@ def publication_guard(conn,job,require_search=False):
         version=job.version_id,org=job.organization_id).mappings().first()
     lease=sql(conn,"""SELECT id FROM processing_jobs WHERE id=:id
         AND version_id=:version AND organization_id=:org AND lease_token=:lease
-        AND status='processing' AND lease_until>clock_timestamp() FOR UPDATE""",
-        id=job.id,version=job.version_id,org=job.organization_id,lease=job.lease_token).first()
+        AND status='processing' AND lease_until>clock_timestamp()
+        AND staged_version_id IS NOT DISTINCT FROM :staged FOR UPDATE""",
+        id=job.id,version=job.version_id,org=job.organization_id,lease=job.lease_token,
+        staged=getattr(job,"staged_version_id",None)).first()
     newer=sql(conn,"""SELECT 1 FROM document_versions v JOIN document_versions newer
         ON newer.document_id=v.document_id AND (newer.created_at,newer.id)>(v.created_at,v.id)
-        WHERE v.id=:version LIMIT 1""",version=job.version_id).first()
+        WHERE v.id=:version AND newer.source_version_id IS NULL LIMIT 1""",version=job.version_id).first()
     if not document or not lease or newer or (require_search and document.current_version_id!=job.version_id):
         raise ValueError("Document was deleted, superseded, or processing lease expired.")
 
@@ -138,8 +152,11 @@ def publish(conn,job,result,passages,provider,judgments=None):
     sql(conn,"SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",key=str(job.organization_id))
     publication_guard(conn,job,require_search=True)
     # Retain immutable prior publications; retry of a published version does not duplicate knowledge.
-    if sql(conn,"SELECT processed_at FROM document_versions WHERE id=:id",id=job.version_id).scalar():
+    generation=getattr(job,"staged_version_id",None)
+    if sql(conn,"SELECT processed_at FROM document_versions WHERE id=:id",id=generation or job.version_id).scalar():
         return
+    result=validate_extraction(result,passages)
+    staging.activation_guard(conn,job,result)
     ids={}
     canonical_ids={}
     for item in result.entities:
@@ -147,8 +164,8 @@ def publish(conn,job,result,passages,provider,judgments=None):
         eid=uuid4()
         ids[item.key]=eid
         canonical_ids[item.key]=cid
-        sql(conn,"""INSERT INTO entities(id,organization_id,version_id,kind,name,canonical_id)
-             VALUES(:id,:org,:version,:kind,:name,:canonical)""",**scope,id=eid,kind=item.kind,name=item.name,canonical=cid)
+        sql(conn,"""INSERT INTO entities(id,organization_id,version_id,kind,name,canonical_id,enrichment_version_id)
+             VALUES(:id,:org,:version,:kind,:name,:canonical,:generation)""",**scope,id=eid,kind=item.kind,name=item.name,canonical=cid,generation=generation)
         for cite in item.evidence:
             start=byid[cite.passage_id]["text"].index(cite.quote)
             sql(conn,"""INSERT INTO entity_evidence(id,organization_id,entity_id,chunk_id,quote,span_start,span_end)
@@ -158,7 +175,7 @@ def publish(conn,job,result,passages,provider,judgments=None):
         sql(conn,"""INSERT INTO entity_aliases(id,organization_id,canonical_id,occurrence_id,alias)
              VALUES(:id,:org,:canonical,:occurrence,:alias)""",
              id=uuid4(),org=job.organization_id,canonical=cid,occurrence=eid,alias=item.name)
-        candidates=sql(conn,"""SELECT DISTINCT canonical_id FROM entities
+        candidates=sql(conn,"""SELECT DISTINCT canonical_id FROM live_entities
              WHERE organization_id=:org AND kind=:kind AND lower(name)=lower(:name)
              AND canonical_id<>:id LIMIT 10""",org=job.organization_id,kind=item.kind,name=item.name,id=cid).scalars()
         for candidate in candidates:
@@ -190,12 +207,13 @@ def publish(conn,job,result,passages,provider,judgments=None):
             VALUES(:id,:org,:version,:source,:target,:chunk,:predicate,:start,:end)""",**scope,id=rid,
             source=ids[item.source_key],target=ids[item.target_key],chunk=UUID(item.evidence[0].passage_id),predicate=item.predicate,start=item.effective_from,end=item.effective_to)
         evidence("relationship_evidence","relationship_id",rid,item.evidence)
+    staging.activate(conn,job,provider)
     # Only intrinsically single-valued attributes are automatic conflict candidates.
     # Free-form decisions and descriptions remain separate attributed claims.
     for index,(cid,entity,item) in enumerate(new_claims):
         if item.predicate not in {"owner","status","deadline","target_database","managed_by","budget","launch_date"}:
             continue
-        others=sql(conn,"""SELECT c.* FROM claims c JOIN entities e ON e.id=c.entity_id
+        others=sql(conn,"""SELECT c.* FROM live_claims c JOIN live_entities e ON e.id=c.entity_id
             JOIN document_versions v ON v.id=c.version_id JOIN documents d ON d.id=v.document_id
             WHERE e.organization_id=:org AND e.canonical_id=:canonical AND c.predicate=:predicate
               AND c.id<>:id AND lower(trim(c.value))<>lower(trim(:value))
@@ -220,21 +238,30 @@ def process_one():
         # Recover abandoned leases without permitting unlimited worker retries.
         # Lock jobs before attempts, matching completion. Multiple workers must
         # neither recover the same lease nor deadlock a completing worker.
-        expired=sql(conn,"""SELECT id FROM processing_jobs WHERE status='processing'
-            AND lease_until<clock_timestamp() FOR UPDATE SKIP LOCKED""").scalars().all()
+        expired_rows=sql(conn,"""SELECT id,staged_version_id FROM processing_jobs WHERE status='processing'
+            AND lease_until<clock_timestamp() FOR UPDATE SKIP LOCKED""").mappings().all()
+        expired=[row.id for row in expired_rows]
         if expired:
+            for row in expired_rows:
+                staging.rollback(conn,row.staged_version_id)
             sql(conn,"""UPDATE processing_attempts SET status='abandoned',error='Worker lease expired.',finished_at=now()
                 WHERE job_id=ANY(:ids) AND status='processing'""",ids=expired)
-            sql(conn,"""UPDATE processing_jobs SET status=CASE WHEN attempts>=3 THEN 'failed' ELSE 'queued' END,
+            sql(conn,"""UPDATE processing_jobs SET status=CASE WHEN attempts<3 THEN 'queued'
+                WHEN staged_version_id IS NOT NULL THEN 'enrichment_staged_failed' ELSE 'failed' END,
                 lease_token=NULL,error='Worker lease expired.',error_code='lease_expired'
                 WHERE id=ANY(:ids)""",ids=expired)
         row=sql(conn,"""SELECT j.*,v.artifact_key,v.filename,v.document_id,v.search_ready_at,v.processed_at FROM processing_jobs j
             JOIN document_versions v ON v.id=j.version_id JOIN documents d ON d.id=v.document_id
-            WHERE j.status='queued' AND j.available_at<=now() AND d.deleted_at IS NULL
+            WHERE j.status='queued' AND j.available_at<=clock_timestamp() AND d.deleted_at IS NULL
             ORDER BY j.available_at,j.created_at LIMIT 1 FOR UPDATE OF j SKIP LOCKED""").mappings().first()
         if row is None:
             return False
         job=dict(row)
+        if job.get("staged_version_id"):
+            state=sql(conn,"SELECT activation_state FROM document_versions WHERE id=:id",id=job["staged_version_id"]).scalar_one()
+            if state!='staged':
+                job["staged_version_id"]=staging.create(conn,job)
+                sql(conn,"UPDATE processing_jobs SET staged_version_id=:staged WHERE id=:id",staged=job["staged_version_id"],id=job["id"])
         job.update(lease_token=uuid4(),attempt_id=uuid4(),attempts=row.attempts+1)
         sql(conn,"""UPDATE processing_jobs SET status='processing',stage='parsing',attempts=:attempts,
             lease_token=:lease_token,lease_until=now()+interval '15 minutes',error=NULL WHERE id=:id""",
@@ -264,7 +291,7 @@ def process_one():
                     id=job.version_id).mappings()]
         else:
             passages=prepare_content(job,content,scope,is_graph_demo)
-        if not job.processed_at:
+        if not job.processed_at or job.staged_version_id:
             enrich(job,content,passages,scope,use_bedrock,is_graph_demo)
     except (ProviderUnavailable,BudgetStopped) as exc:
         status="extraction_unavailable"
@@ -275,6 +302,8 @@ def process_one():
         log.warning("Job %s attempt %s failed: %s",job.id,job.attempts,code)
         error="The model response did not match the required schema. No unverified knowledge was published." if isinstance(exc,ValidationError) else str(exc)[:300] if isinstance(exc,(ValueError,ProviderUnavailable)) else f"Processing failed ({code}). Check model access, file content, and worker configuration."
         status="failed" if job.attempts>=MAX_ATTEMPTS or code in {"AccessDeniedException","ValidationException","ValueError"} else "queued"
+    if job.staged_version_id and status not in {"ready","cancelled"}:
+        status="enrichment_staged_failed"
     with engine.begin() as conn:
         changed=sql(conn,"""UPDATE processing_jobs SET status=:status,stage=:stage,error=:error,error_code=:code,
            finished_at=now(),lease_until=NULL,available_at=now()+interval '10 seconds'
@@ -284,6 +313,8 @@ def process_one():
         sql(conn,"""UPDATE processing_attempts SET status=:status,error=:error,finished_at=now()
             WHERE id=:id AND status='processing'""",id=job.attempt_id,
             status=status if changed else "abandoned",error=error if changed else "Processing lease expired or was replaced.")
+        if job.staged_version_id and status!='ready':
+            staging.rollback(conn,job.staged_version_id)
     return True
 
 
@@ -364,6 +395,11 @@ def enrich(job,content,passages,scope,use_bedrock,is_graph_demo):
     else:
         result=mock_extract(content,passages)
         provider="fixture"
+    if job.staged_version_id:
+        set_stage(job,"verifying_staged_enrichment")
+        with engine.begin() as conn:
+            publication_guard(conn,job,require_search=True)
+            result=staging.verify(conn,job,result,passages,provider)
     set_stage(job,"checking_conflicts")
     from app.conflict_detection import assess
     judgments=assess(result,job) if use_bedrock else {}

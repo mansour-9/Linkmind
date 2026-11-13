@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "document_id": "fc03fb92-e32f-484c-9837-649b6b917e4f",
+  "job_id": "09671029-53cc-43d8-b193-32499b5f8adb",
+  "real_model_counts": {
+    "entities": 3,
+    "claims": 4,
+    "relationships": 2
+  },
+  "activation": "verified recorded Sonnet result",
+  "rollback": "deterministic unsupported-quote injection after activation",
+  "search_ids_preserved": true,
+  "live_generation_retained": true,
+  "paid_calls_in_this_script": 0
+}

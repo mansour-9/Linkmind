@@ -24,7 +24,7 @@ PREFIX="/api/v1"
 # Explicit opt-in for the isolated local preview; does not apply to the production path.
 LOCAL_PREVIEW = os.environ.get("COMPANY_BRAIN_COMPANY_PREVIEW") == "1"
 PREVIEW_SECRET = os.environ.get("COMPANY_BRAIN_PREVIEW_SECRET", "")
-ANSWER_VALIDATION_VERSION="grounded-v3"
+ANSWER_VALIDATION_VERSION="grounded-v4-staged"
 DEMO_USERS={f"demo-{name}":UUID(f"00000000-0000-4000-8000-00000000010{i}") for i,name in enumerate(["amal","omar","nour"],1)}
 bearer=HTTPBearer(auto_error=False)
 
@@ -79,16 +79,22 @@ JOB_QUERY="""SELECT j.*,v.document_id,v.filename,v.created_at AS uploaded_at,v.p
   CASE WHEN v.search_ready_at IS NOT NULL THEN 'ready'
        WHEN j.status IN ('failed','extraction_unavailable') THEN 'failed'
        WHEN j.status='cancelled' THEN 'cancelled' ELSE 'pending' END AS search_status,
-  CASE WHEN v.processed_at IS NOT NULL OR j.status='ready' THEN 'ready'
+  CASE WHEN j.staged_version_id IS NOT NULL AND j.status IN ('queued','processing','enrichment_staged_failed') THEN j.status
+       WHEN v.processed_at IS NOT NULL OR j.status='ready' THEN 'ready'
        WHEN j.status='extraction_unavailable' THEN 'unavailable' ELSE j.status END AS enrichment_status,
-  v.embedding_status,v.extraction_provider,d.visibility,d.current_version_id,
+  v.embedding_status,v.extraction_provider,d.visibility,d.current_version_id,v.active_enrichment_version_id,
+  (j.staged_version_id IS NOT NULL AND j.status<>'ready' AND v.processed_at IS NOT NULL AND d.current_version_id=v.id) AS preserved_enrichment,
+  (SELECT activation_state FROM document_versions WHERE id=j.staged_version_id) AS staged_activation_state,
   (d.owner_id=:viewer OR :operator) AS can_manage,
-  (v.processed_at IS NULL AND j.status IN ('failed','extraction_unavailable')
+  (j.status IN ('failed','extraction_unavailable','enrichment_staged_failed')
     AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id
-      AND (newer.created_at,newer.id)>(v.created_at,v.id))) AS can_retry,
-  (SELECT count(*) FROM entities e WHERE e.version_id=v.id) AS entity_count,
-  (SELECT count(*) FROM claims c WHERE c.version_id=v.id) AS claim_count,
-  (SELECT count(*) FROM relationships r WHERE r.version_id=v.id) AS relationship_count
+      AND newer.source_version_id IS NULL AND (newer.created_at,newer.id)>(v.created_at,v.id))) AS can_retry,
+  (v.search_ready_at IS NOT NULL AND d.current_version_id=v.id AND j.status NOT IN ('queued','processing','cancelled')
+    AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id
+      AND newer.source_version_id IS NULL AND (newer.created_at,newer.id)>(v.created_at,v.id))) AS can_reprocess,
+  (SELECT count(*) FROM live_entities e WHERE e.version_id=v.id) AS entity_count,
+  (SELECT count(*) FROM live_claims c WHERE c.version_id=v.id) AS claim_count,
+  (SELECT count(*) FROM live_relationships r WHERE r.version_id=v.id) AS relationship_count
   FROM processing_jobs j JOIN document_versions v ON v.id=j.version_id JOIN documents d ON d.id=v.document_id"""
 def job_params(viewer):
     return {**viewer.access(),"operator":viewer.role in {"admin","reviewer"}}
@@ -115,7 +121,7 @@ def graph_demo_jobs(conn,viewer):
         checksum=hashlib.sha256(content).hexdigest()
         row=sql(conn,JOB_QUERY+f""" WHERE {ACCESS} AND d.visibility='team' AND v.checksum=:checksum
             AND (d.current_version_id=v.id OR d.current_version_id IS NULL)
-            AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id
+            AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id AND newer.source_version_id IS NULL
                 AND (newer.created_at,newer.id)>(v.created_at,v.id))
             ORDER BY (j.status='ready') DESC,j.created_at LIMIT 1""",**job_params(viewer),checksum=checksum).mappings().first()
         jobs.append(dict(row) if row else None)
@@ -125,13 +131,13 @@ def graph_demo_jobs(conn,viewer):
 def graph_demo_status(conn,viewer):
     from app.graph_demo import MANIFEST
     jobs=graph_demo_jobs(conn,viewer)
-    versions=[job["version_id"] for job in jobs if job and job["status"]=="ready" and job["current_version_id"]==job["version_id"] and job["extraction_provider"]=="graph-demo-fixture"]
+    versions=[job["version_id"] for job in jobs if job and (job["status"]=="ready" or job["preserved_enrichment"]) and job["current_version_id"]==job["version_id"] and job["extraction_provider"]=="graph-demo-fixture"]
     counts=dict(entity_count=0,entity_occurrence_count=0,relationship_count=0)
     if versions:
         counts=dict(sql(conn,"""SELECT count(DISTINCT canonical_id) AS entity_count,
             count(*) AS entity_occurrence_count,
-            (SELECT count(*) FROM relationships WHERE version_id=ANY(:versions)) AS relationship_count
-            FROM entities WHERE version_id=ANY(:versions)""",versions=versions).mappings().one())
+            (SELECT count(*) FROM live_relationships WHERE version_id=ANY(:versions)) AS relationship_count
+            FROM live_entities WHERE version_id=ANY(:versions)""",versions=versions).mappings().one())
     ready=len(versions)==2 and all(counts[key]==MANIFEST[key] for key in counts)
     return {**counts,"ready":ready,"source_count":len(versions),"jobs":jobs}
 
@@ -190,7 +196,7 @@ def company_jobs(conn,viewer):
             continue
         row=sql(conn,JOB_QUERY+f""" WHERE {ACCESS}
             AND EXISTS(SELECT 1 FROM document_versions original WHERE original.document_id=d.id AND original.checksum=:checksum)
-            AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id
+            AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id AND newer.source_version_id IS NULL
                 AND (newer.created_at,newer.id)>(v.created_at,v.id))
             ORDER BY v.created_at DESC LIMIT 1""",**job_params(viewer),checksum=item["sha256"]).mappings().first()
         result.append({**dict(row),"fixture_key":item["key"]} if row else None)
@@ -200,7 +206,7 @@ def company_jobs(conn,viewer):
 def company_status(conn,viewer):
     jobs=company_jobs(conn,viewer)
     return dict(jobs=jobs,total=len(jobs),search_ready=sum(bool(j and j["search_status"]=="ready" and j["version_id"]==j["current_version_id"]) for j in jobs),
-        enriched=sum(bool(j and j["enrichment_status"]=="ready" and j["version_id"]==j["current_version_id"]) for j in jobs))
+        enriched=sum(bool(j and (j["enrichment_status"]=="ready" or j["preserved_enrichment"]) and j["version_id"]==j["current_version_id"]) for j in jobs))
 
 
 @app.get(PREFIX+"/demo/company/status")
@@ -321,7 +327,33 @@ def job(id:UUID,viewer:Identity):
     with engine.connect() as conn:
         result=find_job(conn,viewer,id)
         result["attempt_history"]=[dict(r) for r in sql(conn,"SELECT * FROM processing_attempts WHERE job_id=:id ORDER BY started_at",id=id).mappings()]
+        result["enrichment_history"]=[dict(r) for r in sql(conn,"""SELECT id,activation_state,created_at,verified_at,processed_at,
+            extraction_provider FROM document_versions WHERE source_version_id=:source ORDER BY created_at DESC,id DESC LIMIT 20""",
+            source=result["version_id"]).mappings()]
         return result
+
+
+def queue_staged_enrichment(conn,viewer,job):
+    from app.enrichment_staging import create
+    if not job["can_manage"]:
+        raise HTTPException(403,"Reprocessing requires source ownership or an operational role.")
+    if not job["can_reprocess"]:
+        raise HTTPException(409,"Only the latest search-ready source can be reprocessed when no job is pending.")
+    candidate=create(conn,job)
+    sql(conn,"""UPDATE processing_jobs SET staged_version_id=:candidate,status='queued',stage='queued_enrichment',
+        attempts=0,available_at=clock_timestamp(),finished_at=NULL,error=NULL,error_code=NULL,lease_token=NULL,lease_until=NULL
+        WHERE id=:id""",id=job["id"],candidate=candidate)
+    audit(conn,viewer,"stage_enrichment",job["id"])
+    return find_job(conn,viewer,job["id"])
+
+
+@app.post(PREFIX+"/jobs/{id}/reprocess",status_code=202)
+def reprocess(id:UUID,viewer:Identity):
+    with engine.begin() as conn:
+        job=find_job(conn,viewer,id)
+        sql(conn,"SELECT id FROM documents WHERE id=:id FOR UPDATE",id=job["document_id"])
+        sql(conn,"SELECT id FROM processing_jobs WHERE id=:id FOR UPDATE",id=id)
+        return queue_staged_enrichment(conn,viewer,find_job(conn,viewer,id))
 
 @app.post(PREFIX+"/jobs/{id}/retry",status_code=202)
 def retry(id:UUID,viewer:Identity):
@@ -334,9 +366,11 @@ def retry(id:UUID,viewer:Identity):
         if not job["can_manage"]: raise HTTPException(403,"Retry requires source ownership or an operational role.")
         if job["status"] in {"queued","processing"}: raise HTTPException(409,"This job is already pending.")
         if job["status"]=="cancelled": raise HTTPException(409,"Cancelled jobs cannot be retried.")
+        if job["status"]=="enrichment_staged_failed":
+            return queue_staged_enrichment(conn,viewer,job)
         if job["processed_at"] or job["status"]=="ready": raise HTTPException(409,"Published versions are immutable. Upload a revision to reprocess.")
         if sql(conn,"""SELECT 1 FROM document_versions v JOIN document_versions newer ON newer.document_id=v.document_id
-            AND (newer.created_at,newer.id)>(v.created_at,v.id) WHERE v.id=:version LIMIT 1""",
+            AND newer.source_version_id IS NULL AND (newer.created_at,newer.id)>(v.created_at,v.id) WHERE v.id=:version LIMIT 1""",
             version=job["version_id"]).first():
             raise HTTPException(409,"This revision was superseded. Retry the latest revision instead.")
         sql(conn,"""UPDATE processing_jobs SET status='queued',stage='queued',attempts=0,
@@ -366,15 +400,20 @@ def change_access(id:UUID,body:AccessChange,viewer:Identity):
     return {"status":"updated"}
 @app.delete(PREFIX+"/documents/{id}")
 def delete(id:UUID,viewer:Identity):
+    from app.enrichment_staging import rollback
     with engine.begin() as conn:
         owned_document(conn,viewer,id)
+        candidates=sql(conn,"""SELECT j.staged_version_id FROM processing_jobs j JOIN document_versions v ON v.id=j.version_id
+            WHERE v.document_id=:id AND j.status IN ('queued','processing') FOR UPDATE OF j""",id=id).scalars().all()
+        for candidate in candidates:
+            rollback(conn,candidate)
         sql(conn,"UPDATE documents SET deleted_at=now(),current_version_id=NULL WHERE id=:id",id=id)
         sql(conn,"""UPDATE processing_jobs SET status='cancelled',lease_token=NULL WHERE version_id IN
             (SELECT id FROM document_versions WHERE document_id=:id) AND status IN ('queued','processing')""",id=id)
         audit(conn,viewer,"delete",id)
     return {"status":"deleted"}
 
-ENTITY_JOIN="FROM entities e JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id"
+ENTITY_JOIN="FROM live_entities e JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id"
 def entity_detail(conn,viewer,id):
     occurrence=sql(conn,f"SELECT e.canonical_id {ENTITY_JOIN} WHERE {ACCESS} AND e.id=:id",
                    **viewer.access(),id=id).scalar_one_or_none()
@@ -389,15 +428,15 @@ def entity_detail(conn,viewer,id):
         ORDER BY v.created_at DESC,e.id LIMIT 1""",**viewer.access(),id=id).mappings().first()
     if not row: raise HTTPException(404,"Entity not found.")
     claims=sql(conn,f"""SELECT c.*,k.line_number,k.locator,k.text AS quote,v.filename
-        {ENTITY_JOIN} JOIN claims c ON c.entity_id=e.id JOIN chunks k ON k.id=c.chunk_id
+        {ENTITY_JOIN} JOIN live_claims c ON c.entity_id=e.id JOIN chunks k ON k.id=c.chunk_id
         WHERE {CURRENT} AND e.canonical_id=:id ORDER BY v.created_at,c.id""",**viewer.access(),id=row.id).mappings().all()
     result={**dict(row),"claims":[]}
     result["sources"]=[dict(x) for x in sql(conn,f"""SELECT DISTINCT v.id AS version_id,v.filename,
-       v.created_at,(d.current_version_id=v.id) AS current FROM entities e
+       v.created_at,(d.current_version_id=v.id) AS current FROM live_entities e
        JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id
        WHERE {ACCESS} AND e.canonical_id=:id ORDER BY v.created_at DESC""",**viewer.access(),id=row.id).mappings()]
     result["entity_evidence"]=[dict(x) for x in sql(conn,f"""SELECT ee.chunk_id,ee.quote,k.locator,v.filename,
-       v.id AS version_id FROM entity_evidence ee JOIN entities e ON e.id=ee.entity_id
+       v.id AS version_id FROM entity_evidence ee JOIN live_entities e ON e.id=ee.entity_id
        JOIN chunks k ON k.id=ee.chunk_id JOIN document_versions v ON v.id=e.version_id
        JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND e.canonical_id=:id""",
        **viewer.access(),id=row.id).mappings()]
@@ -461,11 +500,11 @@ def graph(viewer:Identity,root:UUID|None=None,q:str=Query("",max_length=200),kin
         with engine.connect() as conn: entity_detail_id=entity_detail(conn,viewer,root)["id"]
         params["root"]=entity_detail_id
         condition=f""" AND e.canonical_id IN (
-          SELECT :root UNION SELECT t.canonical_id FROM relationships r JOIN entities s ON s.id=r.source_id
-          JOIN entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
+          SELECT :root UNION SELECT t.canonical_id FROM live_relationships r JOIN live_entities s ON s.id=r.source_id
+          JOIN live_entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
           JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND s.canonical_id=:root
-          UNION SELECT s.canonical_id FROM relationships r JOIN entities s ON s.id=r.source_id
-          JOIN entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
+          UNION SELECT s.canonical_id FROM live_relationships r JOIN live_entities s ON s.id=r.source_id
+          JOIN live_entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
           JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND t.canonical_id=:root)"""
     with engine.begin() as conn:
         sql(conn,"SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
@@ -475,7 +514,7 @@ def graph(viewer:Identity,root:UUID|None=None,q:str=Query("",max_length=200),kin
              ORDER BY e.canonical_id,v.created_at DESC LIMIT :limit""",**params).mappings().all()
         ids=[r.id for r in nodes]
         edges=sql(conn,f"""SELECT r.id,s.canonical_id AS source,t.canonical_id AS target,r.predicate AS label,r.effective_from,r.effective_to,r.chunk_id
-             FROM relationships r JOIN entities s ON s.id=r.source_id JOIN entities t ON t.id=r.target_id
+             FROM live_relationships r JOIN live_entities s ON s.id=r.source_id JOIN live_entities t ON t.id=r.target_id
              JOIN document_versions v ON v.id=r.version_id JOIN documents d ON d.id=v.document_id
              WHERE {CURRENT} AND s.canonical_id=ANY(:ids) AND t.canonical_id=ANY(:ids) ORDER BY r.id""",
              **viewer.access(),ids=ids).mappings() if ids else []
@@ -516,7 +555,7 @@ def enterprise_search(viewer:Identity,response:Response,q:str=Query(...,min_leng
         raise HTTPException(503,"Search could not complete. Check Bedrock embedding access or retry.") from exc
 
 CONFLICT_QUERY=f"""WITH authorized_claims AS (
- SELECT c.id,c.value,c.chunk_id,c.predicate {ENTITY_JOIN} JOIN claims c ON c.entity_id=e.id WHERE {CURRENT}
+ SELECT c.id,c.value,c.chunk_id,c.predicate {ENTITY_JOIN} JOIN live_claims c ON c.entity_id=e.id WHERE {CURRENT}
 ) SELECT f.*,l.value AS left_value,r.value AS right_value,l.chunk_id AS left_chunk_id,r.chunk_id AS right_chunk_id
  FROM conflicts f JOIN authorized_claims l ON l.id=f.left_claim_id JOIN authorized_claims r ON r.id=f.right_claim_id
  WHERE f.organization_id=:org"""
@@ -597,7 +636,7 @@ def history(id:UUID,viewer:Identity):
         row=conversation(conn,viewer,id)
         turns=[]
         for turn in sql(conn,"SELECT * FROM conversation_turns WHERE conversation_id=:id ORDER BY created_at,id",id=id).mappings():
-            allowed=(turn.validation_version==ANSWER_VALIDATION_VERSION and dependencies_allowed(conn,viewer,turn.dependency_ids)
+            allowed=(turn.validation_version==ANSWER_VALIDATION_VERSION and dependencies_allowed(conn,viewer,turn.dependency_ids,turn.response.get("enrichment_dependencies",[]))
                 and source_discovery.allowed(conn,viewer,turn.response.get("source_matches",[])))
             turns.append(dict(id=turn.id,question=turn.question,response=turn.response if allowed else None,
                 suppressed=not allowed,created_at=turn.created_at))
@@ -613,7 +652,7 @@ def ask(id:UUID,body:Question,viewer:Identity):
     with engine.connect() as conn:
         row=conversation(conn,viewer,id)
         for turn in sql(conn,"SELECT question,response,dependency_ids FROM conversation_turns WHERE conversation_id=:id AND validation_version=:policy ORDER BY created_at DESC,id DESC LIMIT 3",id=id,policy=ANSWER_VALIDATION_VERSION).mappings():
-            if (dependencies_allowed(conn,viewer,turn.dependency_ids)
+            if (dependencies_allowed(conn,viewer,turn.dependency_ids,turn.response.get("enrichment_dependencies",[]))
                     and source_discovery.allowed(conn,viewer,turn.response.get("source_matches",[]))):
                 previous.append(dict(turn))
     try:
@@ -630,7 +669,7 @@ def ask(id:UUID,body:Question,viewer:Identity):
         raise HTTPException(503,"Answer unavailable ("+code+"). No unverified answer was saved. Retry or check the provider.") from exc
     with engine.begin() as conn:
         conversation(conn,viewer,id)
-        if (not dependencies_allowed(conn,viewer,dependencies)
+        if (not dependencies_allowed(conn,viewer,dependencies,response.get("enrichment_dependencies",[]))
                 or not source_discovery.allowed(conn,viewer,response.get("source_matches",[]))):
             raise HTTPException(409,"Source access or versions changed. Ask again using current evidence.")
         sql(conn,"""INSERT INTO conversation_turns(id,organization_id,conversation_id,question,response,dependency_ids,validation_version,created_at)

@@ -192,3 +192,10 @@ def test_same_name_people_prompt_for_source_context_without_claiming_distinct_pe
 def test_source_topic_about_an_assistant_is_not_application_help():
     from app.question_intent import intent
     assert intent("what does the handover assistant do?")!="help"
+
+
+def test_topic_that_also_matches_a_filename_still_answers_from_its_text(workspace):
+    document(workspace,'CobaltReleaseNotes.md','CobaltReleaseNotes confirms the support rehearsal is Thursday.')
+    result=ask(chat(),'CobaltReleaseNotes')
+    assert result['provider']=='mock-extractive' and result['statements']
+    assert 'Thursday' in result['statements'][0]['text']

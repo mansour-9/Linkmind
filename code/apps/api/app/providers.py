@@ -136,7 +136,9 @@ def _extract_verified(passages,scope,payload,repair_allowed):
                     "assertions":assertions,"supported":verdict.supported},repair_allowed=False)
             # Prune unsupported items; preserve what the verifier accepted rather than discarding all.
             ne,nc=len(result.entities),len(result.claims)
-            sup=verdict.supported if len(verdict.supported)==len(assertions) else [True]*len(assertions)
+            if len(verdict.supported)!=len(assertions):
+                raise ValueError("Extraction verification returned an incomplete verdict. No replacement was verified.")
+            sup=verdict.supported
             kept_entities=[e for e,s in zip(result.entities,sup[:ne]) if s]
             kept_keys={e.key for e in kept_entities}
             kept_claims=[c for c,s in zip(result.claims,sup[ne:ne+nc]) if s and c.entity_key in kept_keys]

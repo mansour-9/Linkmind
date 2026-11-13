@@ -139,6 +139,8 @@ def main():
             report['questions'].sort(key=lambda q:q['number'])
             checkpoint('question_'+str(index+1))
             print(json.dumps({'question':index+1,'http_status':code,'statements':len(response.get('statements',[]))}),flush=True)
+            if code!=200:
+                raise RuntimeError('Question '+str(index+1)+' failed with HTTP '+str(code)+'. Review the checkpoint before explicitly resuming.')
             _,runtime=call('/runtime')
             if runtime['budget']['paused']:
                 raise RuntimeError('Budget paused; uncertain usage is preserved for review')

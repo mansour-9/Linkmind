@@ -6,10 +6,12 @@ export type Job = {
   filename: string;
   uploaded_at: string;
   visibility: Visibility;
-  status: "queued" | "processing" | "ready" | "extraction_unavailable" | "failed" | "cancelled";
+  status: "queued" | "processing" | "ready" | "extraction_unavailable" | "failed" | "cancelled" | "enrichment_staged_failed";
   document_id: string; stage: string; processed_at: string | null; can_manage: boolean;
   search_ready_at: string | null; search_status: "ready" | "pending" | "failed" | "cancelled";
-  enrichment_status: "ready" | "queued" | "processing" | "unavailable" | "failed" | "cancelled"; can_retry: boolean;
+  enrichment_status: "ready" | "queued" | "processing" | "unavailable" | "failed" | "cancelled" | "enrichment_staged_failed"; can_retry: boolean;
+  can_reprocess: boolean; staged_version_id: string | null; active_enrichment_version_id: string | null;
+  preserved_enrichment: boolean; staged_activation_state: "live" | "staged" | "rolled_back" | null;
   current_version_id: string | null; extraction_provider: string | null; embedding_status: string;
   entity_count: number; claim_count: number; relationship_count: number;
   attempts: number;

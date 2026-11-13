@@ -19,6 +19,11 @@ user-uploaded data. This focused usability increment precedes F1.3; it does not
 authorize F1.3 implementation or main-data rollout. Validation is isolated and mock;
 manual Sonnet use retains the existing persistent USD 10 test allowance.
 
+Subsequent 2026-11-13 authorization: implement **F1.3 and main-data rollout
+preparation first**; the user explicitly selected this batch over continuing into F2.
+Bounded Bedrock-backed checks are authorized within the existing persistent USD 10
+run, without resetting/increasing it. Main cutover remains a separately reviewed step.
+
 - [x] Implement bounded query understanding, catalog discovery, and source choices.
 - [x] Recheck source metadata permissions/revisions in history and follow-ups.
 - [x] Verify arbitrary uploads, typo/topic search, clarification, and frontend behavior.
@@ -43,7 +48,8 @@ M0/M1/M1.1 and M3.1 are completed. M2/M3 core local workflows are implemented, w
 independent quality acceptance outstanding. The M3.1 UI/Graph/canvas checkpoint was
 user-approved on 2026-11-12. M3.2A diagnostics and the bounded Gemma/Sonnet pilot are
 complete. F1.1, the first M3.2B slice, is implemented and validated in an isolated
-local stack; main-data rollout is pending. F1.2 implemented 2026-11-12. F1.3 remains planned. See
+local stack; main-data rollout is pending. F1.2 implemented 2026-11-12; F1.3 locally
+validated 2026-11-13. See
 [F1.1 results](F1_1_RESULTS.md) and the unchanged historical checklists below.
 
 Model decision (2026-11-12): use Sonnet only for ongoing model-backed work. Gemma is
@@ -64,7 +70,7 @@ Sources: [M3.2A](M3_2A_RESULTS.md), [M2/M3](M2_M3_VALIDATION.md),
 
 | Phase | Milestones | Status / dependency |
 | --- | --- | --- |
-| P1 — Reliable production foundations | F1 (M3.2B), F2 identity/access | Partial: F1.1 locally validated, main-data rollout pending; F1.2 implemented 2026-11-12; F1.3 and F2 planned |
+| P1 — Reliable production foundations | F1 (M3.2B), F2 identity/access | Partial: F1.1–F1.3 locally implemented/validated, main-data cutover pending; F2 planned |
 | P2 — Knowledge Hub and Spaces | K1 authoring, S1 Space experience | Planned; use F2 Space/access foundation and F1 content readiness |
 | P3 — Retrieval intelligence | R1 (M3.3), R2 (M3.4), R3 bounded routing | Partial baseline; R1 uses F1; R2 builds on R1; R3 can be tested with adapters before live connector access |
 | P4 — Enterprise connectors | C1 Jira live (M4.1), C2 Jira sync (M4.2), C3 Confluence, C4 GitLab | Planned; early identity/ACL feasibility in F2; C1 uses R3; C2 uses C1; C3 then C4 reuse proven contracts |
@@ -124,7 +130,8 @@ the coordinator contract before C1; real cross-source acceptance follows C3/C4.
 Mock workflow implementation is validated. Full Sonnet run completed. 17 of 24
 documents had enrichment failures (12 unsupported assertions, 5 identifier namespace
 errors) — text remains search-ready for all; enrichment fix is F1.2 scope.
-F1.2 implemented (contracts.py + providers.py, 2026-11-12). F1.3 remains open. Main app and the existing F1.1 data are untouched.
+F1.2 implemented (contracts.py + providers.py, 2026-11-12). F1.3 locally validated
+2026-11-13. The current F1.3 work leaves the main app and existing F1.1 preview untouched.
 
 All milestones require focused implementation changes when separately requested,
 compatible migrations where needed, preservation of existing behavior/data, and
@@ -150,8 +157,9 @@ Dependencies: completed M3.2A. Complexity: high due to publication/citation inva
   applied so claims/relationships referencing pruned entities are also removed.
   Regression: grounding, resolution, model_limits tests all pass. Pre-existing preview-auth
   403 failures in company-sonnet container are unchanged (not caused by these fixes).
-- [ ] **F1.3:** add only necessary versioned reprocessing/index metadata; build and
-  validate new derived data alongside old data, with deliberate activation/rollback.
+- [x] **F1.3 (isolated local acceptance):** add versioned enrichment staging,
+  verified atomic activation and failure rollback; preserve source search/evidence.
+  Migration 0011 and the refresh journey are implemented. Main cutover remains pending.
 - [ ] Improve structure-aware context and parent passages against held-out retrieval
   tests; do not treat a byte estimator as measured token usage or adopt fixed tuning blindly.
 - [ ] Preserve useful conflict/identity functionality and history. Isolate cross-document
@@ -171,7 +179,8 @@ Detailed sequence: [M3.2B](M3_2B_PLAN.md).
 #### F1 remaining delivery order — plan only, 2026-11-13
 
 The user requested this plan after reporting that the conversational improvements
-work. This does not start F1.3 or authorize the main-data rollout.
+work, then authorized F1.3 implementation and rollout preparation. The reviewed
+main-data cutover and F2 execution remain outside this batch.
 
 1. **Checkpoint the current application.** Preserve the tested conversation/upload
    increment and its fixtures; prepare a scoped commit without sweeping unrelated
@@ -216,6 +225,12 @@ work. This does not start F1.3 or authorize the main-data rollout.
 The remaining F1 context/ranking checks must use held-out questions and measured
 results. They are not silently counted as completed by staging, and broad relevance
 work retains its R1 gate. Historical M3.2A/F1.1 implementation is not repeated.
+
+F1.3 acceptance and Bedrock evidence are in [F1.3 results](F1_3_RESULTS.md).
+The [main-data rollout review](MAIN_DATA_ROLLOUT.md) includes the successful
+synthetic backup/restore rehearsal and the observed main-stack inference-guard
+configuration mismatch. Read-only inspection found the main database already at
+0010; its next migration is 0011, rather than a repeat of readiness migration 0009.
 
 ### F2 — Organization identity, groups and access foundation
 
@@ -526,16 +541,18 @@ dates or feature removal are inferred from this order.
 
 ## Recommended next development task — when explicitly requested
 
-**F1.3 / controlled enrichment staging, activation and rollback.** F1.1 is locally
-validated, and F1.2 plus the focused conversational increment are implemented locally.
-Checkpoint that work and address outstanding regression evidence explicitly; do not
-repeat completed milestones. The F1 remaining delivery order above defines the
-proposed next implementation boundary and its acceptance gates. F2's source/access
-feasibility can be designed independently, without starting live connector work.
+**Review the prepared main-data rollout.** F1.1/F1.2, the conversational increment
+and F1.3 are implemented locally; F1.3 has isolated acceptance and a bounded Sonnet
+probe. The original main stack has not been changed by this work. Resolve the
+observed main API/worker budget mismatch in the concrete rollout review; the proposed
+first cutover keeps inference disabled instead of creating another test allowance.
+F2 remains the next implementation milestone after the separately approved rollout.
 
-F1.1 main-data rollout remains a separate tracked step: prepare a concrete backup,
-legacy readiness preview and rollback before applying migration 0009 to the original
-database. The current isolated preview and evidence are in [F1.1 results](F1_1_RESULTS.md).
+F1 main-data rollout remains a separate tracked step. The main database is observed
+at migration 0010; rehearse its actual snapshot and migration 0011, with reviewed
+backups and rollback, before cutover. Historical isolated F1.1 evidence remains in
+[F1.1 results](F1_1_RESULTS.md); current procedures are in
+[main-data rollout review](MAIN_DATA_ROLLOUT.md).
 
 Do not rerun completed M3.1 handoff, M3.2A or F1.1 implementation merely because an old
 paragraph said to do so. Later slices require a new implementation request.

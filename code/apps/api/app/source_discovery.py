@@ -29,9 +29,9 @@ def title_score(query, filename):
 
 
 # A never-published upload is discoverable as a file even before parsing succeeds.
-CATALOG_VERSION="""(v.id=d.current_version_id OR (d.current_version_id IS NULL AND
+CATALOG_VERSION="""v.source_version_id IS NULL AND (v.id=d.current_version_id OR (d.current_version_id IS NULL AND
     v.id=(SELECT latest.id FROM document_versions latest WHERE latest.document_id=d.id
-          ORDER BY latest.created_at DESC,latest.id DESC LIMIT 1)))"""
+          AND latest.source_version_id IS NULL ORDER BY latest.created_at DESC,latest.id DESC LIMIT 1)))"""
 
 
 def candidates(conn,viewer,query,document_ids=None,limit=6):
@@ -73,7 +73,7 @@ def identity_choices(conn,viewer,query):
         v.id AS version_id,v.filename,v.search_ready_at IS NOT NULL AS search_ready,
         EXISTS(SELECT 1 FROM entity_identifiers i WHERE i.canonical_id=e.canonical_id
             AND i.value<>'' AND position(lower(i.value) in lower(:query))>0) AS identified
-        FROM entities e JOIN document_versions v ON v.id=e.version_id
+        FROM live_entities e JOIN document_versions v ON v.id=e.version_id
         JOIN documents d ON d.id=v.document_id
         WHERE {ACCESS} AND d.current_version_id=v.id AND e.kind IN ('person','project','team','system')
         AND lower(e.name) LIKE ANY(:names) ORDER BY e.name,v.filename,e.canonical_id LIMIT 100""",

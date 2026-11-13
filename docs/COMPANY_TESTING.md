@@ -13,6 +13,12 @@ approved resuming the same run on 2026-11-13. It is now unpaused; the USD 10 cap
 recorded spend and unknown reservations were preserved. The historical completed-run
 figures below are not a new evaluation of the conversational changes.
 
+F1.3 update: the [isolated staged-enrichment milestone](F1_3_RESULTS.md) is now
+verified at port 5181. One authorized real-Sonnet fictional-source probe added
+USD 0.027357 to the existing ledger (recorded spend now USD 2.0997707200), with
+prior unknown reservations retained. The Sonnet preview's database was not upgraded
+to F1.3; its original test experience remains at 5175.
+
 ## Open the right preview
 
 | Address | Purpose | Data and cost |

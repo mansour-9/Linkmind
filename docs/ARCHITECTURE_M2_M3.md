@@ -1,11 +1,16 @@
 # Linkmind — Current Architecture and Planned Evolution
 
-Updated 2026-11-12. The filename is retained for existing links. Sections labelled
-current describe repository behavior through F1.1, validated in a separate local
+Updated 2026-11-13. The filename is retained for existing links. Sections labelled
+current describe repository behavior through F1.3, validated in a separate local
 stack; the original running application/database remains at its earlier checkpoint.
 Target sections are unimplemented design unless explicitly identified below. See
 the [single roadmap](IMPLEMENTATION_PLAN.md), [agreed scope](PROJECT_SCOPE.md) and
 [F1.1 validation](F1_1_RESULTS.md).
+
+2026-11-13 update: F1.3 is implemented and accepted in an isolated local stack.
+The read-only main inventory is already at migration 0010; the F1.3/0011 cutover
+is still pending. [F1.3 results](F1_3_RESULTS.md) and the
+[rollout procedure](MAIN_DATA_ROLLOUT.md) supersede older main-state assumptions.
 
 ## Current implementation
 
@@ -41,7 +46,23 @@ that transaction never changes the active content pointer. Parser/index-preparat
 failure preserves previous content. Enrichment failure preserves the new searchable
 content without borrowing old relationships. Enrichment retries reuse published chunks
 and IDs without reparsing/re-embedding; completed enrichment remains immutable. Controlled
-reprocessing/index-generation activation and rollback remain F1.3 work.
+F1.3 adds an explicit same-source enrichment refresh. A candidate row in
+document_versions references the immutable source revision and retains verified
+extraction JSON, verification time and activation state. processing_jobs tracks its
+staged_version_id. The source revision's active_enrichment_version_id switches
+atomically only under the current document/job/lease guards. Entities carry the
+candidate generation separately from source version IDs; existing evidence FKs and
+passage IDs remain unchanged. Shared live_entities/live_claims/live_relationships
+views select only the active generation, followed by existing source-current and ACL
+checks on every derived surface. Legacy generations require no ID/content backfill.
+
+Failed candidates become rolled_back, with job status enrichment_staged_failed.
+Prior verified same-source facts remain live while raw search continues. New source
+revision activation still excludes old-source facts under F1.1. Exact source-local
+entity/evidence anchors can preserve reviewed identities during refresh; names alone
+never link identities across sources. Candidate history and old facts/evidence remain
+retained. Metadata downgrade refuses retained generations and requires the reviewed
+database/originals snapshot plus prior build for restoration.
 
 ## Retrieval and derived views
 
@@ -84,6 +105,10 @@ guidance is labelled separately and supplies no invented source facts.
 
 Stored turns record every supplied evidence dependency, not merely the displayed citations.
 History rechecks all dependencies and the answer-validation policy version. Any revoked, deleted or superseded evidence, or a superseded grounding policy, suppresses the answer while preserving the original record.
+F1.3 also records source/enrichment-generation dependencies from the retrieval
+snapshot. Activation invalidates saved answers using the superseded generation,
+including selected-source overviews. Grounding policy is now grounded-v4-staged;
+older experimental answers remain stored but are suppressed under this policy.
 Identity changes replace the entire frontend query client; deep links and original downloads reauthorize on the server.
 
 ## Operations

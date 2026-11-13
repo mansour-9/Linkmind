@@ -71,6 +71,7 @@ export const jobLabels: Record<Job["status"], string> = {
   cancelled: "Cancelled",
   ready: "Ready",
   extraction_unavailable: "Extraction unavailable",
+  enrichment_staged_failed: "Knowledge refresh failed",
   failed: "Failed",
 };
 
@@ -81,6 +82,7 @@ export function StatusBadge({ status }: { status: Job["status"] }) {
 const enrichmentLabels: Record<Job["enrichment_status"], string> = {
   ready: "Knowledge Enriched", queued: "Enrichment queued", processing: "Enriching knowledge",
   unavailable: "Enrichment unavailable", failed: "Enrichment failed", cancelled: "Enrichment cancelled",
+  enrichment_staged_failed: "Knowledge refresh failed",
 };
 export function ReadinessBadge({ job }: { job: Job }) {
   return <><span className={"status-pill " + (job.search_status === "ready" ? "ready" : job.status)}>

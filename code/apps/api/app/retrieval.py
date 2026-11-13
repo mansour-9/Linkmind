@@ -21,7 +21,7 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
         params["documents"]=[UUID(str(x)) for x in document_ids]
     filters=filters or {}
     if filters.get("kind"):
-        where+=" AND EXISTS(SELECT 1 FROM entities fe WHERE fe.version_id=v.id AND fe.kind=:entity_kind)"
+        where+=" AND EXISTS(SELECT 1 FROM live_entities fe WHERE fe.version_id=v.id AND fe.kind=:entity_kind)"
         params["entity_kind"]=filters["kind"]
     if filters.get("after"):
         where+=" AND v.created_at>=CAST(:after AS date)"
@@ -41,21 +41,21 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
                     {PASSAGES} WHERE {where} AND k.search_text@@websearch_to_tsquery('english',:keywords)
                     ORDER BY score DESC,k.id LIMIT 40""",**params,keywords=" OR ".join(keywords)).all()
         exact=sql(conn,f"""SELECT k.id {PASSAGES} WHERE {where} AND
-           (k.text ILIKE :pattern OR EXISTS(SELECT 1 FROM entities e
+           (k.text ILIKE :pattern OR EXISTS(SELECT 1 FROM live_entities e
              LEFT JOIN entity_identifiers i ON i.canonical_id=e.canonical_id
              WHERE e.version_id=v.id AND (lower(e.name)=lower(:q)
                OR (i.value<>'' AND position(i.value in lower(:q))>0))))
            ORDER BY k.id LIMIT 40""",**params).all()
         graph=sql(conn,f"""WITH matched AS (
-           SELECT DISTINCT e.canonical_id FROM entities e JOIN document_versions v ON v.id=e.version_id
+           SELECT DISTINCT e.canonical_id FROM live_entities e JOIN document_versions v ON v.id=e.version_id
            JOIN documents d ON d.id=v.document_id LEFT JOIN entity_identifiers i ON i.canonical_id=e.canonical_id
            WHERE {where} AND (e.name ILIKE :pattern OR (i.value<>'' AND position(i.value in lower(:q))>0))
         ), neighbors AS (
-           SELECT DISTINCT target.canonical_id FROM relationships r JOIN entities source ON source.id=r.source_id
-           JOIN entities target ON target.id=r.target_id JOIN document_versions v ON v.id=r.version_id
+           SELECT DISTINCT target.canonical_id FROM live_relationships r JOIN live_entities source ON source.id=r.source_id
+           JOIN live_entities target ON target.id=r.target_id JOIN document_versions v ON v.id=r.version_id
            JOIN documents d ON d.id=v.document_id WHERE {where}
            AND source.canonical_id IN (SELECT canonical_id FROM matched)
-        ) SELECT DISTINCT k.id {PASSAGES} JOIN claims c ON c.chunk_id=k.id JOIN entities e ON e.id=c.entity_id
+        ) SELECT DISTINCT k.id {PASSAGES} JOIN live_claims c ON c.chunk_id=k.id JOIN live_entities e ON e.id=c.entity_id
            WHERE {where} AND e.canonical_id IN (SELECT canonical_id FROM matched UNION SELECT canonical_id FROM neighbors)
            ORDER BY k.id LIMIT 40""",**params).all()
     rankings=[lexical,exact,graph]
@@ -97,13 +97,24 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
     with engine.connect() as conn:
         rows=sql(conn,f"""SELECT k.id,k.text,k.locator,k.line_number,v.id AS version_id,
             d.id AS document_id,v.filename,v.embedding_status,
+            CASE WHEN v.processed_at IS NOT NULL THEN coalesce(v.active_enrichment_version_id,v.id)::text END AS enrichment_version_id,
             (SELECT coalesce(jsonb_agg(DISTINCT jsonb_build_object('canonical_id',e.canonical_id,'name',e.name,'kind',e.kind)),'[]'::jsonb)
-             FROM entities e WHERE e.version_id=v.id AND e.organization_id=d.organization_id) AS entities
+             FROM live_entities e WHERE e.version_id=v.id AND e.organization_id=d.organization_id) AS entities
             {PASSAGES} WHERE {where} AND k.id=ANY(:ids)""",**params,ids=ids).mappings().all()
     return [{**dict(row),"id":str(row.id),"score":scores[row.id],"semantic_status":semantic_status}
             for row in sorted(rows,key=lambda r:ids.index(r.id))]
 
-def dependencies_allowed(conn,viewer,ids):
+def dependencies_allowed(conn,viewer,ids,generations=()):
+    for item in generations:
+        try:
+            source=UUID(str(item["source_version_id"]))
+        except (KeyError,TypeError,ValueError):
+            return False
+        row=sql(conn,f"""SELECT CASE WHEN v.processed_at IS NOT NULL THEN coalesce(v.active_enrichment_version_id,v.id)::text END AS generation
+            FROM document_versions v JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND v.id=:source""",
+            **viewer.access(),source=source).mappings().first()
+        if not row or row.generation!=item.get("generation_id"):
+            return False
     if not ids:
         return True
     count=sql(conn,f"SELECT count(*) {PASSAGES} WHERE {CURRENT} AND k.id=ANY(:ids)",
@@ -124,6 +135,7 @@ def selected_context(viewer,document_ids,limit=24,max_characters=20000):
             raise HTTPException(404,"A selected source is no longer available.")
         rows=sql(conn,f"""WITH ranked AS (
             SELECT k.id,k.text,k.locator,k.line_number,v.id AS version_id,d.id AS document_id,v.filename,
+                CASE WHEN v.processed_at IS NOT NULL THEN coalesce(v.active_enrichment_version_id,v.id)::text END AS enrichment_version_id,
                 row_number() OVER(PARTITION BY d.id ORDER BY k.line_number,k.id) AS position,
                 count(*) OVER(PARTITION BY d.id) AS total
             {PASSAGES} WHERE {CURRENT} AND d.id=ANY(:ids)

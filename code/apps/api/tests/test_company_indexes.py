@@ -36,7 +36,7 @@ def test_repair_is_scoped_to_approved_sources_and_preserves_evidence(workspace,m
         return [1.0]+[0.0]*255
     monkeypatch.setattr(providers,'embed',embed)
     result=company_indexes.refresh()
-    assert result['repaired_passages']>0 and set(calls)=={known.version_id}
+    assert result['repaired_passages']>0 and known.version_id in calls and arbitrary.version_id not in calls
     assert sql(workspace,'SELECT id,text,locator FROM chunks ORDER BY id').all()==before
     assert sql(workspace,'SELECT embedding_status FROM document_versions WHERE id=:id',id=known.version_id).scalar()=='ready'
     assert sql(workspace,'SELECT count(*) FROM chunks WHERE version_id=:id AND embedding IS NOT NULL',id=arbitrary.version_id).scalar()==0

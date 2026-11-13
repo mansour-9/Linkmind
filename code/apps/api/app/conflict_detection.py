@@ -20,7 +20,7 @@ def assess(result,job):
             if len(targets)!=1:
                 continue
             candidates=sql(conn,"""SELECT c.id,c.value,c.asserted_by,c.effective_from,c.effective_to,k.text AS evidence
-                FROM claims c JOIN entities e ON e.id=c.entity_id JOIN chunks k ON k.id=c.chunk_id
+                FROM live_claims c JOIN live_entities e ON e.id=c.entity_id JOIN chunks k ON k.id=c.chunk_id
                 JOIN document_versions v ON v.id=c.version_id JOIN documents d ON d.id=v.document_id
                 WHERE e.organization_id=:org AND e.canonical_id=:id AND c.predicate=:predicate
                 AND d.deleted_at IS NULL AND d.current_version_id=v.id AND d.id<>:document""",

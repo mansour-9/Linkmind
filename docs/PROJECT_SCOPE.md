@@ -12,6 +12,10 @@ mock/Sonnet previews. An explicit **US$10 maximum** covers the new Sonnet extrac
 embeddings and chat run only. No model comparison or AWS infrastructure deployment.
 See [testing guide and actual acceptance](COMPANY_TESTING.md).
 
+On 2026-11-13 the user additionally authorized F1.3 implementation and main-data
+rollout preparation, before F2. Bounded Sonnet checks reuse the existing USD 10
+run and ledger; there is no new allowance or AWS infrastructure authorization.
+
 ## Document authority and actual state
 
 - This file owns product requirements and agreed decisions.
@@ -29,8 +33,10 @@ generated entity pages, conflict/identity review and usage. Native authoring,
 managed Spaces, organization groups, live connectors and synchronization are not
 implemented. M3.1 is completed and user-approved; M3.2A diagnostics are complete;
 F1.1/M3.2B search-readiness separation is implemented and validated in an isolated
-local stack; the main running database/application has not been migrated. F1.2/F1.3
-remain planned. See [F1.1 evidence](F1_1_RESULTS.md). Existing functionality is not
+local stack. F1.2 and conversational discovery are implemented locally; F1.3 staged
+enrichment is locally validated. The read-only main inventory is already at schema
+0010, while its F1.3/0011 cutover remains pending the prepared rollout review.
+See [F1.1 evidence](F1_1_RESULTS.md) and [F1.3 results](F1_3_RESULTS.md). Existing functionality is not
 reset by the new scope.
 
 ## Product direction

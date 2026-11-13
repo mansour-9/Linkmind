@@ -17,7 +17,11 @@ function processingError(error: string) {
  if (/quote|evidence|verification|validation/i.test(error)) return "The extracted evidence could not be validated. No unverified knowledge was published. " + error;
  return error;
 }
-const pretty = (value: string) => value.replaceAll("_", " ");
+const stageLabels: Record<string, string> = {
+ queued_enrichment: "Refresh queued", verifying_staged_enrichment: "Verifying replacement",
+ enrichment_staged_failed: "Refresh rolled back",
+};
+const pretty = (value: string) => stageLabels[value] ?? value.replaceAll("_", " ");
 const date = (value: string | null) => value ? new Date(value).toLocaleString() : "Not recorded";
 const location = (locator?: Record<string, unknown>) => !locator ? "Source passage" :
  Object.entries(locator).filter(([key]) => ["page", "paragraph", "table", "row", "line"].includes(key))
@@ -93,6 +97,7 @@ export function Processing() {
  <div className="process-stages"><span><Activity size={14} />{pretty(j.stage)}</span><span>{j.entity_count} entities</span><span>{j.claim_count} claims</span><span>{j.relationship_count} relationships</span><span>Semantic index: {j.embedding_status}</span></div>
  <p className="muted">Search ready: {date(j.search_ready_at)} · Knowledge enriched: {date(j.processed_at)} · {j.attempts} attempts</p>
  {j.error && <Feedback error>{processingError(j.error)}</Feedback>}
+ {j.preserved_enrichment && <Feedback>{j.status === "enrichment_staged_failed" ? "The replacement did not pass. Previous verified knowledge is still available." : "A replacement is being prepared. Search and previous verified knowledge remain available."}</Feedback>}
  <div className="action-row"><Button variant="outline" onClick={() => setSelected(j.id)}>Processing details</Button>
  {j.can_manage && j.can_retry && <Button variant="outline" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}><RefreshCw size={14} />{j.search_status === "ready" ? "Retry enrichment" : "Retry processing"}</Button>}</div>
  </article>)}</div>

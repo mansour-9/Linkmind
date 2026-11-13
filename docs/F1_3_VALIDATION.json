@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-13",
+  "branch": "m3.2/baseline-gemma",
+  "api": {
+    "passed": 127,
+    "failed": 0,
+    "command": "pytest -q -p no:cacheprovider apps/api/tests",
+    "stack": "linkmind-f13-validation",
+    "pythonpath": "/app:/app/apps/api"
+  },
+  "browser": {
+    "passed": 28,
+    "failed": 0,
+    "command": "npx playwright test",
+    "base_url": "http://127.0.0.1:5181"
+  },
+  "final_stage_label_recheck": {
+    "passed": 2,
+    "failed": 0
+  },
+  "frontend": {
+    "typecheck": "passed",
+    "production_build": "passed",
+    "widths": [
+      1440,
+      1024,
+      390,
+      1920
+    ]
+  },
+  "sonnet_probe": "company_demo/f13_sonnet_probe.json",
+  "staging_probe": "company_demo/f13_staging_probe.json",
+  "rollout_rehearsal": "F1_3_REHEARSAL.json",
+  "main_cutover": "pending separate approval",
+  "aws_infrastructure_changes": 0,
+  "budget_reset_or_limit_changes": 0
+}

@@ -1,13 +1,21 @@
 from fastapi.testclient import TestClient
-from app.main import app
+from app import main
 
 
-def test_local_preview_authentication_and_loopback_guard():
-    with TestClient(app,client=('127.0.0.1',12345)) as client:
-        response=client.get('/api/v1/demo/company',headers={'Authorization':'Bearer demo-amal','X-Preview-Proxy':'northstar-local-preview-2026-11-12'})
-        assert response.status_code in {200,403}
-        bad=client.get('/api/v1/demo/company',headers={'Authorization':'Bearer unknown'})
-        assert bad.status_code==401
-    with TestClient(app,client=('203.0.113.10',12345)) as client:
-        response=client.get('/api/v1/demo/company',headers={'Authorization':'Bearer demo-amal','X-Preview-Proxy':'northstar-local-preview-2026-11-12'})
-        assert response.status_code==403
+def test_local_demo_authentication_without_preview_proxy(monkeypatch):
+    monkeypatch.setattr(main,"LOCAL_PREVIEW",False)
+    with TestClient(main.app) as client:
+        assert client.get('/api/v1/demo/company',headers={'Authorization':'Bearer demo-amal'}).status_code==200
+        assert client.get('/api/v1/demo/company',headers={'Authorization':'Bearer unknown'}).status_code==401
+
+
+def test_preview_proxy_secret_and_identity_are_both_required(monkeypatch):
+    monkeypatch.setattr(main,"LOCAL_PREVIEW",True)
+    monkeypatch.setattr(main,"PREVIEW_SECRET","test-only-preview-secret")
+    with TestClient(main.app) as client:
+        headers={'Authorization':'Bearer demo-amal','X-Preview-Proxy':'test-only-preview-secret'}
+        assert client.get('/api/v1/demo/company',headers=headers).status_code==200
+        assert client.get('/api/v1/demo/company',headers={'Authorization':'Bearer demo-amal'}).status_code==403
+        assert client.get('/api/v1/demo/company',headers={**headers,'Authorization':'Bearer unknown'}).status_code==401
+    with TestClient(main.app,client=('203.0.113.10',12345)) as client:
+        assert client.get('/api/v1/demo/company',headers={'Authorization':'Bearer demo-amal'}).status_code==403
