@@ -78,6 +78,16 @@ export function StatusBadge({ status }: { status: Job["status"] }) {
   return <span className={"status-pill " + status}>{jobLabels[status]}</span>;
 }
 
+const enrichmentLabels: Record<Job["enrichment_status"], string> = {
+  ready: "Knowledge Enriched", queued: "Enrichment queued", processing: "Enriching knowledge",
+  unavailable: "Enrichment unavailable", failed: "Enrichment failed", cancelled: "Enrichment cancelled",
+};
+export function ReadinessBadge({ job }: { job: Job }) {
+  return <><span className={"status-pill " + (job.search_status === "ready" ? "ready" : job.status)}>
+    {job.search_status === "ready" ? "Search Ready" : jobLabels[job.status]}</span>
+    {job.search_status === "ready" && <small>{enrichmentLabels[job.enrichment_status]}</small>}</>;
+}
+
 export function SearchField({ className, ...props }: ComponentProps<"input">) {
   return <div className={cn("search-field", className)}>
     <Search size={17} aria-hidden="true" /><input type="search" {...props} />

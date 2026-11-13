@@ -6,3 +6,4 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 COPY apps/api apps/api
 COPY apps/worker apps/worker
 COPY fixtures fixtures
+COPY scripts scripts

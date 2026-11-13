@@ -1,3 +1,4 @@
+import type { Passage } from "./contracts";
 export type Visibility = "private" | "team";
 export type Job = {
   id: string;
@@ -7,6 +8,8 @@ export type Job = {
   visibility: Visibility;
   status: "queued" | "processing" | "ready" | "extraction_unavailable" | "failed" | "cancelled";
   document_id: string; stage: string; processed_at: string | null; can_manage: boolean;
+  search_ready_at: string | null; search_status: "ready" | "pending" | "failed" | "cancelled";
+  enrichment_status: "ready" | "queued" | "processing" | "unavailable" | "failed" | "cancelled"; can_retry: boolean;
   current_version_id: string | null; extraction_provider: string | null; embedding_status: string;
   entity_count: number; claim_count: number; relationship_count: number;
   attempts: number;
@@ -40,6 +43,10 @@ export function api(token: string) {
   }
   return {
     json: <T,>(path: string, init?: RequestInit): Promise<T> => request(path, init).then((r) => r.json()),
+    async search(params: string): Promise<{ passages: Passage[]; semantic_status: string }> {
+      const response = await request("/search?" + params);
+      return { passages: await response.json(), semantic_status: response.headers.get("X-Linkmind-Semantic-Status") ?? "unavailable" };
+    },
     neighbors: (root: string) => request("/graph/neighborhood?root=" + root + "&limit=40").then((r): Promise<GraphData> => r.json()),
     me: () => request("/me").then((r): Promise<Viewer> => r.json()),
     jobs: () => request("/sources").then((r): Promise<Job[]> => r.json()),
@@ -63,6 +70,13 @@ export function api(token: string) {
       anchor.href = url;
       anchor.download = filename;
       anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    },
+    async companyFile(key: string, filename: string) {
+      const blob = await (await request("/demo/company/files/" + encodeURIComponent(key))).blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url; anchor.download = filename; anchor.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     },
   };

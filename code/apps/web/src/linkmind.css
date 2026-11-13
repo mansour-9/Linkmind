@@ -119,8 +119,22 @@ textarea { color: var(--foreground); }
 .work-content .muted { font-size: 12px; }
 .work-content section { margin-top: 18px; }
 .work-content h3 { font-size: 12px; font-weight: 500; }
-.answer-statement { margin-top: 24px; }
+.answer-statement { margin-top: 0; }
+.answer-inline-cites { display: inline; white-space: nowrap; }
+.cite-marker { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 3px; margin-inline-start: 3px; vertical-align: super; border-radius: 3px; border: 0; background: var(--brand-subtle); color: var(--accent-foreground); font-size: 9px; font-weight: 650; line-height: 1; cursor: pointer; font-family: inherit; transition: background 100ms; }
+.cite-marker:hover { background: var(--accent); }
+.answer-sources { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border); }
+.sources-label { flex-basis: 100%; color: var(--muted-foreground); font-size: 11px; font-weight: 500; letter-spacing: .02em; margin-bottom: 2px; }
+.source-ref { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 5px; border-radius: 7px; border: 1px solid var(--border); background: var(--card); color: var(--foreground); font-size: 11px; cursor: pointer; max-width: min(100%, 230px); transition: background 100ms; }
+.source-ref:hover { background: var(--muted); }
+.source-ref-num { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; border-radius: 3px; background: var(--brand-subtle); color: var(--accent-foreground); font-size: 9px; font-weight: 650; flex: none; }
+.source-ref-icon { color: var(--muted-foreground); flex: none; }
+.source-ref-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .answer-provider { font-size: 11px; color: var(--muted-foreground); }
+.source-choices { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin-block: 12px; }
+.source-choice { justify-content: flex-start; max-width: 100%; height: auto; white-space: normal; text-align: start; padding: 12px; }
+.source-choice > span { min-width: 0; overflow-wrap: anywhere; }
+.source-choice small { display: block; color: var(--muted-foreground); margin-top: 4px; }
 .markdown { font-size: 16px; line-height: 1.85; overflow-wrap: anywhere; }
 .markdown :is(p, ul, ol, pre, blockquote, table) { margin: 0 0 16px; }
 .markdown p { white-space: normal; }
@@ -304,6 +318,8 @@ textarea { color: var(--foreground); }
   .sheet { padding: 20px; }
   .sheet-right { inset: auto 0 0; width: 100%; max-height: 92dvh; border-radius: 18px 18px 0 0; }
   .sheet-left { width: min(90%,320px); }
+  .cite-marker { font-size: 8px; min-width: 14px; height: 14px; }
+  .source-ref { max-width: min(100%, 180px); }
 }
 @media(prefers-reduced-motion:reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 /* Source discovery: a searchable modal, optional scoped chips, all sources by default. */

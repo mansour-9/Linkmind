@@ -1,6 +1,6 @@
 name: company-brain
 x-backend: &backend
-  image: company-brain-backend:local
+  image: ${BRAIN_BACKEND_IMAGE:-company-brain-backend:local}
   build:
     context: .
     dockerfile: apps/api/Dockerfile

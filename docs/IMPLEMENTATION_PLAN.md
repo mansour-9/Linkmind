@@ -1,38 +1,550 @@
-# Company Brain — Implementation Plan
+# Linkmind — Main Implementation Roadmap
 
-M2/M3 core implementation is in place; independent acceptance work remains.
-The UI checkpoint is implemented and validated. On 2026-11-12 the user approved
-the current work and requested M3.2 planning plus a GitHub checkpoint before backend
-implementation. Historical checkmarks distinguish implemented work from later
-quality acceptance and pending upgrades.
+## Production-Quality Core Platform with Phased Feature Delivery
 
-## Active order — confirmed 2026-11-11
+Updated 2026-11-13. This is the **single active roadmap**, restructuring the existing
+M0–M7 plan. Product decisions are in [scope](PROJECT_SCOPE.md); current/target behavior
+is in [architecture](ARCHITECTURE_M2_M3.md). The user subsequently requested F1.1
+implementation on 2026-11-12. That slice is locally validated; all other unchecked
+tasks remain planned and require their own implementation request.
 
-| Order | Milestone | Status |
+Subsequent T1 authorization: the user requested the complete fictional-company test
+experience and approved a US$10 cap for its Sonnet extraction/embedding/chat run.
+This is a focused test/retrieval increment, not authorization to implement every
+remaining roadmap milestone. See [T1 testing and evidence](COMPANY_TESTING.md).
+
+2026-11-13 follow-up authorization: improve conversational help, approximate/topic
+source discovery, clarification of similar matches, and contextual follow-ups for
+user-uploaded data. This focused usability increment precedes F1.3; it does not
+authorize F1.3 implementation or main-data rollout. Validation is isolated and mock;
+manual Sonnet use retains the existing persistent USD 10 test allowance.
+
+- [x] Implement bounded query understanding, catalog discovery, and source choices.
+- [x] Recheck source metadata permissions/revisions in history and follow-ups.
+- [x] Verify arbitrary uploads, typo/topic search, clarification, and frontend behavior.
+- [x] Update the Sonnet preview without migrating the main app or spending on evaluation.
+
+See [conversation tests and current operational limits](CONVERSATIONAL_TESTING.md).
+
+## Status and evidence rules
+
+- **Completed:** a bounded delivered feature/checkpoint with recorded evidence.
+- **Partial:** useful implemented behavior exists, but target acceptance is not met.
+- **Planned:** no verified implementation of that capability in the current application.
+- **Deferred:** intentionally sequenced later, not deleted from product scope.
+
+Completed local features do not imply production readiness. A synthetic test pass
+does not establish real-model quality; a live lookup does not complete a connector.
+Keep user visual acceptance, automated checks and representative quality review separate.
+
+## Preserved checkpoint
+
+M0/M1/M1.1 and M3.1 are completed. M2/M3 core local workflows are implemented, with
+independent quality acceptance outstanding. The M3.1 UI/Graph/canvas checkpoint was
+user-approved on 2026-11-12. M3.2A diagnostics and the bounded Gemma/Sonnet pilot are
+complete. F1.1, the first M3.2B slice, is implemented and validated in an isolated
+local stack; main-data rollout is pending. F1.2 implemented 2026-11-12. F1.3 remains planned. See
+[F1.1 results](F1_1_RESULTS.md) and the unchanged historical checklists below.
+
+Model decision (2026-11-12): use Sonnet only for ongoing model-backed work. Gemma is
+unavailable per the user. The completed comparison remains historical evidence;
+there is no active Gemma repair, comparison rerun or adoption task. Future processing
+and quality work targets Sonnet. F1.1 preserves model settings and includes no paid
+evaluation or model replacement.
+
+Historical pre-F1.1 checks: 48 API tests, 20 browser workflows and frontend build passed
+in M3.2A; 17 paid diagnostic attempts, with no production model/schema/data changes.
+The older 12-document/30-question live benchmark predates final grounded-v3 tightening;
+targeted checks are not a full rerun. Original private-PDF failed response bodies are
+unavailable. These are historical results, not new tests run for this planning update.
+Sources: [M3.2A](M3_2A_RESULTS.md), [M2/M3](M2_M3_VALIDATION.md),
+[M3.1](M3_1_UI_REDESIGN.md), [Graph](GRAPH_EXPLORER_UPDATE.md).
+
+## Phase map and dependencies
+
+| Phase | Milestones | Status / dependency |
 | --- | --- | --- |
-| 1 | M3.1 — Linkmind UI redesign and validation | Implemented and validated; user approved proceeding to M3.2 planning on 2026-11-12 |
-| 2 | M3.2 — Baseline and document-processing reliability | A diagnostics/pilot complete; B proposal pending approval |
-| 3 | M3.3 — Retrieval quality and entity resolution | Pending |
-| 4 | M3.4 — Verified multi-hop GraphRAG | Pending |
-| 5 | M4.1 — Read-only Jira integration | Pending local quality gates |
-| 6 | M4.2 — Persistent sync, freshness and revocation | Pending source ACLs |
-| 7 | M4.3 — Bounded orchestration | Adopt only with measured benefit |
-| 8 | M4.4 — Additional sources | Later; Slack retained, other sources evaluated |
-| 9 | M5 / M6 — Hosted readiness / approved AWS deployment | Later |
-| 10 | M7 — Arabic and bilingual validation | After the English hosted pilot |
+| P1 — Reliable production foundations | F1 (M3.2B), F2 identity/access | Partial: F1.1 locally validated, main-data rollout pending; F1.2 implemented 2026-11-12; F1.3 and F2 planned |
+| P2 — Knowledge Hub and Spaces | K1 authoring, S1 Space experience | Planned; use F2 Space/access foundation and F1 content readiness |
+| P3 — Retrieval intelligence | R1 (M3.3), R2 (M3.4), R3 bounded routing | Partial baseline; R1 uses F1; R2 builds on R1; R3 can be tested with adapters before live connector access |
+| P4 — Enterprise connectors | C1 Jira live (M4.1), C2 Jira sync (M4.2), C3 Confluence, C4 GitLab | Planned; early identity/ACL feasibility in F2; C1 uses R3; C2 uses C1; C3 then C4 reuse proven contracts |
+| P5 — Research and assisted work | W1 research/drafts, W2 approved actions | Planned; W1 builds on relevant P3/P4 sources; W2 follows explicit action authorization design |
+| Cross-cutting production release | H1 hosted readiness (M5), H2 deployment/pilot (M6), L1 localization (M7) | Planned; security, quality and bilingual evaluation start early; H1 required before H2 |
+| P6 — Advanced Conflict Resolution and Delegated Verification | D1 advanced review/resolution | Deferred; preserve essential safety and useful existing reviews throughout |
 
-The next release is for local testing, prioritizes knowledge quality, and uses Jira
-as its first external source. Update milestones and acceptance evidence as work
-completes; do not start the backend upgrade ahead of the UI milestone.
+Phases describe delivery order, not reduced product quality. No requirement to finish
+every graph improvement before investigating connector authorization. Native pages
+use F2's minimal Space identity/authorization foundation; S1 delivers the full Space
+experience after K1, avoiding a circular page/destination dependency. R3 supplies
+the coordinator contract before C1; real cross-source acceptance follows C3/C4.
 
-## Delivery strategy
-Build a substantial hosted MVP in demonstrable increments. Start with one complete
-upload-to-knowledge flow, then expand intelligence, product surfaces, live sources,
-and hosted operations. Keep permissions and provenance in the first slice.
+## Capability Acceptance Matrix
 
-Use the current scope and [frontend rules](FRONTEND_RULES.md) alongside the
-original master specification. Ship frontend workflows in stages as their APIs
-become available. Launch the hosted pilot in English and deliver Arabic in M7.
+| Capability | Current state and evidence | Missing / improvement | Complete when | Owner milestone |
+| --- | --- | --- | --- | --- |
+| Uploads and evidence | Local ingestion, revisions, locators and retained originals; F1.1 independent search publication validated in an isolated stack | Main-data rollout; quote repair gaps; controlled reprocessing | Valid authorized text remains searchable despite failed enrichment; stable citations and safe revision transitions | F1 |
+| Search | Partial target: implemented exact/text/vector/graph-assisted RRF in retrieval.py | Ranking, larger corpora, bilingual evaluation, new source filters | Relevant authorized resources found on held-out tasks within agreed load/latency targets | R1, L1, C2–C4 |
+| Chat/RAG | Partial target: implemented cited answers, follow-ups, evidence dependencies and grounded-v3 | Space scope, live evidence, adaptive routing, improved interaction | Correct supported answers/abstention, scoped follow-ups, dated failures and end-to-end revocation | R1, R3, S1, C1 |
+| Knowledge Graph | Completed bounded explorer and evidence display; partial target retrieval | Verified multi-hop answers, cross-source identity, measured path relevance | Useful paths support actual questions with evidence for every required connection; bounded and permission-safe | R2, C2–C4 |
+| Native Knowledge Hub | Planned; current Knowledge.tsx is generated entity/claim display, not an editor | Rich authoring, publishing, organization, maintenance and revision UX | Full ordinary author/publisher/maintainer journeys work without approval bottlenecks; sources and attribution preserved | K1 |
+| Spaces | Planned; current file scope and graph roots are not managed Spaces | Ownership, memberships, primary destinations, resource linking, contextual overview/chat | Project journey integrates curated and discovered knowledge without duplication or access expansion | F2, S1 |
+| Identity and permissions | Partial target: org + owner/org-visible documents, demo tokens; review roles | Production sign-in, multi-group grants, delegated creation, narrowing page restrictions, source identity mapping | Full access matrix enforced before LLM and on all derived/history/cache surfaces; no demo impersonation hosted | F2, H1, C1–C4 |
+| Contribution assistance | Planned | Destination/category/tag/related/duplicate suggestions | Useful authorized suggestions are optional; author is never inferred to be the actor described | K1, S1 |
+| Connectors | Planned; no live Jira/Confluence/GitLab application integration | Authentication, live tools, modes, sync, ACLs, error lifecycle | Each source passes live and sync lifecycle gates; fixtures alone do not mark it complete | C1–C4 |
+| Freshness and Updates | Partial foundation: revisions/timestamps exist; no connector change feed | Incremental sync, meaningful changes, live checks, simple indicators | Current requests use live source; dated fallback only if authorized; changed records refresh without full graph rebuild | R3, C2–C4 |
+| Conflict safety | Basic local conflict storage/review; F1.1 search independence validated in isolation; partial target behavior | Main-data rollout; context-aware answer prioritization | Conflicting evidence retained, retrieved disagreements explained, existing useful review/history preserved | F1, R1 |
+| Advanced conflict/delegated verification | Deferred; basic existing reviews are not this future capability | Detection/resolution policies, routing, queues, delegated fact review | Later approved scope and evaluation; no future-only machinery now | D1 |
+| UI/UX | Completed M3.1 shell, source picker, evidence, graph/canvas, responsive checks | Complete authoring/Spaces/connectors UX, real progress/cancellation, RTL | Working end-to-end, accessible keyboard/mobile/error journeys; no empty navigation or simulated work | All, L1 |
+| Operations/performance | Partial: leased jobs, bounded retries, independent usage, configured pacing | Load targets, interactive priority, backups, production monitoring/auth/deployment | Measured concurrent workloads, recovery, restore, security and cost acceptance; real infrastructure review | F1, F2, H1, H2 |
+| Research/actions | Planned | Multi-source research/reports, assisted drafts, separately approved writes | Traceable useful outputs within budgets; authorized preview/approval and safe execution for writes | W1, W2 |
+
+## Milestone execution contracts
+
+### T1 — Fictional-company testing and selected-source overviews
+
+- [x] Prepare 24 clearly fictional source documents, five projects, shared people/
+  teams, an owner-only budget, an unresolved ownership disagreement and a sample revision.
+- [x] Provide 15 example questions with source mappings and hand-authored expected
+  outcomes; preserve exact-byte fixture recognition and honest arbitrary-upload behavior.
+- [x] Add working source loading/downloads, questions and addition/revision guidance
+  to the existing Sources sample area; no new empty navigation.
+- [x] Add bounded permission-checked selected-document context for vague overviews,
+  partial-coverage disclosure, low-cost greeting/clarification and clear provider labels.
+- [x] Implement persistent API/worker-shared conservative test-cost reservations and
+  pause on unknown usage; do not change existing unbudgeted provider behavior.
+- [x] Complete the capped Sonnet journeys after refreshing the expired AWS session.
+  Run completed 2026-11-12. 14 of 15 questions answered (Q14 is revision-mode,
+  handled in the revision stage). Revision stage passed (old answer suppressed,
+  new deadline found). User addition: enrichment failed, text search-ready (expected
+  F1.1 behavior). 9 questions fully pass; 2 content-pass (Q7 conflict, Q12 overview);
+  5 original failures (Q4/Q5/Q9/Q10/Q11) confirmed as temporary empty-retrieval
+  caused by vocabulary mismatch when semantic embeddings weren't yet indexed — all 5
+  pass on retest. Budget: $1.587/$10 spent. See docs/company_demo/validation_summary.json.
+
+Mock workflow implementation is validated. Full Sonnet run completed. 17 of 24
+documents had enrichment failures (12 unsupported assertions, 5 identifier namespace
+errors) — text remains search-ready for all; enrichment fix is F1.2 scope.
+F1.2 implemented (contracts.py + providers.py, 2026-11-12). F1.3 remains open. Main app and the existing F1.1 data are untouched.
+
+All milestones require focused implementation changes when separately requested,
+compatible migrations where needed, preservation of existing behavior/data, and
+recorded acceptance evidence. Paths below are existing reuse points, not mandates
+for a new service per responsibility. Complexity is relative, not a time estimate.
+
+### F1 — Search readiness and processing reliability (continues M3.2B)
+
+Dependencies: completed M3.2A. Complexity: high due to publication/citation invariants.
+
+- [x] **F1.1 first slice (isolated local validation; main-data rollout pending):** separate searchable-content readiness from enrichment;
+  conflict/extraction failures cannot block valid authorized indexed content.
+- [x] Keep current-content and enrichment-version selection explicit. Superseded
+  relationships remain historical, not current facts while new enrichment is pending.
+- [x] **F1.2:** implement bounded safe quote/schema repair and relationship-direction
+  guards from the diagnosed cases; preserve exact original evidence.
+  Implemented 2026-11-12. Two targeted fixes applied:
+  (1) contracts.py: allow `project_key` namespace for `decision` entities — decisions
+  legitimately reference project keys; previously all 5 decision documents failed.
+  (2) providers.py: after one bounded repair attempt, prune unsupported assertions
+  (entities/claims/relationships) instead of rejecting the entire extraction — supported
+  knowledge is retained, unsupported claims are discarded. Cascading entity-key cleanup
+  applied so claims/relationships referencing pruned entities are also removed.
+  Regression: grounding, resolution, model_limits tests all pass. Pre-existing preview-auth
+  403 failures in company-sonnet container are unchanged (not caused by these fixes).
+- [ ] **F1.3:** add only necessary versioned reprocessing/index metadata; build and
+  validate new derived data alongside old data, with deliberate activation/rollback.
+- [ ] Improve structure-aware context and parent passages against held-out retrieval
+  tests; do not treat a byte estimator as measured token usage or adopt fixed tuning blindly.
+- [ ] Preserve useful conflict/identity functionality and history. Isolate cross-document
+  conflict assessment from search publication rather than deleting the subsystem.
+
+Backend: processing.py, parsers.py, contracts.py, providers.py, retrieval.py,
+conflict_detection.py, worker/main.py. Frontend: IntelligencePages.tsx Processing,
+Sources/SourceControls and actual readiness/error displays. Data: F1.1 adds
+search_ready_at; derived-generation changes remain F1.3 work as justified, existing
+revision/chunk IDs unchanged.
+Test: partial/failing extraction, parser failures, stale leases, concurrent revisions,
+rollback/retry, mapped quotations, reversed edges, deletion/revocation and saved answers.
+Exit: original citations still resolve, previous evidence is retained, supported new
+text is searchable independently, and no stale/unsupported graph facts are promoted.
+Detailed sequence: [M3.2B](M3_2B_PLAN.md).
+
+#### F1 remaining delivery order — plan only, 2026-11-13
+
+The user requested this plan after reporting that the conversational improvements
+work. This does not start F1.3 or authorize the main-data rollout.
+
+1. **Checkpoint the current application.** Preserve the tested conversation/upload
+   increment and its fixtures; prepare a scoped commit without sweeping unrelated
+   changes into it. Retain the three reproduced baseline regression failures as
+   explicit outstanding checks, not a fully passing-suite claim.
+2. **F1.3 additive metadata.** Add `processing_jobs.staged_version_id` and
+   `document_versions.activation_state` (`live`, `staged`, `rolled_back`) through
+   an additive Alembic migration. Backfill existing records conservatively, retain
+   source/revision lineage and original citation IDs, and extend job-status constraints
+   for `enrichment_staged_failed` without destructive schema replacement. Confirm
+   the distinction between immutable source revisions and derived enrichment
+   generations before changing publication queries; add only metadata needed by
+   the implemented staging boundary.
+3. **F1.3 staging and verification.** Build candidate enrichment outside the live
+   graph. Verify exact evidence, accepted assertions, relationship references and
+   direction, and tenant/source dependencies before it becomes visible. Preserve
+   current authorized text retrieval throughout reprocessing. The work uses the
+   existing worker/modules; no new agent platform or infrastructure.
+4. **F1.3 activation and failure.** Activate a verified candidate atomically, only
+   when the expected source revision and job ownership/lease still match. A stale
+   worker or older revision cannot replace a newer publication. If candidate
+   verification fails, retain valid existing live enrichment, mark the candidate
+   rolled back and the job `enrichment_staged_failed`, with an actionable reason.
+   Same-revision reprocessing retains prior live facts; a newer source revision
+   must still keep superseded old-revision facts historical under F1.1. Rollback
+   must not label facts from obsolete text as current.
+5. **F1.3 acceptance.** Test successful staged activation, failed verification and
+   rollback, interrupted/stale workers, competing revisions, retry idempotency,
+   uninterrupted search, historical citations, revoked access and saved-answer
+   invalidation. Reflect the actual states in Processing/source controls and
+   verify keyboard/mobile behavior. Validate migration/backfill and recovery in
+   an isolated stack; record remaining quality limits. No new paid model evaluation
+   or main-app migration is implied by these deterministic checks.
+6. **F1.1 main-data rollout, separately authorized.** Freeze mutations/workers;
+   preserve the old build; back up PostgreSQL and original artifacts; restore both
+   into an isolated rehearsal stack. Preview actual readiness counts and pointers,
+   apply the compatible migration chain in rehearsal, then verify permissions,
+   search, graph freshness, citations/history and downloads. Prepare restore-based
+   rollback and handling of post-backup writes before touching the original stack.
+   Execute the reviewed rollout only after its own green light.
+
+The remaining F1 context/ranking checks must use held-out questions and measured
+results. They are not silently counted as completed by staging, and broad relevance
+work retains its R1 gate. Historical M3.2A/F1.1 implementation is not repeated.
+
+### F2 — Organization identity, groups and access foundation
+
+Dependencies: existing org/document permissions; can design/test alongside F1.
+Complexity: high. Includes early source authorization feasibility, not a connector build.
+
+- [ ] Replace demo-only auth for hosted operation; preserve local fixtures and plan
+  enterprise IdP integration using the existing proposed Cognito boundary.
+- [ ] Add multi-group membership and simple resource grants; centralize shared
+  permission checks without per-claim/edge ACL administration.
+- [ ] Establish Space identity, primary destination, owner and delegated Create Space;
+  page restrictions narrow Space access, never broaden it. Define the general area.
+- [ ] Cover owner delegation limits, link/move semantics and effective audience previews.
+- [ ] Validate Jira Cloud user/source ACL and source-instance identity assumptions
+  early using synthetic contracts, then an approved application connection when available.
+
+Backend: main.py authentication/authorization boundary, retrieval.py, resolution.py,
+graph_explorer.py; small reusable permission module as needed. Frontend: session.tsx,
+admin/user/group screens and audience controls. Data: memberships/grants and Space
+foundation with conservative backfill preserving existing owner/org audiences.
+Test: multiple groups, narrowed pages, cross-org access, revoked membership, moves,
+restricted names/counts, owner limits and source denial. Exit: permission matrix
+works across API, search, graph, citations, history and caches; hosted demo auth disabled.
+
+Suggested F2 delivery sequence, still planned:
+
+1. Establish production sign-in/session contracts and an enterprise IdP path; keep
+   the local demo explicitly isolated. Cognito remains the proposed hosted option,
+   with configuration/cost review before any AWS resource provisioning.
+2. Implement organization identity, multiple group memberships, resource grants
+   and shared server-side permission checks with a conservative data backfill.
+3. Deliver the Space/destination access foundation: delegated Create Space, owners,
+   primary destination/general area, narrowing page restrictions, and safe links/moves.
+   The complete Space UX remains S1; native authoring remains K1.
+4. Verify the full access matrix across direct APIs, retrieval, graph, metadata,
+   suggestions, citations, history and caches, including immediate revocation.
+5. Validate Jira/source identity and ACL assumptions with synthetic contracts;
+   use a real application connection only when separately authorized. This is
+   feasibility for C1, not delivery of a live connector or synchronization.
+
+### K1 — Production-quality native Knowledge Hub
+
+Dependencies: F1 searchable content and F2 destination/access foundation. Complexity: high.
+
+- [ ] Evaluate/reuse a maintained rich editor; deliver headings, lists, tables,
+  links, code, appropriate attachments/media, autosave, preview and concurrent-edit protection.
+- [ ] Deliver drafts without destination; direct authorized publication with suggested
+  destination and visible audience; keep category/tag suggestions optional.
+- [ ] Add revision browsing/comparison/restoration, archive and deliberate merge/redirect
+  workflows preserving evidence and permission boundaries.
+- [ ] Track author/editors, maintainer, described actors, AI provenance and references
+  distinctly. Official designation is a separate authorized revision action, not a queue.
+- [ ] Provide polished discovery, organization and authorized related/duplicate suggestions.
+
+Backend: existing versions/artifacts/contracts and search publication; native content
+module where needed. Frontend: Knowledge.tsx, shared ui.tsx/Evidence, editor and library
+views. Data: native content/revisions, minimal lifecycle/maintainer/provenance fields;
+reuse resource/evidence contracts, do not copy external pages into native records.
+Test: save/reload, simultaneous edits, publication/access changes, restoration, duplicate
+merge citations, safe rendering and keyboard/responsive UX. Exit: complete author,
+reader and maintainer journeys; no compulsory ordinary approval; actor attribution correct.
+
+### S1 — Complete Project Space experience
+
+Dependencies: F2 Space foundation, K1 native content; integrate new sources as delivered.
+Complexity: high across product UX and derived permissions.
+
+- [ ] Deliver overview/objectives/owner/team, knowledge, connected resources, decisions,
+  relationships, updates and contextual chat with honest empty/unavailable states.
+- [ ] Support delegated self-service creation, accessible similar-Space suggestions,
+  owner maintenance and a lightweight suggestion path for non-creators.
+- [ ] Link a resource to multiple Spaces without copying or expanding access; suggestions
+  and reliable auto-enrichment cannot overwrite approved content.
+- [ ] Implement Hybrid Smart Scoping and clear audience/move controls; support teams
+  and departments through the same model as their experiences are delivered.
+
+Backend: Space queries/links using F2 permissions and existing entity/evidence/search
+APIs. Frontend: Space navigation/overview/resources/chat; preserve People/Graph routes.
+Data: Space-resource links and scoped conversation metadata; no separate knowledge store.
+Test: private linked content, summaries with mixed permissions, duplicate names, moves,
+revocation and context follow-ups. Exit: a useful cohesive project journey, not just a folder.
+
+### R1 — Search relevance and grounded contextual answers (M3.3)
+
+Dependencies: existing baseline; F1 enables index/context changes. Complexity: high.
+
+- [ ] Improve identifier/entity linking, candidate ordering, hybrid ranking, context
+  diversity and filters; compare reranking with baseline before adoption.
+- [ ] Evaluate Arabic/English/mixed-language retrieval and answers from the beginning;
+  expand independently reviewed real-company questions, not only synthetic fixtures.
+- [ ] Implement flexible authority/relevance/time prioritization, optional scoped
+  designations and semantic role distinctions; cite unresolved material disagreement.
+- [ ] Evaluate proportionate semantic verification without weakening source checks;
+  retain fail-safe abstention and Sonnet-only model use. No Gemma comparison or
+  replacement work is required.
+- [ ] Improve contextual follow-ups, source inspection, actual progress and supported
+  cancellation; keep direct search independent of answer generation.
+
+Backend: retrieval.py, providers.py, contracts.py, main.py conversations and tests.
+Frontend: Assistant.tsx, IntelligencePages.tsx, FocusSources.tsx, Evidence.tsx.
+Data: additive ranking/context/evidence metadata only if needed; version answer policy
+when grounding rules change. Test: relevance, qualifiers, same-name entities, disagreements,
+unsupported answers, bilingual queries and permission-safe history. Exit: held-out
+quality/latency/cost targets met and regressions preserved; no invented target results.
+
+### R2 — Evidence-backed multi-hop GraphRAG (M3.4)
+
+Dependencies: R1, F1 source/version integrity. Complexity: high.
+
+- [ ] Implement bounded path retrieval with cycle prevention and direction-aware traversal;
+  the former three-hop default is a tuning starting point, not an intelligence ceiling.
+- [ ] Retrieve evidence for every required edge; validate identity, dates and access;
+  preserve explicit, inferred and uncertain distinctions.
+- [ ] Measure path/ranking benefit against hybrid retrieval alone; retain useful graph
+  exploration and do not extract every sentence or every possible relationship.
+- [ ] Present supporting paths where useful and invalidate affected results on source changes.
+
+Backend: graph_explorer.py, retrieval.py, contracts/evidence/resolution. Frontend:
+GraphWorkspace/GraphPanels/ExplorerCanvas and evidence paths in chat. Data: reuse
+relationships/evidence; source-qualified identity and additive metadata as needed.
+Test: two/three-hop questions, reversed edges, missing evidence, ambiguous identity,
+periods, cycles and revocation. Exit: useful cross-document answers with traceable
+connections; failed paths produce partial/insufficient evidence, not fabricated links.
+
+### R3 — Lightweight query routing and common evidence (continues M4.3)
+
+Dependencies: R1; adapter contract can precede live C1; R2 enables graph routes.
+Complexity: medium–high. No mandatory agent framework.
+
+- [ ] Route stable, operational, historical and compound requests before retrieval;
+  use relevant live source by default for current operational fields.
+- [ ] Normalize local/live evidence identity, source/version, observed time, field/text
+  support, authorization dependencies and coverage limitations.
+- [ ] Bound tools, rounds, tokens, time and concurrency outside prompts; parallelize
+  independent calls; broaden Space scope only when requested/enabled.
+- [ ] Reauthorize retained live evidence/history and distinguish outage from source denial.
+
+Backend: main.py ask path, contracts.py, providers.py, retrieval.py plus small coordinator/
+adapter modules. Frontend: actual source activity, freshness, cancellation and partial
+coverage in Assistant/Evidence. Data: minimal live evidence/dependency persistence under
+retention; never automatically index Live Only history. Test routing with fixtures,
+then real source gates in C1; simple questions incur no unnecessary planner call.
+
+### C1 — Robust read-only Jira live integration (M4.1)
+
+Dependencies: F2 source access/identity contract, R3 evidence/routing; approved app
+credentials/project for live acceptance. Complexity: high.
+
+- [ ] Implement approved MCP/native tools, user/source authorization, known endpoints,
+  input validation, pagination, timeouts, bounded retries and source rate pacing.
+- [ ] Expose connector/project modes and health; route current issue status/assignee/
+  blockers live without equating assignee with project owner.
+- [ ] Cite retained supporting response/excerpt and original Jira link with timestamps;
+  do not use partial or user-filtered views as complete shared index records.
+- [ ] Handle credential expiry, source denial, schema change, injection, outage and
+  authorized dated fallback. No external writes.
+
+Backend: connector adapter, coordinator, authorization/evidence. Frontend: Sources
+connection/policy/health and source-labelled evidence throughout Chat/Search/Spaces.
+Data: source instance, connection/scope policy, external identity and retained live evidence.
+Test real approved access with two distinct source permissions plus mock fault cases.
+Exit: complete live lifecycle, not one lookup. Jira integration is fully accepted
+only with C2 synchronization lifecycle for Live + Sync scopes.
+
+### C2 — Jira incremental sync, enrichment and Updates (M4.2)
+
+Dependencies: C1, F1, F2; S1 for visible Space enrichment. Complexity: high.
+
+- [ ] Synchronize approved scopes with checkpoints, recovery, deduplication, deletion
+  and ACL reconciliation. Pick polling/webhooks from actual needs and source support.
+- [ ] Refresh affected records from live observations without delaying answers;
+  reject stale overwrites and incomplete replacement payloads; avoid unchanged embeddings.
+- [ ] Auto-link reliable identities within sync scopes, preserve official content,
+  and present basic meaningful change/freshness indicators without an event platform.
+- [ ] Enforce Live Only/no-index and mode-transition removal from active retrieval;
+  retained history still respects source access and retention.
+
+Backend: existing worker/job patterns with appropriately scoped refresh jobs,
+connector/search/Space queries. Frontend: sync status, recovery/errors and Space Updates.
+Data: source revision/checkpoint and minimal change records justified by Updates.
+Test duplicated/out-of-order/partial updates, source deletion vs not-found ambiguity,
+permission revocation, missed polling cycles, mode changes and nonblocking refresh.
+Exit: source changes appear once, old evidence remains attributable, active results
+are permission-current, and only affected content/relationships are reprocessed.
+
+### C3 / C4 — Confluence, then GitLab (expands M4.4)
+
+Dependencies: proven C1/C2 contract; each needs its own approved connection and ACL tests.
+Complexity: high per connector; no completion inherited from Jira.
+
+- [ ] C3: Confluence live search/page retrieval, original identity/links, versions,
+  restrictions, sync and revocation; complement native content without independent copies.
+- [ ] C4: GitLab repositories/issues/merge requests/pipelines as approved, with live
+  operational routing, membership/visibility, incremental sync and source limits.
+- [ ] Reuse modes, evidence, connector UI and worker logic; implement source-specific
+  permissions and error behavior explicitly rather than assuming identical APIs.
+- [ ] Prove cross-source identities using explicit references; an issue mention is
+  not proof that a merge request fixes it.
+
+Data: reuse connector/resource models with only source-required metadata. Frontend:
+complete source-specific configuration and unified results, not empty placeholders.
+Test each full connector lifecycle and authorized cross-source questions, including
+denial/expiry/rate limits/partial results. Exit: equivalent quality to Jira for supported
+capabilities; unsupported source features are documented, not simulated.
+
+### W1 / W2 — Research, assisted knowledge and authorized actions
+
+Dependencies: R3 and relevant accepted connectors; W2 follows W1 and concrete action
+design. Complexity: high; external writes require separate authorization.
+
+- [ ] W1: complete multi-source research, project reports and handovers with source
+  comparison, actual progress, cancellation, bounded cost and disclosed coverage.
+- [ ] Prepare native-page additions as distinguishable drafts; a user explicitly
+  publishes them. Keep tool results, conversation memory and organizational facts separate.
+- [ ] W2: show exact target/payload preview, obtain explicit approval, reauthorize at
+  execution, prevent duplicate writes, handle partial outcomes and retain audit evidence.
+- [ ] Adopt specialist agents/frameworks only if measured task success or maintainability
+  improves; do not add one agent per source.
+
+Reuse coordinator, native editor, evidence and audit. Add execution/approval persistence
+only when W2 is actually implemented; no future-only tables now. Test budget exhaustion,
+prompt injection, evidence revocation, cancelled runs, retries and changed approval payloads.
+Exit: useful reviewable outputs and safe approved actions, not unbounded autonomous work.
+
+### H1 / H2 — Hosted readiness and approved deployment (M5 / M6)
+
+Dependencies: F2 for real user access; each released capability's own gates. Complexity:
+high. This is a cross-cutting release track, not deferred security cleanup.
+
+- [ ] H1: production authentication, upload protection, least-privilege secrets,
+  redacted diagnostics, monitoring, interactive/background scheduling, recovery and
+  measured concurrency/latency/cost. Recheck actual model/source quotas; workers alone
+  do not create throughput. Current nine-RPM pacing is configuration, not fresh quota proof.
+- [ ] Establish backup/restore and retention/purge behavior; test tenant isolation and
+  every derived surface under permission changes. Resolve critical findings.
+- [ ] Prepare Python CDK deployment, HTTPS/frontend delivery/networking, state protections,
+  current region-specific costs, synth/diff, restore/rollback and operator runbook.
+- [ ] H2: only after explicit approval deploy the concrete reviewed AWS scope, validate
+  hosted journeys/alerts/restore and run the measured pilot; no infrastructure in this task.
+
+Reuse local Compose/runtime; target infrastructure is a proposal until reviewed. Tests
+include load during ingestion/sync, failures/restarts, backup restoration and hosted auth.
+No calendar commitment until representative volume, concurrency, budget and targets agree.
+
+### L1 — Bilingual capability and localization (repositions M7)
+
+Dependencies: evaluate content/query quality during F1/R1; localized UI follows each
+working surface. Complexity: medium–high across authoring, evidence and navigation.
+
+- [ ] Evaluate Arabic, English and mixed-language source/query combinations throughout.
+- [ ] Deliver language selection and RTL layouts across Hub, Spaces, Search, Chat,
+  Graph, source management and evidence; preserve original source identifiers/text.
+- [ ] Test desktop/mobile, keyboard, mixed-direction editor content and English regression.
+
+Data: language/locale metadata only where useful; no separate knowledge stores. Exit:
+an Arabic-speaking employee can complete the same accepted knowledge journeys; current
+English UI does not count as localization completion. Release coverage must be explicit.
+
+### D1 — Advanced Conflict Resolution and Delegated Verification
+
+Status: deferred. Do not add new conflict engines, queues, ownership routing, resolution
+automation, verification services or speculative tables now. Preserve existing basic
+conflict/identity review and history; do not remove useful working features merely
+because this phase is later. Future design can attach decisions to stable attributed
+claims/evidence. Reassess scope and acceptance with real usage before implementation.
+
+## Cross-cutting acceptance and rollout
+
+Before each capability is called complete: test ordinary workflows, permissions and
+revocation, concurrency/version races, degraded/error recovery, responsive/keyboard UX,
+and measured quality/latency/cost appropriate to the change. Preserve original data and
+citations with additive migrations and tested rollback/backfill; destructive replacement
+is not authorized. Run relevant API/build/browser regressions in disposable environments.
+
+Build a held-out employee-question set covering policies, ownership, same-name projects,
+history, source disagreement, graph paths, operational status and Jira/GitLab research.
+Review gold answers independently. Compare hybrid baseline vs graph/reranking/planning
+increments; report retrieval, semantic support, abstention, latency, source/model calls
+and costs separately. Never infer factual truth from exact-quote matching alone.
+
+Numeric targets and workload are open decisions: previous 20 users/50–200 documents
+were pilot assumptions, not capacity requirements; 100–200 employees is not measured
+concurrency. Agree corpus, simultaneous queries, source quotas, freshness/ACL windows,
+retention and budget before claiming enterprise-scale readiness. Paid evaluation needs
+a new explicit budget; historical M3.2A approval is not a standing allowance.
+
+## Legacy milestone mapping and retained scope
+
+| Earlier plan | Current location / reason |
+| --- | --- |
+| M0–M3.1 completed checklists | Preserved verbatim below; new requirements do not reset progress |
+| M3.2A | Completed findings retained; no repeated pilot implied |
+| M3.2B | F1, split into reviewable readiness/repair/reprocessing slices |
+| M3.3 / M3.4 | R1 / R2; graph capability preserved and measured |
+| M4.1 / M4.2 / M4.3 | C1 / C2 / R3 and W1; live-first routing is not only an empty-KB fallback |
+| M4.4 | C3 Confluence then C4 GitLab committed; Slack retained below |
+| M5 / M6 | H1 / H2; production auth/security start early, deployment still requires approval |
+| M7 last | L1 cross-cutting evaluation/localization; no false claim of existing Arabic support |
+| New native Hub and Spaces | F2, K1 and S1; full capabilities, not merely renamed generated Wiki |
+| Extensive new conflict workflows | D1 deferred; essential safety and existing useful functionality retained |
+
+Retained extension backlog (not implicitly authorized or deleted): selected public
+Slack channels/readable replies with verified membership; named saved graph views/layouts
+that store view state without copying knowledge; SharePoint/OneDrive; OCR/images/Excel;
+private Slack/DMs; customer onboarding. Existing explicit source/data authorizations
+remain valid within their scope; additional access needs its own authorization. No new
+dates or feature removal are inferred from this order.
+
+## Recommended next development task — when explicitly requested
+
+**F1.3 / controlled enrichment staging, activation and rollback.** F1.1 is locally
+validated, and F1.2 plus the focused conversational increment are implemented locally.
+Checkpoint that work and address outstanding regression evidence explicitly; do not
+repeat completed milestones. The F1 remaining delivery order above defines the
+proposed next implementation boundary and its acceptance gates. F2's source/access
+feasibility can be designed independently, without starting live connector work.
+
+F1.1 main-data rollout remains a separate tracked step: prepare a concrete backup,
+legacy readiness preview and rollback before applying migration 0009 to the original
+database. The current isolated preview and evidence are in [F1.1 results](F1_1_RESULTS.md).
+
+Do not rerun completed M3.1 handoff, M3.2A or F1.1 implementation merely because an old
+paragraph said to do so. Later slices require a new implementation request.
+
+## Historical completed milestones and validation
+
+The following original M0–M3.1 record is retained verbatim. Its dated wording and
+old delivery assumptions describe past work; active order and requirements are above.
+Outstanding M2/M3 quality acceptance is carried into R1 and cross-cutting acceptance.
 
 ## M0 — Prepare the project
 - [x] Read both original specification files completely.
@@ -179,218 +691,3 @@ See [UI redesign and validation](M3_1_UI_REDESIGN.md).
 - [x] User approved the Graph/demo/canvas checkpoint and requested M3.2 planning (2026-11-12).
 
 See [Graph explorer implementation and validation](GRAPH_EXPLORER_UPDATE.md).
-
-## M3.2 — Architecture baseline and document-processing reliability
-
-M3.2A completed on 2026-11-12: [findings](M3_2A_RESULTS.md), 48 API / 20 browser checks, 17 capped live attempts. [M3.2B proposal](M3_2B_PLAN.md) is not implemented; original private-PDF quotations remain unconfirmed.
-
-Use the [M3.2 plan](M3_2_PLAN.md): **one milestone, two sequential checkpoints** (A: reproduction/baseline; B: implementation/validation). Backend implementation has not started.
-
-Preparation completed: [baseline manifest](M3_2_BASELINE.json) freezes backend/test/fixture hashes and separates existing live results from current mock regressions. This is preparation, not acceptance of the full milestone.
-
-Local testing first; improve knowledge quality before expanding external sources.
-
-- [ ] Audit the actual code/schema and record the custom-vs-managed retrieval,
-  orchestration and integration decisions using current official documentation.
-  Compare Managed Knowledge Bases without provisioning or migrating automatically.
-- [ ] Freeze a reproducible baseline and agree quality, latency and cost targets
-  before evaluating changes. Independently review expected answers; carry forward
-  the outstanding M2/M3 representative-document acceptance work.
-- [ ] Reproduce the remaining PDF exact-quote failure and add a regression case
-  using authorized content or a representative synthetic reproduction.
-- [ ] Improve text normalization with mappings to original source locations and
-  add bounded repair for recoverable extraction/schema/quote errors. Keep exact
-  evidence validation and reject unsupported facts after the repair limit.
-- [ ] Introduce token-aware, structure-aware chunks with measured overlap and
-  parent context; preserve headings, paragraphs, tables and original page/line locators.
-- [ ] Version processing/index generations. Backfill alongside the current index,
-  validate and switch deliberately; preserve source versions, citations and rollback.
-- [ ] Record a document format/size matrix and test malformed, scanned, unsupported,
-  empty and large files with truthful errors. OCR remains outside this upgrade.
-- [ ] Add per-stage tracing and measure ingestion time, extraction/relationship
-  quality, token usage and available cost estimates against the baseline.
-
-Exit: the PDF regression is resolved without weakening grounding; versioned
-reprocessing preserves old evidence, and the agreed document test matrix passes.
-
-## M3.3 — Retrieval quality and conservative entity resolution
-
-- [ ] Improve question-to-entity linking using explicit identifiers, aliases and
-  context. Namespace external IDs by source instance and project/repository.
-- [ ] Use contextual/semantic similarity to propose uncertain identity matches;
-  keep unsupported automatic merges disabled and preserve human review/history.
-- [ ] Improve cross-section extraction and link suitable attributed claims to
-  evidence-backed relationships without converting every value into a graph edge.
-- [ ] Improve exact/keyword candidate ordering, tune hybrid fusion and compare a
-  reranker against the same held-out questions. Adopt it only if quality and
-  latency/cost targets justify it; do not add new infrastructure by default.
-- [ ] Select evidence with parent context, diversity and a token budget while
-  retaining every required supporting passage. Keep source scope and ACL filtering.
-- [ ] Report retrieval recall/ranking, identity-match and relationship precision/recall,
-  grounded answers, abstention, citations and permission regressions separately.
-
-Exit: held-out comparisons meet the agreed retrieval/identity targets without
-permission regressions; ambiguous same-name entities remain distinguishable.
-
-## M3.4 — Verified multi-hop GraphRAG on uploaded documents
-
-- [ ] Implement bounded PostgreSQL traversal with three hops by default,
-  bidirectional navigation, cycle detection and explicit node/edge/path budgets.
-  Preserve predicate direction and meaning when navigating backward.
-- [ ] Link the question to canonical entities, decompose a complex question when
-  necessary, rank candidate paths and retrieve source evidence for every edge.
-- [ ] Verify identity, relationship meaning, applicable dates and access across the
-  complete path. Distinguish explicit facts, supported conclusions and unconfirmed
-  hypotheses; hypotheses must not become trusted graph facts automatically.
-- [ ] Keep simple questions on a direct retrieval path. Bound any extra retrieval
-  rounds by configured call/token/time limits and return partial or insufficient
-  evidence when a path cannot be established.
-- [ ] Recheck all source dependencies before generation, saving and history display;
-  include paths, caches, labels and counts in revocation/deletion tests.
-- [ ] Preserve existing API behavior and add evidence-path metadata additively;
-  show authorized supporting paths through the UI accepted in M3.1.
-- [ ] Test two- and three-hop cross-document answers, ambiguous identities,
-  cycles, reversed predicates, conflicting periods, missing edges and revoked evidence.
-
-Exit demo: two documents support Project Alpha -> uses -> Billing Service ->
-maintained by -> Omar. The answer cites both edges. Removing or revoking either
-source prevents an unsupported answer and suppresses dependent saved evidence.
-
-## M4 — External sources, synchronization and bounded orchestration
-
-Jira is the first external source, after the local document-quality milestones.
-Connections in Codex are not application credentials. A real project and the
-application's own authorized connection are required for live-source acceptance.
-
-### M4.1 — One read-only Jira integration
-
-See [Jira knowledge discussion](JIRA_KNOWLEDGE_NEXT_STEPS.md) for the confirmed source and proposed reference/saved-view tasks; the additional user chat is pending.
-
-- [ ] Build a typed connector boundary supporting direct MCP for live tools and
-  native APIs/webhooks where synchronization capabilities require them. Keep
-  uploaded-document tools internal rather than wrapping them in MCP unnecessarily.
-- [ ] Register approved endpoints/tools, discover capabilities, check health and
-  enforce read-only allowlists, timeouts, bounded retries and sanitized responses.
-  Prevent source content or the model from choosing identities or arbitrary endpoints.
-- [ ] Map application users to validated Jira identities and source permissions.
-  Do not translate a service account's broad access into organization sharing;
-  deny unverified access and isolate credentials, sessions and cached results.
-- [ ] Normalize source-qualified IDs, URLs, version/update times, retrieval times,
-  evidence and authorization context. Label live results separately from cached facts.
-- [ ] Compare direct MCP with AgentCore Gateway/Identity for the hosted target;
-  keep the local integration independent of new billable AWS infrastructure.
-- [ ] Demonstrate one approved Jira project plus uploaded-document evidence. A
-  reference to an issue is not proof that a merge request or change fixes it.
-- [ ] Test denied/expired credentials, unavailable tools, prompt injection,
-  tool-schema changes, rate limits and cross-user/organization isolation.
-
-Exit: a real read-only Jira query returns current, attributed information only to
-an authorized user. Fixtures remain clearly labelled; unavailable credentials are
-reported as a live-validation dependency, never as a completed integration.
-
-### M4.2 — Persistent synchronization, freshness and revocation
-
-- [ ] Route authorized connector records through the versioned ingestion pipeline
-  only after source ACLs and identity mapping are established.
-- [ ] Implement incremental checkpoints, idempotency, pagination, bounded retries,
-  rate limiting and recovery; choose polling/webhooks from verified source capabilities.
-- [ ] Reconcile updates, deletions and permissions, preserving source versions and
-  invalidating affected graph paths, search, caches and saved answers.
-- [ ] Define freshness and access-verification expiry rules; fail closed when access
-  cannot be verified. Distinguish unavailable sources from an empty result and do
-  not present stale status as current.
-- [ ] Expose actual sync runs, checkpoints, last-success time, freshness and errors
-  through compatible APIs and matching source-management UI.
-- [ ] Test duplicate/out-of-order events, interrupted sync, deletion/revocation,
-  source outages and resumption without duplicate publications.
-
-Exit: a Jira update appears once, stale facts are superseded, and revoked/deleted
-records stop contributing to every dependent surface within the agreed policy.
-
-### M4.3 — Bounded agentic retrieval and orchestration (measured adoption)
-
-- [ ] Start with one typed Python workflow and deterministic knowledge/Jira tools.
-  Add planning or specialist LLM agents only when paired tests show a benefit.
-- [ ] Compare custom orchestration, Strands Agents-as-Tools and LangGraph against
-  actual needs, including durable execution, streaming and future approval workflows.
-- [ ] Enforce tool, iteration, concurrency, token and time budgets outside prompts;
-  support cancellation and honest partial answers with visible evidence limitations.
-- [ ] Trace source/tool calls, retrieved evidence, permission decisions and usage
-  with sensitive-data redaction. Conversation memory is not organizational truth.
-- [ ] Compare answer quality, p50/p95 latency, token/model usage and available
-  costs with the direct retrieval baseline before enabling extra orchestration.
-
-Exit: complex authorized questions improve against the agreed baseline while
-simple questions retain their direct path. A framework with no measured benefit
-is documented as deferred rather than adopted to satisfy an agent count.
-
-### M4.4 — Additional sources after the Jira proof
-
-- [ ] Retain approved public Slack channels and readable replies in the later
-  hosted-pilot scope, with verified membership and the same sync/revocation guarantees.
-- [ ] Evaluate Confluence and GitLab as subsequent source candidates; do not add
-  them to the next local release automatically. Confirm their order and approved scope.
-- [ ] Reuse connector contracts and preserve namespace-qualified identities,
-  evidence, permissions and predicate meanings across every source.
-
-Exit: each adopted source passes its own live authorization and synchronization
-checks before contributing to cross-source answers. Broader source adoption is
-separate from completion of the next local knowledge-quality release.
-
-## M5 — Hosted readiness and verification
-- [ ] Add verified Cognito authentication and disable all demo impersonation in hosted mode.
-- [ ] Test cross-tenant isolation and restricted nodes, edges, labels, counts, snippets,
-  citations, original downloads, wiki content, AI context, and cache invalidation.
-- [ ] Test malicious source instructions, unsafe uploads, stale jobs, and concurrent changes.
-- [ ] Add structured operational metrics, redacted logs, audit visibility, and failure recovery.
-- [ ] Measure graph performance, ingestion throughput, retrieval quality, and model usage
-  on the agreed pilot dataset; set explicit acceptance targets before evaluating it.
-- [ ] Prepare an AWS CDK v2 app in Python with pinned dependencies, secrets and IAM,
-  HTTPS ingress, frontend delivery, networking, backups, and an operator runbook.
-- [ ] Synthesize and review CloudFormation templates, including protections for
-  stateful resources. Prepare the target-specific CDK diff, restore and rollback
-  procedures, and bootstrap requirements for review before deployment.
-- [ ] Prepare a region-specific cost estimate including compute, database, storage,
-  model calls, networking, logs, backups, and frontend delivery. No invented prices.
-- [ ] Present exact resources, access model, projected cost, and known limitations for review.
-
-Exit: acceptance tests pass, remaining limitations are documented, and the proposed
-deployment is concrete and reviewable. No cloud resources are provisioned in this milestone.
-
-## M6 — AWS deployment and pilot
-- [ ] Obtain explicit user approval for the concrete billable deployment.
-- [ ] Confirm the approved account and region. Bootstrap the CDK environment if
-  required, review `cdk diff`, then deploy the approved stacks with `cdk deploy`.
-- [ ] Validate hosted login, uploads, processing, graph, wiki, search, reviews, and citations.
-- [ ] Verify backup restoration, rollback, alerts, and access restrictions in the hosted environment.
-- [ ] Run a limited pilot, collect feedback, and resolve critical findings before expanding.
-- [ ] Deliver operating instructions, exact run/deploy commands, and a measured limitation report.
-
-Exit: pilot users can securely use the hosted product with their approved data.
-
-## M7 — Arabic support (final milestone)
-
-- [ ] Localize UI copy and add right-to-left layouts for navigation, controls,
-  graph inspection, wiki, search, evidence, and conversations.
-- [ ] Validate Arabic and mixed-language document extraction, retrieval, and
-  answers, including Arabic questions against English evidence.
-- [ ] Review Arabic citation accuracy, source links, and permissions. Run
-  desktop, mobile, keyboard, and English regression checks.
-
-Exit demo: an Arabic-speaking user can upload and explore Arabic and mixed-language
-knowledge, ask a question, and follow the answer back to authorized evidence.
-
-## Planning estimates
-
-The previous 4-8 week local-MVP and 10-14 week hosted-pilot ranges predated this
-UI revision and advanced GraphRAG scope; they are not commitments for this update.
-Re-estimate after M3.1 locks the UI scope and M3.2 establishes the quality baseline,
-using representative documents, model quotas and authorized source access.
-Record effort, dependencies and acceptance evidence per milestone. Hosting and
-additional-source estimates remain separate from the next local release.
-
-## Next implementation task, when requested
-
-Finish M3.1 automated validation and visual handoff. Prepare independent M3.2
-baseline work while preserving the knowledge layer; representative-data quality
-acceptance and user visual acceptance must not be claimed automatically.

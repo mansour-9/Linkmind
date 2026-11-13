@@ -10,7 +10,7 @@ ACCESS="d.organization_id=:org AND d.deleted_at IS NULL AND (d.owner_id=:viewer 
 CURRENT=ACCESS+" AND d.current_version_id=v.id"
 PASSAGES="""FROM chunks k JOIN document_versions v ON v.id=k.version_id
  JOIN documents d ON d.id=v.document_id"""
-def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,offset=0):
+def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,offset=0,diagnostics=None):
     query=query.strip()
     if not query:
         return []
@@ -33,11 +33,19 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
         lexical=sql(conn,f"""SELECT k.id,ts_rank_cd(k.search_text,websearch_to_tsquery('english',:q)) score
            {PASSAGES} WHERE {where} AND k.search_text@@websearch_to_tsquery('english',:q)
            ORDER BY score DESC,k.id LIMIT 40""",**params).all()
-        exact=sql(conn,f"""SELECT DISTINCT k.id {PASSAGES}
-           JOIN entities e ON e.version_id=v.id
-           LEFT JOIN entity_identifiers i ON i.canonical_id=e.canonical_id
-           WHERE {where} AND (lower(e.name)=lower(:q) OR (i.value<>'' AND position(i.value in lower(:q))>0)
-             OR k.text ILIKE :pattern) ORDER BY k.id LIMIT 40""",**params).all()
+        if not lexical:
+            from app.source_discovery import terms
+            keywords=terms(query)
+            if keywords:
+                lexical=sql(conn,f"""SELECT k.id,ts_rank_cd(k.search_text,websearch_to_tsquery('english',:keywords)) score
+                    {PASSAGES} WHERE {where} AND k.search_text@@websearch_to_tsquery('english',:keywords)
+                    ORDER BY score DESC,k.id LIMIT 40""",**params,keywords=" OR ".join(keywords)).all()
+        exact=sql(conn,f"""SELECT k.id {PASSAGES} WHERE {where} AND
+           (k.text ILIKE :pattern OR EXISTS(SELECT 1 FROM entities e
+             LEFT JOIN entity_identifiers i ON i.canonical_id=e.canonical_id
+             WHERE e.version_id=v.id AND (lower(e.name)=lower(:q)
+               OR (i.value<>'' AND position(i.value in lower(:q))>0))))
+           ORDER BY k.id LIMIT 40""",**params).all()
         graph=sql(conn,f"""WITH matched AS (
            SELECT DISTINCT e.canonical_id FROM entities e JOIN document_versions v ON v.id=e.version_id
            JOIN documents d ON d.id=v.document_id LEFT JOIN entity_identifiers i ON i.canonical_id=e.canonical_id
@@ -53,8 +61,15 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
     rankings=[lexical,exact,graph]
     semantic_ranking=[]
     vector=None
+    semantic_status="not_requested" if not semantic else "unavailable"
     if semantic and configured() and os.getenv("BEDROCK_EMBEDDING_MODEL"):
-        vector=embed(query,dict(org=viewer.organization_id,user=viewer.id))
+        try:
+            vector=embed(query,dict(org=viewer.organization_id,user=viewer.id))
+            semantic_status="ready" if vector else "unavailable"
+        except Exception:
+            # This is only a model/index degradation. SQL source/ACL failures still
+            # fail the request, and every returned passage is reauthorized below.
+            semantic_status="failed"
     if vector:
         with engine.connect() as conn:
             semantic_ranking=sql(conn,f"""SELECT k.id {PASSAGES} WHERE {where}
@@ -63,6 +78,8 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
                 ORDER BY k.embedding <=> CAST(:vector AS vector),k.id LIMIT 40""",
                 **params,model=os.environ["BEDROCK_EMBEDDING_MODEL"],dim=len(vector),vector=json.dumps(vector)).all()
             rankings.append(semantic_ranking)
+    if diagnostics is not None:
+        diagnostics["semantic_status"]=semantic_status
     scores=defaultdict(float)
     for ranking in rankings:
         for i,row in enumerate(ranking,1):
@@ -79,11 +96,12 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
     # Recheck access after inference, before exposing passages.
     with engine.connect() as conn:
         rows=sql(conn,f"""SELECT k.id,k.text,k.locator,k.line_number,v.id AS version_id,
-            d.id AS document_id,v.filename,
+            d.id AS document_id,v.filename,v.embedding_status,
             (SELECT coalesce(jsonb_agg(DISTINCT jsonb_build_object('canonical_id',e.canonical_id,'name',e.name,'kind',e.kind)),'[]'::jsonb)
              FROM entities e WHERE e.version_id=v.id AND e.organization_id=d.organization_id) AS entities
             {PASSAGES} WHERE {where} AND k.id=ANY(:ids)""",**params,ids=ids).mappings().all()
-    return [{**dict(row),"id":str(row.id),"score":scores[row.id]} for row in sorted(rows,key=lambda r:ids.index(r.id))]
+    return [{**dict(row),"id":str(row.id),"score":scores[row.id],"semantic_status":semantic_status}
+            for row in sorted(rows,key=lambda r:ids.index(r.id))]
 
 def dependencies_allowed(conn,viewer,ids):
     if not ids:
@@ -91,3 +109,44 @@ def dependencies_allowed(conn,viewer,ids):
     count=sql(conn,f"SELECT count(*) {PASSAGES} WHERE {CURRENT} AND k.id=ANY(:ids)",
               **viewer.access(),ids=[UUID(str(x)) for x in ids]).scalar_one()
     return count==len(set(ids))
+
+
+def selected_context(viewer,document_ids,limit=24,max_characters=20000):
+    """Bounded source overview, including text that has no extracted entities."""
+    from fastapi import HTTPException
+    ids=[UUID(str(id)) for id in dict.fromkeys(document_ids)]
+    if not ids or len(ids)>30:
+        raise ValueError("A document overview requires 1 to 30 selected sources.")
+    with engine.connect() as conn:
+        allowed=sql(conn,f"SELECT count(*) FROM documents d WHERE {ACCESS} AND d.id=ANY(:ids)",
+            **viewer.access(),ids=ids).scalar_one()
+        if allowed!=len(ids):
+            raise HTTPException(404,"A selected source is no longer available.")
+        rows=sql(conn,f"""WITH ranked AS (
+            SELECT k.id,k.text,k.locator,k.line_number,v.id AS version_id,d.id AS document_id,v.filename,
+                row_number() OVER(PARTITION BY d.id ORDER BY k.line_number,k.id) AS position,
+                count(*) OVER(PARTITION BY d.id) AS total
+            {PASSAGES} WHERE {CURRENT} AND d.id=ANY(:ids)
+        ) SELECT * FROM ranked WHERE position<=3 OR position=total
+            OR position%greatest(1,total/8)=0 ORDER BY document_id,position""",**viewer.access(),ids=ids).mappings().all()
+    groups={id:[] for id in ids}
+    totals={}
+    for row in rows:
+        groups[row.document_id].append(dict(row))
+        totals[row.document_id]=row.total
+    selected=[]
+    characters=0
+    for index in range(max((len(items) for items in groups.values()),default=0)):
+        for id in ids:
+            group=groups[id]
+            if index<len(group) and len(selected)<limit:
+                item=group[index]
+                if characters+len(item["text"])<=max_characters:
+                    selected.append({key:value for key,value in item.items() if key not in {"position","total"}})
+                    selected[-1]["id"]=str(item["id"])
+                    selected[-1]["entities"]=[]
+                    characters+=len(item["text"])
+    coverage=dict(mode="document_overview",selected_sources=len(ids),covered_sources=len({p["document_id"] for p in selected}),
+        supplied_passages=len(selected),total_passages=sum(totals.values()),
+        partial=len(selected)<sum(totals.values()) or len(totals)<len(ids))
+    return selected,coverage

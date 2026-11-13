@@ -78,7 +78,7 @@ def validate_extraction(result: Extraction, passages: list[dict]) -> Extraction:
     for entity in result.entities:
         validate_citations(entity.evidence, passage_map)
         for identifier in entity.identifiers:
-            if identifier.namespace=="project_key" and entity.kind!="project" or identifier.namespace=="issue_key" and entity.kind!="task":
+            if identifier.namespace=="project_key" and entity.kind not in {"project","decision"} or identifier.namespace=="issue_key" and entity.kind!="task":
                 raise ValueError("Identifier namespace is incompatible with the entity type")
             if not identifier.value.strip() or not any(
                 identifier.value.casefold() in citation.quote.casefold() for citation in entity.evidence):

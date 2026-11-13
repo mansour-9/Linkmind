@@ -4,11 +4,11 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Plus, RefreshCw, Activity } from "lucide-react";
 import { useJobs, useSession, useViewer } from "./session";
-import { Button, Feedback, PageHeading, SearchField, Sheet, StatusBadge } from "./ui";
+import { Button, Feedback, PageHeading, SearchField, Sheet, ReadinessBadge } from "./ui";
 import type { Job, EntityOverview } from "./api";
 import { EntityOverviewCard } from "./GraphPanels";
 
-import type { Passage, Conflict } from "./contracts";
+import type { Conflict } from "./contracts";
 type Usage = { operation: string; provider: string; model: string; region: string; status: string; calls: number;
  input_tokens: number | null; output_tokens: number | null; latency_ms: number; estimated_cost: string | null;
  unknown_cost_calls: number; currency: string | null; rate_date: string | null; retries: number };
@@ -41,7 +41,8 @@ export function SearchPage() {
  function filter(key: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(key, value); else next.delete(key); next.delete("offset"); setParams(next); }
  const [input, setInput] = useState(q);
  useEffect(() => setInput(q), [q]);
- const results = useQuery({ queryKey: ["search", params.toString()], queryFn: () => service.json<Passage[]>("/search?" + resultQuery.toString()), enabled: !!q, refetchOnWindowFocus: true });
+ const results = useQuery({ queryKey: ["search", params.toString()], queryFn: () => service.search(resultQuery.toString()), enabled: !!q, refetchOnWindowFocus: true });
+ const passages = results.data?.passages ?? [];
  const overview = useQuery({ queryKey: ["search-overview", q], queryFn: () => service.json<EntityOverview>("/graph/overview?q=" + encodeURIComponent(q)), enabled: !!q && !params.get("document_id") && !params.get("kind") && !params.get("after") && !params.get("before") && offset === 0 });
  const entity = useQuery({ queryKey: ["entity", overview.data?.entity.id], queryFn: () => service.entity(overview.data!.entity.id), enabled: !!overview.data });
  return <div className="page reading-width"><PageHeading title="Search your workspace" description="Find evidence across the sources you can access." />
@@ -56,14 +57,16 @@ export function SearchPage() {
  {!q && <Feedback>Enter a project name, identifier, or question to search your workspace.</Feedback>}
  {q && <><QueryState query={results} />
  {overview.isSuccess && overview.data && entity.isSuccess && <EntityOverviewCard entity={overview.data.entity} graph={overview.data.graph} claims={entity.data.claims} />}
- {results.isSuccess && <><div className="result-meta"><span>{results.data.length} relevant passages</span>
+ {results.isSuccess && <><div className="result-meta"><span>{passages.length} relevant passages</span>
  <Link className="text-action" to={"/?q=" + encodeURIComponent(q)}>Ask AI about this <ArrowRight size={14} /></Link></div>
- {!results.data.length && <Feedback>No matching evidence. Try an exact project identifier or a different phrase.</Feedback>}
- <div className="knowledge-stack">{results.data.map((p) => <article className="search-result" key={p.id}>
+ {results.data.semantic_status === "failed" && <Feedback>Semantic search is temporarily unavailable. Showing text matches.</Feedback>}
+ {passages.some(p => p.embedding_status !== "ready") && <p className="muted">Some sources are searchable by text while their semantic index is unavailable.</p>}
+ {!passages.length && <Feedback>No matching evidence. Try an exact project identifier or a different phrase.</Feedback>}
+ <div className="knowledge-stack">{passages.map((p) => <article className="search-result" key={p.id}>
  <small className="eyebrow">{location(p.locator)}</small><h2>{p.filename}</h2><p className="passage-excerpt" dir="auto">{p.text}</p>
  <EvidenceAction id={p.id} title="Open source passage" /></article>)}</div>
  <div className="action-row"><Button variant="outline" disabled={offset === 0} onClick={() => { const next = new URLSearchParams(params); next.set("offset", String(Math.max(0, offset - 20))); setParams(next); }}>Previous</Button>
- <span className="muted">Page {Math.floor(offset / 20) + 1}</span><Button variant="outline" disabled={results.data.length < 20 || offset >= 200} onClick={() => { const next = new URLSearchParams(params); next.set("offset", String(offset + 20)); setParams(next); }}>Next</Button></div></>}</>}
+ <span className="muted">Page {Math.floor(offset / 20) + 1}</span><Button variant="outline" disabled={passages.length < 20 || offset >= 200} onClick={() => { const next = new URLSearchParams(params); next.set("offset", String(offset + 20)); setParams(next); }}>Next</Button></div></>}</>}
  </div>;
 }
 
@@ -86,15 +89,16 @@ export function Processing() {
  {jobs.isSuccess && !jobs.data.length && <Feedback>No uploaded documents. Add a source to start processing.</Feedback>}
  <div className="knowledge-stack">{jobs.data?.map((j) => <article className="panel process-card" key={j.id}>
  <div className="process-heading"><div><h2>{j.filename}</h2><small className="muted">{j.visibility === "team" ? "Organization" : "Owner only"} · Version {j.version_id.slice(0, 8)}
- {j.current_version_id === j.version_id ? " · Current" : j.processed_at ? " · Historical" : ""}</small></div><StatusBadge status={j.status} /></div>
- <div className="process-stages"><span><Activity size={14} />{pretty(j.stage)}</span><span>{j.entity_count} entities</span><span>{j.claim_count} claims</span><span>{j.relationship_count} relationships</span><span>Embeddings: {j.embedding_status}</span></div>
- <p className="muted">Last processed: {date(j.processed_at)} · {j.attempts} attempts</p>
+ {j.current_version_id === j.version_id ? " · Current" : j.search_ready_at ? " · Historical" : ""}</small></div><div className="source-state"><ReadinessBadge job={j} /></div></div>
+ <div className="process-stages"><span><Activity size={14} />{pretty(j.stage)}</span><span>{j.entity_count} entities</span><span>{j.claim_count} claims</span><span>{j.relationship_count} relationships</span><span>Semantic index: {j.embedding_status}</span></div>
+ <p className="muted">Search ready: {date(j.search_ready_at)} · Knowledge enriched: {date(j.processed_at)} · {j.attempts} attempts</p>
  {j.error && <Feedback error>{processingError(j.error)}</Feedback>}
  <div className="action-row"><Button variant="outline" onClick={() => setSelected(j.id)}>Processing details</Button>
- {j.can_manage && ["failed", "extraction_unavailable"].includes(j.status) && <Button variant="outline" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}><RefreshCw size={14} />Retry processing</Button>}</div>
+ {j.can_manage && j.can_retry && <Button variant="outline" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}><RefreshCw size={14} />{j.search_status === "ready" ? "Retry enrichment" : "Retry processing"}</Button>}</div>
  </article>)}</div>
  <Sheet title="Processing details" description="Version metadata, attempts and errors." open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null); }}>
  <QueryState query={details} />{details.isSuccess && <div className="space-y-4"><h2>{details.data.filename}</h2><p className="muted">Provider: {details.data.extraction_provider ?? "Not extracted"}</p>
+ <p>Search: {pretty(details.data.search_status)} · Enrichment: {pretty(details.data.enrichment_status)} · Semantic index: {details.data.embedding_status}</p>
  {details.data.attempt_history.map((a) => <div className="panel knowledge-card" key={a.id}><strong>Attempt {a.attempt} · {pretty(a.status)}</strong><p>{pretty(a.stage)}</p>{a.error && <p>{a.error}</p>}</div>)}
  {!details.data.attempt_history.length && <p className="muted">No new processing attempts recorded for this legacy upload.</p>}</div>}
  </Sheet></div>;

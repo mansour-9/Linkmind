@@ -1,154 +1,239 @@
-# Company Brain — Current Scope and Decisions
+# Linkmind — Product Scope and Decisions
 
-M2/M3 core workflows are implemented locally, including Bedrock processing,
-Processing, Search, Wiki, Graph, Chat, conflict/identity review and Usage. See
-[M2/M3 validation](M2_M3_VALIDATION.md) for verified checks and limits, and the
-[frontend rules](FRONTEND_RULES.md) for shared UI guidance.
+Updated 2026-11-12: **Production-Quality Core Platform with Phased Feature Delivery**.
+The roadmap revision originally authorized documentation only. The user subsequently
+requested F1.1 implementation and isolated local validation on 2026-11-12. The product
+direction below is agreed; other slices remain planned. No paid evaluation, model
+change or AWS deployment is authorized by that focused implementation request.
 
-## UI direction approved 2026-11-11
+The user later authorized T1 fictional-company testing: 24 fictional documents,
+example questions, additions/revisions, selected-document overviews and separate
+mock/Sonnet previews. An explicit **US$10 maximum** covers the new Sonnet extraction,
+embeddings and chat run only. No model comparison or AWS infrastructure deployment.
+See [testing guide and actual acceptance](COMPANY_TESTING.md).
 
-- Product identity: Linkmind. Complete Glean-inspired frontend redesign using the supplied references.
-- English first; working features only in navigation. Preserve the backend and API contracts.
-- See [UI redesign](M3_1_UI_REDESIGN.md) for implementation and validation evidence.
+## Document authority and actual state
 
-## Confirmed direction
-- Build a substantial, usable MVP, eventually hosted on AWS.
-- Use this project to organize the knowledge and instructions needed for the build.
-- Make direct file uploads a core input path alongside service connectors.
-- Use Python with FastAPI for the API and Python for the ingestion worker.
-- Use boto3 for application calls to AWS services and AWS CDK v2 in Python for
-  infrastructure. This supersedes the Terraform choice in the original specification.
-- Preserve the original priorities: premium UI, real React Flow graph, working
-  extraction and conflict detection, source-backed wiki, Bedrock answers, secure
-  permissions, database persistence, local development, and tests.
-- Prepare infrastructure and deployment documentation before requesting permission
-  to provision billable AWS resources.
+- This file owns product requirements and agreed decisions.
+- [Implementation plan](IMPLEMENTATION_PLAN.md) is the single active roadmap and
+  contains the Capability Acceptance Matrix, milestones, dependencies and gates.
+- [Architecture](ARCHITECTURE_M2_M3.md) separates current behavior from target design.
+- M3.2 documents elaborate only the processing work; the Jira note elaborates only
+  connector behavior. They do not establish competing delivery orders.
+- Validation reports, original specification and original engineering instructions
+  remain historical evidence. Explicit latest user instructions take precedence.
 
-## Confirmed upgrade order — 2026-11-11
+Current runtime: local React/FastAPI/PostgreSQL/pgvector/Bedrock application with
+uploads, retained revisions, source evidence, hybrid search, grounded chat, graph,
+generated entity pages, conflict/identity review and usage. Native authoring,
+managed Spaces, organization groups, live connectors and synchronization are not
+implemented. M3.1 is completed and user-approved; M3.2A diagnostics are complete;
+F1.1/M3.2B search-readiness separation is implemented and validated in an isolated
+local stack; the main running database/application has not been migrated. F1.2/F1.3
+remain planned. See [F1.1 evidence](F1_1_RESULTS.md). Existing functionality is not
+reset by the new scope.
 
-- The current UI does not meet the user's expectations. M3.1 starts with a full
-  UI discussion, then agreed fixes and a user acceptance walkthrough. Backend
-  upgrades follow this milestone; existing visual references are not final acceptance.
-- The next release is for local testing and prioritizes knowledge quality.
-- M3.2 establishes the baseline, fixes PDF/evidence-processing reliability and
-  introduces safe versioned chunk/index improvements. M3.3 improves retrieval and
-  identity resolution; M3.4 adds verified graph paths with three hops by default.
-- Jira is the first external source. M4.1 establishes a read-only authorized
-  integration; M4.2 adds persistent sync, freshness, deletion and revocation handling.
-- M4.3 evaluates bounded orchestration after retrieval quality is demonstrated.
-  Keep deterministic tools as the baseline; extra agents/frameworks require a
-  measured benefit. Keep organizational facts separate from conversational memory.
-- Retain FastAPI/PostgreSQL/pgvector and evolve compatible APIs. Use migrations
-  and parallel index generations to preserve document versions, data and citations.
-- MCP is a supported live-tool transport, not a requirement for every internal
-  tool or bulk sync. Native source APIs/webhooks may be needed for reliable sync.
-- Preserve source ACLs and qualified IDs; never share a sync account's privileged
-  results with an organization by default. Keep uncertain inferred links separate
-  from explicit facts and verified conclusions.
-- Compare custom retrieval with current managed alternatives before major new
-  orchestration work. Gateway, Identity, Memory, dedicated graph databases and
-  managed KB adoption remain decisions to evaluate, not deployed dependencies.
-- Slack remains in the later hosted-pilot scope. Confluence and GitLab are later
-  candidates; they do not expand the next local release automatically.
-- English remains the current release language. Hosted readiness, approved AWS
-  deployment and M7 Arabic/bilingual validation remain later milestones.
+## Product direction
 
-The detailed checklist and acceptance gates are in [the implementation plan](IMPLEMENTATION_PLAN.md).
+Linkmind is an enterprise knowledge, search, intelligence and AI workspace,
+complementing Jira, Confluence and GitLab rather than replacing them. Deliver
+complete, polished capabilities incrementally. Simple architecture must not mean
+reduced feature depth, an intentionally limited editor, weak GraphRAG, or prototype UX.
 
-## Confirmed pilot scope
-- One invite-only internal team. Design and test tenant isolation from the beginning.
-- Direct uploads, one approved Jira Cloud project, and selected public Slack channels.
-  Ingest readable thread replies and restrict Slack access to verified channel members.
-- English UI, documentation, and validated document intelligence through the hosted
-  pilot. M7 adds Arabic UI and right-to-left layouts and validates Arabic and
-  mixed-language processing, search, answers, and citations.
-- Upload formats are selectable-text PDF, DOCX, TXT, and Markdown.
-- Review the AWS region and data-location policy before deployment.
+Store broadly, structure selectively, verify proportionally, and reason on demand.
+Measure useful answers, discovery, evidence, access correctness, latency and cost;
+do not optimize for entity counts. Preserve useful existing features and data.
 
-## Pilot assumptions and later releases
-- Size for up to 20 invited users and 50–200 representative documents.
-- Use employee, reviewer, and administrator roles together with explicit source and
-  document permissions.
-- Schedule SharePoint/OneDrive, spreadsheets, OCR, private Slack channels, DMs, and
-  self-service customer onboarding for later releases.
+## Knowledge Hub and contribution
 
-## Shared ingestion behavior
-Uploads and connectors create immutable source versions with metadata and access
-rules. Processing normalizes content, creates addressable evidence, extracts claims
-and entities, resolves identities conservatively, builds relationships, and flags
-potential contradictions. Graph, wiki, search, and answers read this persisted layer.
+- Provide practical rich authoring: headings, lists, tables, links, code blocks,
+  media/attachments as appropriate, reliable draft saving, preview and edit-conflict
+  protection. Evaluate an established editor before building one. Simultaneous
+  real-time collaboration was not required initially; do not silently treat basic
+  draft reliability or revision management as optional.
+- Support publishing, discovery, categories/tags, related resources, revision
+  comparison/restoration, archiving, maintainers and deliberate duplicate merging.
+- Drafts need no destination. Every published native page has one primary Space
+  or authorized general organization knowledge area. Preselect the current Space;
+  otherwise suggest a relevant destination and show its audience before publishing.
+- Authorized editors publish ordinary knowledge directly. Categories, tags and
+  related-resource/duplicate suggestions are optional and never block publishing.
+- Official approval is separate, permission-controlled and tied to a revision.
+  Ordinary publication does not imply approval. Editing must not silently carry
+  approval to changed content. No new review queue or delegated verification workflow.
+- Track creator, revision editors, maintainer and timestamps. An author is not
+  automatically the person who performed the work described in the page.
+- Human-authored, AI-assisted and AI-generated content retain clear provenance.
+  AI-generated additions remain distinguishable; publication requires an authorized
+  user's explicit action. Preserve supporting sources and their access restrictions.
+- Suggest related or duplicate pages using authorized retrieval; suggestions must
+  not disclose restricted titles. Merge deliberately, preserve revisions/citation
+  targets and redirects, and never broaden permissions by unioning source audiences.
+- Native pages complement imported records; do not duplicate Confluence resources
+  as independently maintained native pages without an explicit user decision.
 
-Uploads need format and size validation, safe filenames/storage keys, bounded parser
-execution, progress/errors/retries, owner/readers, original-file access, replacement,
-and deletion. A hosted pilot needs quarantine/scanning appropriate to its upload
-threat model. Downloads and evidence access require authorization.
+## Spaces and organization
 
-Changes in content, access, or deletion invalidate dependent views and retrieval.
-Records retained for audit must not remain visible to users who lost access. Exact
-retention, purge timing, and backup deletion policy remain open decisions.
+- Spaces are first-class project, team and department workspaces. Start delivery
+  with the full project journey; reuse the model for teams/departments rather than
+  inventing separate products. Provide overview, objectives, maintained status and
+  owner information, knowledge, resources, people, decisions, relationships, updates
+  and contextual chat as their data becomes available. Show attribution/freshness.
+- Link shared resources; do not copy them. Strong source-qualified identity or
+  explicit links allow automatic enrichment inside approved sync scopes. Similar
+  names or uncertain associations remain suggestions. Never overwrite approved
+  descriptions with inferred content or automatically expand their audience.
+- Organization Admins grant Create Space to selected users/groups. Authorized
+  creators act without per-Space approval and become initial owners. Creation and
+  authority to grant access remain distinct permissions. Owners manage membership,
+  content and maintainers within delegated limits; this is not fact-review routing.
+- Other employees may suggest a Space. Suggest accessible similar Spaces before
+  creation, but do not block similar names or expose inaccessible Spaces.
 
-## AI behavior
-- No AWS credentials are required for the local fixture demonstration.
-- The deterministic mock supports recognized fixtures only. Other uploads may be
-  stored and text-indexed as permitted, but must show AI extraction unavailable.
-- Bedrock enables general-document extraction, embeddings, and grounded
-  answers when configured. PostgreSQL combines exact ID and keyword matching with
-  pgvector search. The approved M2/M3 implementation uses reciprocal-rank fusion.
-  A reranker is not currently enabled. M3.3 compares reranking against the
-  baseline and adopts it only when measured quality and latency/cost justify it.
-- Structured output validation is separate from evidence/semantic validation.
-- Do not infer that contradictory statements can always be reconciled automatically.
-- Preserve uncertain matches and conflict candidates for human review.
+## Users, groups and resource access
 
-## Proposed AWS target
-Retain the original specification's target, subject to regional availability,
-budget, and implementation review:
+- Isolate organizations. Users may join multiple groups and receive the union of
+  their eligible group grants. Keep resource and source restrictions enforceable.
+- Native pages inherit their primary Space's audience by default. Authorized owners
+  can restrict to a smaller permitted audience; restrictions never broaden access.
+  Linking into another Space grants nothing. Preview moves and require explicit
+  confirmation when the effective audience changes; never silently reset restrictions.
+- The general knowledge area is an explicit publishing audience, not an access bypass.
+- External access requires both Linkmind authorization and source-system authorization.
+  Privileged sync credentials do not authorize all employees. Unknown or revoked
+  source access fails safely, including for cached and historical evidence.
+- Enforce access before content reaches the model and on search, titles, counts,
+  suggestions, graph paths, summaries, updates, citations, history and caches.
+  Derived evidence inherits resource dependencies; no per-chunk/claim/edge ACL UI.
+- Use production authentication before real employee access, with a path to enterprise
+  identity providers. Cognito remains the proposed hosted option; retain application
+  authorization separately. Demo identity switching is local-only.
 
-| Component | Proposed service |
-| --- | --- |
-| API and processing worker | ECS Fargate; container images in ECR |
-| Knowledge database | RDS PostgreSQL with pgvector |
-| Uploaded artifacts and source versions | Private S3 storage |
-| Processing queue and failed jobs | SQS and a dead-letter queue |
-| Scheduled connector synchronization | EventBridge Scheduler |
-| AI extraction and answering | Amazon Bedrock |
-| Hosted sign-in | Cognito; application still enforces org/item authorization |
-| Source credentials | Secrets Manager |
-| Operational logs and metrics | CloudWatch |
-| Reproducible infrastructure | AWS CDK v2 in Python, deployed through CloudFormation |
+## Search, chat, research and GraphRAG
 
-The API and worker use boto3 for Bedrock, S3, SQS, and Secrets Manager as needed.
-Hosted services use their ECS task roles for AWS credentials. Docker Compose and
-fixture processing remain usable without AWS credentials. CDK deployment code
-and dependencies are separate from the API and worker runtime.
+- Provide direct search as well as AI answers: exact identifiers, keywords, semantic
+  and hybrid ranking, source/type/project/team/date filters, previews and references.
+- Evaluate Arabic, English and mixed-language retrieval/answers from early milestones.
+  Deliver localized RTL UI as a tracked capability, not an automatic final afterthought.
+  Current UI remains English; bilingual readiness is not yet established.
+- Use evidence-backed relationships and useful multi-hop retrieval, not indiscriminate
+  extraction. Preserve predicate direction, identity, dates and supporting passages.
+  Graph remains a valuable exploration surface; employees need not use it to get answers.
+- Stable documentation normally uses indexed evidence. Current operational questions
+  normally query the relevant live source even if indexed information exists. Historical
+  questions require historical evidence, not simply today's response.
+- Route by meaning, source capabilities, permission, time and conversation context.
+  Clear requests use deterministic tools; complex questions may use bounded planning,
+  progressive retrieval, graph paths and multiple sources. No agent per connector.
+- Hybrid Smart Scoping: Space chat searches the Space and relevant connected scopes,
+  including authorized resources not individually indexed. Broaden when explicitly
+  requested or enabled. No approval for every retrieval step or complex scope UI.
+- Preserve conversation context without treating conversational memory as source truth.
+  Provide citations, evidence inspection, actual progress, cancellation where supported,
+  uncertainty, and honest coverage limits. Enforce tool/token/time budgets in code.
 
-Frontend delivery, HTTPS ingress, networking/egress, database sizing, backup policy,
-and availability level will be selected in the deployment design. Do not present
-this service list as a complete deployment or a verified lowest-cost architecture.
+## Connected sources and freshness
 
-AWS Fargate supports running ECS containers without managing EC2 servers:
-[AWS documentation](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html).
-Bedrock structured-output support must be checked for the selected model and API:
-[AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/structured-output.html).
-References checked 2026-11-10; revalidate before implementation/deployment.
+Deliver Jira first, then Confluence, then GitLab. Each must be robust for real
+organizational use; one successful API call is not connector completion. Codex
+connections are not application credentials. Use MCP or native APIs according to
+verified capability; bulk synchronization need not use MCP.
 
-## MCP and connector boundaries
-MCP integrations can help investigate source systems and support development.
-Connections in the Codex chat do not automatically authorize the hosted application.
-The application's connectors need their own authentication, permission mapping,
-incremental synchronization, retry behavior, and deletion handling.
-No additional MCP connection is required to begin local implementation with fixtures.
-
-## Decisions to collect
-| Decision | Why it matters | Required before |
+| Mode | Live retrieval | Persistent index and enrichment |
 | --- | --- | --- |
-| Which representative documents and Jira project/application connection can we use? | Next local quality evaluation and live Jira authorization | M3.2 / M4.1 validation |
-| Which approved Slack channels can we use later? | Verified membership and hosted-pilot scope | M4.4 live validation |
-| UI visual walkthrough | Linkmind/Glean direction approved; verify final visual preferences | M3.1 acceptance |
-| What quality, latency, cost and freshness targets apply? | Evaluate gains and set enforceable budgets/policies | M3.2 baseline / M4.2 sync |
-| Actual pilot users, document volume, file sizes, and sync frequency? | Limits, performance testing, cost assumptions | Capacity and deployment sizing |
-| AWS monthly budget, region, and data-location restrictions? | Deployment options and model availability | AWS design approval |
-| Who reviews conflicts and which sources have authority? | Review permissions and predicate-specific policies | Conflict workflow acceptance |
-| Data retention and deletion expectations? | Storage lifecycle, audit, backups | Hosted pilot |
+| Live Only | Authorized scoped requests | No automatic organizational indexing or enrichment; temporary citation/history evidence only under retention/access rules |
+| Live + Sync | Authorized scoped requests | Selected approved scopes synchronize and enrich Spaces |
+| Not Connected | Unavailable through Linkmind | No sync or cached fallback exposure |
 
-Unknown answers should be recorded honestly, not converted into approved requirements.
+Configure at connector-instance/project/repository scope with clear inheritance,
+not per record. Disabling a connector stops its scopes. Moving to Live Only removes
+previously synchronized resources from active organizational retrieval/enrichment;
+retained history follows access and retention policy, not implicit public availability.
+
+Live answers do not wait for sync. Changed observations within approved sync scopes
+may request a deduplicated refresh. A partial or user-filtered response must not
+replace a complete shared record. Re-fetch when version, completeness or ACLs are
+insufficient; older observations cannot overwrite newer state. Preserve previous
+evidence and distinguish source-updated, observed and explicit effective times.
+
+Use incremental sync, checkpoints, pagination, bounded retries, source limits and
+permission/deletion reconciliation. Begin with appropriate polling; add webhooks
+where justified. A missing search result does not prove deletion. Query-triggered
+refresh does not replace reconciliation of rarely queried resources or permissions.
+
+On temporary outage/rate limit, provide clearly dated last-known information only
+when access remains reliably established. Never call cached status currently confirmed.
+Permission uncertainty does not permit fallback. Updates begin with meaningful recorded
+changes and freshness indicators, not a separate event engine or LLM per modification.
+
+## Authority, verification and conflict safety
+
+Prioritize evidence by relevance, semantic meaning, direct support, appropriate source
+authority, freshness and explicit effective dates. Optional scoped authority settings
+are available to admins/authorized owners, not mandatory per fact. Jira assignee is
+not project owner; newer text is not automatically authoritative. Model confidence
+alone is not a reason to resolve a contradiction.
+
+Always validate structure, source references, permissions and supporting evidence.
+Recover safe formatting errors without inventing facts. Use deeper semantic checks
+for ambiguous, contradictory or consequential information; evaluate any relaxation
+against the current safeguards before rollout. **Model decision, 2026-11-12: use
+Sonnet only for ongoing model-backed work.** Gemma is unavailable per the user;
+repairing, re-evaluating or adopting it is not an active task. Retain the existing
+Sonnet configuration and essential verification. The completed six-case Gemma/Sonnet
+pilot remains historical evidence, not an outstanding comparison or proof of
+equivalence. This documentation decision does not change runtime configuration or
+authorize new paid evaluation.
+
+Keep original sources, document versions, relevant dates and relationship evidence.
+New ingestion must not silently destroy conflicting evidence. Explain material
+unresolved disagreements in retrieved evidence with citations; no claim of exhaustive
+organization-wide conflict discovery. Keep useful existing conflict/identity review
+features and records, but their failures must not block document searchability.
+
+Advanced Conflict Resolution and Delegated Verification are later-phase features:
+automatic resolution, review queues, escalation and ownership routing are not new
+core requirements. Do not add tables/events/services solely to anticipate them.
+
+## Architecture, delivery and retained requirements
+
+Retain React/TypeScript/React Flow, FastAPI/Python, PostgreSQL/pgvector, Bedrock via
+boto3, and existing worker patterns. Use ordinary modules and compatible migrations.
+Use AWS CDK v2 in Python for any approved infrastructure, superseding original Terraform.
+Require a concrete security/cost/deployment review before billable provisioning.
+Do not adopt a new graph database, event platform or agent framework without benefit.
+
+Earlier AWS candidates remain proposals: ECS Fargate/ECR, RDS PostgreSQL, private S3,
+Cognito, Secrets Manager and CloudWatch. SQS/DLQ and EventBridge Scheduler are options
+when justified, not mandatory replacements for the existing queue/scheduler approach.
+Frontend delivery, HTTPS, backups/restore, availability, region and cost need review.
+No service has been provisioned by this planning update.
+
+Earlier scope items are retained: selected public Slack channels/readable replies,
+named saved graph views, OneDrive/SharePoint, OCR/images/spreadsheets, private Slack/DMs
+and customer onboarding. They remain tracked extensions with their prior authorization
+constraints, not silently deleted or treated as replacements for Confluence/GitLab.
+
+## Open sizing and release decisions
+
+The previous 20-user / 50–200-document pilot assumption is not a new capacity limit.
+The user discussed 100–200 employees; actual concurrency, corpus size and source scope
+remain to be measured. Earlier internal-team/Jira Cloud assumptions are starting
+context, not permission to connect arbitrary live data.
+
+Before capacity/release acceptance, agree representative documents and source access;
+held-out quality criteria; p50/p95 latency, concurrent load and cost targets; freshness
+and ACL verification windows; retention/purge/backup behavior; deployment budget/region;
+and localization release coverage. Keep unknowns explicit, not invented commitments.
+
+## Changes from the prior scope
+
+- Replaced a minimal-MVP ceiling with production-quality phased delivery.
+- Promoted native Knowledge Hub, intelligent Spaces, Confluence and GitLab to committed
+  product scope; did not reset implemented upload/wiki/search/graph/chat capabilities.
+- Moved bilingual evaluation and security work earlier; English-only current state is
+  preserved as fact, not a permanent product constraint.
+- Replaced mandatory extraction-before-search and extensive new conflict workflows
+  with independent search readiness and essential conflict safety.
+- Preserved advanced conflict functionality as a later phase and existing useful
+  reviews as implemented work. No destructive removal is authorized.

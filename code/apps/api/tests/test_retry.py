@@ -40,7 +40,9 @@ def test_worker_retries_rollback_publication(monkeypatch):
                 assert tuple(row)==("failed" if attempt==3 else "queued",attempt)
                 assert sql(conn,"SELECT count(*) FROM canonical_entities").scalar()==count
                 assert sql(conn,"SELECT count(*) FROM entities WHERE version_id=:id",id=vid).scalar()==0
-                assert sql(conn,"SELECT current_version_id FROM documents WHERE id=:id",id=did).scalar() is None
+                # Enrichment rolls back, while valid source search publication survives.
+                assert sql(conn,"SELECT current_version_id FROM documents WHERE id=:id",id=did).scalar()==vid
+                assert sql(conn,"SELECT search_ready_at FROM document_versions WHERE id=:id",id=vid).scalar()
                 sql(conn,"UPDATE processing_jobs SET available_at=now()-interval '100 days' WHERE id=:id",id=jid)
         finally:
             tx.rollback()

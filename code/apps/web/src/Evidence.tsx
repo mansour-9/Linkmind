@@ -18,16 +18,38 @@ export function SourcePreview({ evidence }: { evidence: Evidence }) {
   </div>;
 }
 
-export function EvidenceAction({ id, title = "View evidence" }: { id: string; title?: string }) {
+/** variant="chip"   — existing chip button (Show work, default)
+ *  variant="cite"   — compact superscript [n] button (inline after statement)
+ *  variant="source" — [n] filename row in sources footer
+ */
+export function EvidenceAction({ id, title = "View evidence", citationNumber, variant = "chip" }: {
+  id: string;
+  title?: string;
+  citationNumber?: number;
+  variant?: "chip" | "cite" | "source";
+}) {
   const { service } = useSession();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const evidence = useQuery({ queryKey: ["evidence", id], queryFn: () => service.evidence(id), enabled: open, refetchInterval: open ? 5000 : false });
-  return <><Button ref={trigger} variant="ghost" className="citation-action" title={title} onClick={() => setOpen(true)}><FileText size={14} /><span>{title}</span></Button>
-    <Sheet title="Source evidence" description="Original passage and source file." open={open} onOpenChange={setOpen} returnFocus={trigger}>
-      {evidence.isPending && <Feedback>Loading evidence…</Feedback>}
-      {evidence.isError && <Feedback error>{evidence.error.message}<Button variant="outline" onClick={() => void evidence.refetch()}>Retry</Button></Feedback>}
-      {evidence.isSuccess && <SourcePreview evidence={evidence.data} />}
-    </Sheet>
-  </>;
+
+  const sheet = <Sheet title="Source evidence" description="Original passage and source file." open={open} onOpenChange={setOpen} returnFocus={trigger}>
+    {evidence.isPending && <Feedback>Loading evidence…</Feedback>}
+    {evidence.isError && <Feedback error>{evidence.error.message}<Button variant="outline" onClick={() => void evidence.refetch()}>Retry</Button></Feedback>}
+    {evidence.isSuccess && <SourcePreview evidence={evidence.data} />}
+  </Sheet>;
+
+  if (variant === "cite" && citationNumber != null) {
+    return <><button ref={trigger} className="cite-marker" onClick={() => setOpen(true)} aria-label={`Citation ${citationNumber}: ${title}`}>{citationNumber}</button>{sheet}</>;
+  }
+
+  if (variant === "source" && citationNumber != null) {
+    return <><button ref={trigger} className="source-ref" onClick={() => setOpen(true)} title={title}>
+      <span className="source-ref-num">{citationNumber}</span>
+      <FileText size={11} className="source-ref-icon" aria-hidden />
+      <span className="source-ref-name">{title}</span>
+    </button>{sheet}</>;
+  }
+
+  return <><Button ref={trigger} variant="ghost" className="citation-action" title={title} onClick={() => setOpen(true)}><FileText size={14} /><span>{title}</span></Button>{sheet}</>;
 }

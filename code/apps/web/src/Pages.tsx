@@ -3,8 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { ArrowDownToLine, ArrowRight, Clock3, Database, FileText, Network, Plus, ShieldCheck, UploadCloud } from "lucide-react";
 import { useGraph, useIngest, useJobs, useSession, useViewer } from "./session";
 
-import { Button, Feedback, jobLabels, PageHeading, SearchField, Sheet, StatusBadge } from "./ui";
+import { Button, Feedback, jobLabels, PageHeading, SearchField, Sheet, ReadinessBadge } from "./ui";
 import { SourceControls } from "./SourceControls";
+import { CompanyDemo } from "./CompanyDemo";
 import type { Entity, Job, Visibility } from "./api";
 
 const uploadDate = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
@@ -23,7 +24,7 @@ export function Sources() {
   const visible = jobs.isSuccess ? jobs.data : [];
   const filtered = visible.filter(j => j.filename.toLowerCase().includes(filter.toLowerCase()));
   const queued = visible.filter((job) => job.status === "queued").length;
-  const ready = visible.filter((job) => job.status === "ready").length;
+  const ready = visible.filter((job) => job.search_status === "ready" && job.current_version_id === job.version_id).length;
 
   function openUpload() {
     ingest.reset();
@@ -46,7 +47,7 @@ export function Sources() {
       action={<Button ref={addButton} onClick={openUpload}><Plus size={18} /> Add data source</Button>} />
     {jobs.isSuccess && <div className="source-summary" aria-label="Upload summary">
       <span><strong>{visible.length}</strong> uploads</span>
-      <span><strong>{ready}</strong> ready</span>
+      <span><strong>{ready}</strong> search ready</span>
       <span><strong>{queued}</strong> queued</span>
     </div>}
     <SearchField className="library-search source-search" aria-label="Find a document" placeholder="Find a document…" value={filter} onChange={e => setFilter(e.target.value)} />
@@ -65,7 +66,7 @@ export function Sources() {
               <time className="job-date" dateTime={job.uploaded_at}>Uploaded {uploadDate.format(new Date(job.uploaded_at))}</time>
               <details className="source-management"><summary>Manage source</summary><SourceControls job={job} /></details>
             </div>
-            <div className="source-state"><StatusBadge status={job.status} /><small>{job.current_version_id === job.version_id ? "Current revision" : job.processed_at ? "Historical revision" : "Not published"}</small></div>
+            <div className="source-state"><ReadinessBadge job={job} /><small>{job.current_version_id === job.version_id ? "Current revision" : job.search_ready_at ? "Historical revision" : "Not published"}</small></div>
             <Button variant="ghost" className="icon-button" aria-label={"Download " + job.filename}
               onClick={() => void download(job)}><ArrowDownToLine size={17} /></Button>
           </li>)}
@@ -81,7 +82,7 @@ export function Sources() {
           {token === "demo-amal" && <Button variant="outline" disabled={ingest.isPending}
             onClick={() => ingest.mutate({ sample: "private-review", visibility: "private" })}>Load restricted sample</Button>}
         </div>
-      </section></details>
+      </section><CompanyDemo /></details>
     </div>
     <div className="mt-4 space-y-2">
       {!open && ingest.isPending && <Feedback>Uploading document…</Feedback>}

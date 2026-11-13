@@ -1,5 +1,14 @@
 # Linkmind local development
 
+This runbook describes the current implemented runtime, not the target capability set.
+The [main roadmap](../docs/IMPLEMENTATION_PLAN.md) owns production-quality phased delivery;
+[scope](../docs/PROJECT_SCOPE.md) owns product decisions. F1.1 separates searchable
+source publication from knowledge enrichment and is validated in an isolated stack.
+The original running database/application has not been migrated; review the
+[F1.1 rollout boundary](../docs/F1_1_RESULTS.md) before updating valuable local data.
+F1.2/F1.3 remain planned. Existing local/demo limits are not product ceilings.
+
+
 Application code lives under `code/`. Planning and durable agent/design rules live in the repository root and `docs/`.
 
 | Folder | Purpose |
@@ -24,12 +33,19 @@ Open [Company Brain](http://127.0.0.1:5173). The frontend binds only to loopback
 PostgreSQL and original files persist in named volumes. Alembic migrates the existing database before the API and worker start.
 Back up the local database before applying migrations to valuable data; early canonical-schema migrations require backup restoration to reverse.
 
-The default provider recognizes the two original samples and the exact benchmark files. Arbitrary files are retained but report **Extraction unavailable**.
+The default provider recognizes the original samples, exact benchmark and graph-demo
+fixtures. Arbitrary valid parsed files become **Search Ready** but report
+**Enrichment unavailable**; no entities or relationships are fabricated.
 Mock chat returns clearly labelled verbatim excerpts, without pretending to perform Bedrock inference.
 Local demo tokens deliberately allow identity switching. The API refuses to start unless local demo authentication is explicitly enabled.
-Hosted Cognito authentication remains M5.
+Production authentication is planned in F2/H1 (legacy M5) and required before real employee hosted access.
 
 ## Bedrock mode
+
+For the new Northstar test pack and separate mock/Sonnet previews, follow
+[COMPANY_TESTING.md](../docs/COMPANY_TESTING.md). Its approved US$10 budget is tied to
+one persistent run, not a reusable allowance. The real run is currently paused on an
+expired AWS session; do not reset its budget or copy existing F1.1 uploads into it.
 
 AWS CLI sign-in and local SDK access were verified with the default profile and `us-east-1`.
 Sign in through your approved local CLI flow when the short-lived session expires. Do not put credentials in this repository.
@@ -65,7 +81,7 @@ docker compose up -d --force-recreate api worker
 ## Upload-to-answer workflow
 
 1. As Amal, upload `fixtures/benchmark/alpha-charter.md` and `alpha-review.md` with organization access.
-2. Follow parsing, extraction, embedding and publication in **Processing**.
+2. Follow parsing/index preparation, **Search Ready**, then enrichment in **Processing**.
 3. Open **Knowledge Graph**. The documents share the canonical project identifier CB-ALPHA.
 4. Open **Content** to inspect separate attributed ownership and launch-date claims.
 5. Open **Conflicts** to compare both original sources. Review decisions require a reviewer/admin and a rationale.
@@ -80,7 +96,12 @@ Limits are 20 MiB per file, 100 PDF pages, 500,000 extracted characters and 1,00
 Text files retain the 5,000-line limit. OCR, images and Excel are later releases.
 Original versions are retained; deleting a source removes it from authorized product views and retrieval rather than purging retained storage.
 
-Revisions publish a new current projection atomically only after validation. Older source versions remain available to authorized users.
+Revisions activate valid searchable text independently of enrichment. Parser/index
+preparation failure preserves the previous content; extraction/conflict failure leaves
+new text searchable and old relationships historical. Original passage IDs and prior
+versions remain available to authorized users. Query-embedding failure falls back to
+authorized text matches with an explicit semantic-search diagnostic. Enrichment retries
+reuse the published passages; controlled full reprocessing remains F1.3.
 Names alone produce review candidates. Only strong source-backed identifiers or explicit human review establish shared identity.
 Same-attribute conflicts consider effective periods. Complementary or historical statements remain separate.
 Free-form predicates outside the configured single-valued set are retained without claiming exhaustive contradiction detection.
@@ -99,10 +120,17 @@ Estimates cover token calls; they are not a complete AWS bill.
 
 ## Validate
 
+T1's current mock acceptance is 83 API tests and 25 browser workflows. The checked-in
+corpus builder is `fixtures/generate_company_demo.py`. Source hashes and expected
+records are deterministic; arbitrary edited files remain unavailable for mock AI
+extraction. Selected-document summaries use bounded original passages and disclose
+partial coverage. New nonfactual greetings do not call a model.
+
 Run deterministic integration tests in an isolated mock-mode database. The cleanup below removes only this generated validation project:
 
 ```powershell
 $env:BRAIN_WEB_PORT = '5175'
+$env:BRAIN_BACKEND_IMAGE = 'linkmind-validation-backend:local'
 docker compose -p linkmind-ui-validation up -d --build --wait
 docker compose -p linkmind-ui-validation run --rm --no-deps api pytest -q apps/api/tests
 Set-Location e2e
@@ -113,6 +141,7 @@ npm test
 Set-Location ..
 docker compose -p linkmind-ui-validation down --volumes
 $env:BRAIN_WEB_PORT = ''
+$env:BRAIN_BACKEND_IMAGE = ''
 ```
 
 Playwright uses installed Microsoft Edge in headless mode. Browser checks cover upload/revision, conversations, permissions, revoked evidence,
@@ -152,7 +181,7 @@ passage results with a connected entity card for exact names and identifiers suc
 CB-ALPHA. Chat remains the primary daily answer workflow; no graph-path answer metadata
 is invented or added without verified supporting paths.
 The profile menu contains the local demo identity selector; switching clears the
-old conversation and query cache. Agents and document editing remain deferred.
+old conversation and query cache. Native document editing is planned in K1; agentic workflows are planned in W1/W2. Neither is implemented yet.
 See [redesign validation](../docs/M3_1_UI_REDESIGN.md).
 
 ## Theme and extension rules
@@ -171,4 +200,4 @@ Routes cover sources, jobs/retries, document revisions/access/deletion/download,
 docker compose stop
 ```
 
-This preserves documents and the database. Hosted storage, managed queues, deployment CDK, authentication and operational hardening remain later milestones.
+This preserves documents and the database. Hosted storage, deployment CDK, authentication and operational hardening remain unimplemented; see F2/H1/H2. Managed queues are an evaluated option, not a mandatory migration.

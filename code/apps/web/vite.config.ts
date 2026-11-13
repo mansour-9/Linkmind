@@ -7,7 +7,10 @@ export default defineConfig({
   server: {
     strictPort: true,
     proxy: {
-      "/api": process.env.VITE_API_PROXY ?? "http://localhost:8000",
+      "/api": {
+        target: process.env.VITE_API_PROXY ?? "http://localhost:8000",
+        headers: process.env.VITE_PREVIEW_SECRET ? { "X-Preview-Proxy": process.env.VITE_PREVIEW_SECRET } : {},
+      },
     },
   },
 });

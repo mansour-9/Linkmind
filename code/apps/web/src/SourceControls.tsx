@@ -26,7 +26,7 @@ export function SourceControls({ job }: { job: Job }) {
  <Sheet title={action === "revision" ? "Upload revision" : action === "access" ? "Change source access" : "Delete source"}
  description={job.filename} open={!!action} onOpenChange={(open) => { if (!open) setAction(null); }}>
  <form className="upload-form" onSubmit={(event) => { event.preventDefault(); change.mutate(); }}>
- {action === "revision" ? <><p>The current knowledge stays available until this revision passes processing.</p>
+ {action === "revision" ? <><p>The current source stays available until the new text is search ready. Previous relationships then become historical while the new revision is enriched.</p>
  <label>New file<input type="file" required accept=".pdf,.docx,.txt,.md" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label></> :
  action === "access" ? <p>{job.visibility === "team" ? "Restrict this source and its derived knowledge to its owner. Saved answers depending on it will be hidden from other users." :
  "Share this source and its derived knowledge with everyone in your organization."}</p> :

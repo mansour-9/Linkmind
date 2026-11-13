@@ -1,0 +1,32 @@
+# Only for the explicitly approved fictional-company test run. Persists across restarts.
+services:
+  api:
+    volumes:
+      - type: bind
+        source: ../docs/company_demo
+        target: /reports
+      - type: bind
+        source: ../docs/company_demo/resumed_preflight/rates.json
+        target: /run/secrets/company-rates.json
+        read_only: true
+    environment:
+      COMPANY_BRAIN_COMPANY_PREVIEW: "1"
+      COMPANY_BRAIN_PREVIEW_SECRET: northstar-local-preview-2026-11-12
+      BEDROCK_BUDGET_RUN: northstar-sonnet-2026-11-12
+      BEDROCK_BUDGET_USD: "10"
+      BEDROCK_RATES_JSON: /run/secrets/company-rates.json
+  web:
+    environment:
+      VITE_PREVIEW_SECRET: northstar-local-preview-2026-11-12
+  worker:
+    volumes:
+      - type: bind
+        source: ../docs/company_demo/resumed_preflight/rates.json
+        target: /run/secrets/company-rates.json
+        read_only: true
+    environment:
+      COMPANY_BRAIN_COMPANY_PREVIEW: "1"
+      COMPANY_BRAIN_PREVIEW_SECRET: northstar-local-preview-2026-11-12
+      BEDROCK_BUDGET_RUN: northstar-sonnet-2026-11-12
+      BEDROCK_BUDGET_USD: "10"
+      BEDROCK_RATES_JSON: /run/secrets/company-rates.json
