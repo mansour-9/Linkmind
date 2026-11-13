@@ -8,13 +8,23 @@ from functools import lru_cache
 from uuid import uuid4
 import boto3
 from botocore.config import Config
-from app.contracts import Extraction, GroundedAnswer, AnswerVerdict, validate_extraction, validate_citations
+from pydantic import ValidationError
+from app.contracts import Extraction, GroundedAnswer, AnswerVerdict, EvidenceValidationError, validate_extraction, validate_citations
 from app.db import engine, sql
 from app.inference_budget import reserve,settle
 from app.assistant_persona import CONVERSATION_SYSTEM
 
 class ProviderUnavailable(RuntimeError):
     pass
+
+
+class ModelResponseError(ValueError):
+    """A classified provider response failure; never accepts partial JSON."""
+    def __init__(self, classification, stop_reason=None):
+        self.classification = classification
+        self.stop_reason = stop_reason
+        detail = f"; Bedrock stopReason={stop_reason}" if stop_reason else ""
+        super().__init__(f"{classification}{detail}")
 
 def configured():
     return os.getenv("AI_PROVIDER","mock") == "bedrock"
@@ -26,7 +36,7 @@ def runtime():
         config=Config(retries={"mode":"adaptive","total_max_attempts":1 if os.getenv("BEDROCK_BUDGET_RUN") else 3},
                       connect_timeout=5,read_timeout=180,max_pool_connections=16))
 
-def record(scope, operation, model, started, response, error):
+def record(scope, operation, model, started, response, error, diagnostic=None):
     usage = response.get("usage",{})
     # Rates are explicitly configured currency units per million tokens.
     try:
@@ -46,16 +56,17 @@ def record(scope, operation, model, started, response, error):
         sql(conn,"""INSERT INTO ai_usage
           (id,organization_id,user_id,version_id,processing_attempt_id,operation,provider,model,region,
            input_tokens,output_tokens,latency_ms,status,error_code,sdk_retries,
-           estimated_cost,currency,rate_date)
+           estimated_cost,currency,rate_date,stop_reason,diagnostic)
           VALUES (:id,:org,:user,:version,:attempt,:operation,'bedrock',:model,:region,
-           :incoming,:outgoing,:latency,:status,:error,:retries,:cost,:currency,:date)""",
+           :incoming,:outgoing,:latency,:status,:error,:retries,:cost,:currency,:date,:stop,CAST(:diagnostic AS jsonb))""",
           id=uuid4(),org=scope["org"],user=scope.get("user"),version=scope.get("version"),
           attempt=scope.get("attempt"),operation=operation,model=model,region=os.getenv("AWS_REGION","us-east-1"),
           incoming=incoming,outgoing=outgoing,latency=int((time.monotonic()-started)*1000),
           status="failed" if error else "success",error=error,
           retries=response.get("ResponseMetadata",{}).get("RetryAttempts",0),
           cost=cost,currency=rates.get("currency") if known else None,
-          date=rates.get("effective_date") if known else None)
+          date=rates.get("effective_date") if known else None,
+          stop=response.get("stopReason"),diagnostic=json.dumps(diagnostic) if diagnostic is not None else None)
 
 def structured(contract, system, payload, scope, operation, model_var="BEDROCK_EXTRACTION_MODEL",authorize=None):
     model=os.getenv(model_var)
@@ -85,18 +96,31 @@ def structured(contract, system, payload, scope, operation, model_var="BEDROCK_E
     started=time.monotonic()
     response={}
     error=None
+    diagnostic=None
     try:
         response=runtime().converse(**request)
-        if response.get("stopReason") not in {"end_turn","stop_sequence"}:
-            raise ValueError("Model response was incomplete or blocked.")
+        stop_reason=response.get("stopReason")
+        if stop_reason not in {"end_turn","stop_sequence"}:
+            classification={"max_tokens":"output_truncated","content_filtered":"content_blocked",
+                "guardrail_intervened":"content_blocked"}.get(stop_reason,"model_stopped")
+            raise ModelResponseError(classification,stop_reason)
         content="".join(part.get("text","") for part in response["output"]["message"]["content"])
-        return contract.model_validate_json(content)
+        try:
+            return contract.model_validate_json(content)
+        except ValidationError as exc:
+            diagnostic=dict(code="malformed_output",stop_reason=stop_reason,
+                locations=[list(error["loc"]) for error in exc.errors()[:12]])
+            raise ModelResponseError("malformed_output",stop_reason) from exc
     except Exception as exc:
+        if diagnostic is None and isinstance(exc,ModelResponseError):
+            diagnostic=dict(code=exc.classification,stop_reason=exc.stop_reason)
+        if diagnostic is None and isinstance(exc,EvidenceValidationError):
+            diagnostic=exc.diagnostic
         error=getattr(exc,"response",{}).get("Error",{}).get("Code",type(exc).__name__)
         raise
     finally:
         try:
-            record(scope,operation,model,started,response,error)
+            record(scope,operation,model,started,response,error,diagnostic)
         finally:
             settle(reservation,response,error)
 
@@ -115,6 +139,49 @@ Return separate complementary statements. Include source attribution and uncerta
 Every entity, claim and relationship needs evidence. Avoid headings and generic words as entities."""
 def extract_bedrock(passages,scope):
     return _extract_verified(passages,scope,{"passages":passages},repair_allowed=True)
+
+
+def bounded_batches(passages, max_passages=3, max_characters=9000):
+    """Batch on both passage count and source text size; never change evidence IDs."""
+    batches=[]
+    current=[]
+    characters=0
+    for passage in passages:
+        size=len(passage["text"])
+        if size>max_characters:
+            raise ValueError("A source passage exceeds the extraction input-size bound.")
+        if current and (len(current)>=max_passages or characters+size>max_characters):
+            batches.append(current)
+            current=[]
+            characters=0
+        current.append(passage)
+        characters+=size
+    if current:
+        batches.append(current)
+    return batches
+
+
+def extract_bedrock_batches(passages,scope,max_passages=3,max_characters=9000):
+    """One truncation split per initial batch: at most three calls per initial batch."""
+    initial=bounded_batches(passages,max_passages,max_characters)
+    pending=[(index,batch,0) for index,batch in enumerate(initial)]
+    completed=[]
+    calls=0
+    while pending:
+        if calls>=3*len(initial):
+            raise ValueError("Extraction split budget exhausted before all passages were verified.")
+        index,batch,depth=pending.pop(0)
+        calls+=1
+        try:
+            result=_extract_verified(batch,scope,{"passages":batch},repair_allowed=True)
+        except ModelResponseError as exc:
+            if exc.classification!="output_truncated" or depth>=1 or len(batch)==1:
+                raise
+            midpoint=max(1,len(batch)//2)
+            pending[0:0]=[(index,batch[:midpoint],depth+1),(index,batch[midpoint:],depth+1)]
+        else:
+            completed.append((index,result))
+    return [result for _,result in sorted(completed,key=lambda item:item[0])]
 
 def _extract_verified(passages,scope,payload,repair_allowed):
     result=validate_extraction(structured(Extraction,EXTRACT,payload,scope,"extraction"),passages)
@@ -177,12 +244,22 @@ def embed(text,scope):
             settle(reservation,response,error)
 
 def answer(question,passages,scope,history=None,authorize=None):
+    feedback=None
     try:
         return _answer_once(question,passages,scope,history,authorize)
-    except ValueError as exc:
+    except EvidenceValidationError as exc:
+        feedback={"attempt":1,"issues":[exc.diagnostic]}
+    try:
         return _answer_once(question,passages,scope,history,authorize,
-            feedback="The previous answer failed evidence validation: "+str(exc)+
-            ". Use only fully supported facts and quotations with sufficient source context. If evidence is missing, explicitly return insufficient_evidence.")
+            feedback={"previous_evidence_errors":feedback["issues"],
+                "instruction":"Correct only the identified citation, quotation or internal-ID error. Use exact source substrings. If evidence is missing, return no statements and insufficient_evidence=true."})
+    except EvidenceValidationError as exc:
+        # Failed model output is retained only as bounded local diagnostics, never as an answer.
+        diagnostic=dict(code="answer_validation_failed",correction_attempts=1,
+            issues=[{**issue,"attempt":attempt} for attempt,issue in
+                enumerate(feedback["issues"]+[exc.diagnostic],1)])
+        record(scope,"answer_validation",os.getenv("BEDROCK_ANSWER_MODEL",""),time.monotonic(),{},exc,diagnostic)
+        return GroundedAnswer(statements=[],insufficient_evidence=True)
 
 def _answer_once(question,passages,scope,history=None,authorize=None,feedback=None):
     if authorize is not None:
@@ -211,10 +288,13 @@ def _answer_once(question,passages,scope,history=None,authorize=None,feedback=No
         {"question":question,"passages":passages,"conversation":history or [],"validation_feedback":feedback},scope,"answer","BEDROCK_ANSWER_MODEL",authorize=authorize)
     mapping={p["id"]:p["text"] for p in passages}
     internal_ids={str(e["canonical_id"]) for p in passages for e in p.get("entities",[]) if e.get("canonical_id")}
-    for statement in result.statements:
-        if any((id in statement.text or id[:8] in statement.text) and not any(id in p["text"] for p in passages) for id in internal_ids):
-            raise ValueError("Do not include internal identity IDs in answer text. Explain uncertainty in plain language.")
-        validate_citations(statement.evidence,mapping)
+    for statement_index,statement in enumerate(result.statements):
+        for internal_id in sorted(internal_ids):
+            if ((internal_id in statement.text or internal_id[:8] in statement.text)
+                    and not any(internal_id in p["text"] for p in passages)):
+                raise EvidenceValidationError(dict(code="internal_identity_id",
+                    statement_index=statement_index,internal_id=internal_id))
+        validate_citations(statement.evidence,mapping,statement_index)
     if result.statements:
         verdict=structured(AnswerVerdict,UNTRUSTED+
             "For each statement return one boolean in order. True only if the entire statement is supported by its cited quotations "

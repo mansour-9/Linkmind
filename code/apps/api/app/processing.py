@@ -9,7 +9,7 @@ from app.contracts import Extraction, validate_extraction
 from app.db import engine, sql
 from app.fixture_provider import recognize
 from app.parsers import parse_document
-from app.providers import configured, extract_bedrock, embed, ProviderUnavailable
+from app.providers import configured, extract_bedrock_batches, embed, ProviderUnavailable
 from app.inference_budget import BudgetStopped
 from app import enrichment_staging as staging
 
@@ -300,8 +300,8 @@ def process_one():
     except Exception as exc:
         code=getattr(exc,"response",{}).get("Error",{}).get("Code",type(exc).__name__)
         log.warning("Job %s attempt %s failed: %s",job.id,job.attempts,code)
-        error="The model response did not match the required schema. No unverified knowledge was published." if isinstance(exc,ValidationError) else str(exc)[:300] if isinstance(exc,(ValueError,ProviderUnavailable)) else f"Processing failed ({code}). Check model access, file content, and worker configuration."
-        status="failed" if job.attempts>=MAX_ATTEMPTS or code in {"AccessDeniedException","ValidationException","ValueError"} else "queued"
+        error="The model response did not match the required schema. No unverified knowledge was published." if isinstance(exc,ValidationError) else str(exc)[:300] if isinstance(exc,ValueError) else f"Processing failed ({code}). Check model access, file content, and worker configuration."
+        status="failed" if job.attempts>=MAX_ATTEMPTS or code in {"AccessDeniedException","ValidationException","ModelResponseError","EvidenceValidationError","ValueError"} else "queued"
     if job.staged_version_id and status not in {"ready","cancelled"}:
         status="enrichment_staged_failed"
     with engine.begin() as conn:
@@ -378,11 +378,10 @@ def enrich(job,content,passages,scope,use_bedrock,is_graph_demo):
         provider="graph-demo-fixture"
     elif use_bedrock:
         result=Extraction(entities=[],claims=[],relationships=[])
-        for start in range(0,len(passages),8):
-            set_stage(job,"extracting")
-            batch=extract_bedrock(passages[start:start+8],scope)
-            # Prefix local model keys to keep independently extracted batches unambiguous.
-            prefix=f"b{start}:"
+        batches=extract_bedrock_batches(passages,scope)
+        for index,batch in enumerate(batches):
+            # Each independently extracted batch has its own model-local key namespace.
+            prefix=f"b{index}:"
             for e in batch.entities: e.key=prefix+e.key
             for c in batch.claims: c.entity_key=prefix+c.entity_key
             for r in batch.relationships:
@@ -391,6 +390,8 @@ def enrich(job,content,passages,scope,use_bedrock,is_graph_demo):
             result.entities.extend(batch.entities)
             result.claims.extend(batch.claims)
             result.relationships.extend(batch.relationships)
+        # All candidate facts are checked again before staging/atomic activation.
+        result=validate_extraction(result,passages)
         provider="bedrock"
     else:
         result=mock_extract(content,passages)

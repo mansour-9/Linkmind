@@ -45,6 +45,7 @@ def test_cost_estimate_configuration_is_explicit(monkeypatch,configured):
     with engine.begin() as conn:
         row=sql(conn,"SELECT * FROM ai_usage WHERE operation=:operation",operation=operation).mappings().one()
         assert row.estimated_cost==(5 if configured.startswith('{"us-east-1"') else None)
+        assert row.stop_reason is None and row.diagnostic is None
         if row.estimated_cost is not None:
             assert row.currency=="USD" and row.rate_date=="2026-11-11"
         sql(conn,"DELETE FROM ai_usage WHERE id=:id",id=row.id)

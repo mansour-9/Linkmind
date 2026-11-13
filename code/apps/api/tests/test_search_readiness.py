@@ -89,7 +89,7 @@ def test_failed_enrichment_keeps_text_without_partial_graph(workspace, monkeypat
     job = source(workspace, content)
     real_extract = processing.mock_extract
     monkeypatch.setattr(processing, "configured", lambda: True)
-    monkeypatch.setattr(processing, "extract_bedrock", fail if failure_stage == "extraction" else lambda passages, scope: real_extract(content, passages))
+    monkeypatch.setattr(processing, "extract_bedrock_batches", fail if failure_stage == "extraction" else lambda passages, scope: [real_extract(content, passages)])
     monkeypatch.setattr(conflict_detection, "assess", fail)
     assert processing.process_one()
     details = main.job(job.id, viewer())

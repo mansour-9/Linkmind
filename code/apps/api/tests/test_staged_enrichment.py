@@ -71,7 +71,7 @@ def test_failed_staging_retains_live_facts_and_can_retry(workspace,monkeypatch,f
         monkeypatch.setattr(processing,'mock_extract',lambda *args:Extraction(entities=[],claims=[],relationships=[]))
     else:
         monkeypatch.setattr(processing,'configured',lambda:True)
-        monkeypatch.setattr(processing,'extract_bedrock',lambda passages,scope:original(FIXTURES['cloud-migration'].path.read_bytes(),passages))
+        monkeypatch.setattr(processing,'extract_bedrock_batches',lambda passages,scope:[original(FIXTURES['cloud-migration'].path.read_bytes(),passages)])
         monkeypatch.setattr(conflict_detection,'assess',fail)
     first=main.reprocess(job.id,viewer())['staged_version_id']
     assert processing.process_one()

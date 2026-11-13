@@ -61,11 +61,11 @@ def reproduction():
     caught=None
     with patch.object(providers,'structured',structured):
         try:providers.extract_bedrock(case['passages'],{})
-        except ValueError as exc:caught=str(exc)
-    assert caught=='Evidence quote does not exist in its passage' and calls==['extraction']
+        except ValueError as exc:caught=exc
+    assert caught.diagnostic["code"]=="quote_not_in_passage" and caught.diagnostic["quote"]==altered and calls==['extraction']
     validate_citations([type(result.entities[0].evidence[0])(passage_id=passage['id'],quote=exact)],{passage['id']:passage['text']})
     return dict(classification='Synthetic reproduction of the recorded error, not recovery of the original model response.',
-        failure=caught,source_quote=exact,altered_model_quote=altered,operations_reached=calls,
+        failure=caught.diagnostic,source_quote=exact,altered_model_quote=altered,operations_reached=calls,
         finding='Exact quote validation raises before the semantic-verification/correction branch. Original raw model output is not retained.',
         original_root_cause='Unconfirmed; retained PDF passages match a current parse, and original sources have no character-boundary splits.')
 

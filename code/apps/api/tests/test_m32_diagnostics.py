@@ -64,7 +64,7 @@ def test_strict_json_and_citations_are_not_repaired():
     assert validate(json.dumps(valid),[p]).entities
     with pytest.raises(ValidationError):validate('```json\n'+json.dumps(valid)+'\n```',[p])
     valid['entities'][0]['evidence'][0]['quote']='Invented exact quote'
-    with pytest.raises(ValueError,match='quote does not exist'):validate(json.dumps(valid),[p])
+    with pytest.raises(ValueError,match='quote_not_in_passage'):validate(json.dumps(valid),[p])
     valid['entities'][0]['evidence'][0]['quote']=p['text'];valid['claims']=[dict(entity_key='missing',predicate='owner',value='Nora',asserted_by=None,effective_from=None,effective_to=None,evidence=valid['entities'][0]['evidence'])]
     with pytest.raises(ValueError,match='unknown entity'):validate(json.dumps(valid),[p])
 

@@ -3,6 +3,12 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+class EvidenceValidationError(ValueError):
+    """A local evidence failure with safe, bounded correction diagnostics."""
+    def __init__(self, diagnostic):
+        self.diagnostic = {key: value for key, value in diagnostic.items() if value is not None}
+        super().__init__(str(self.diagnostic))
+
 class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -93,9 +99,15 @@ def validate_extraction(result: Extraction, passages: list[dict]) -> Extraction:
         validate_citations(relationship.evidence, passage_map)
     return result
 
-def validate_citations(citations: list[Citation], passages: dict[str,str]):
+def validate_citations(citations: list[Citation], passages: dict[str,str], statement_index=None):
     if not citations:
-        raise ValueError("Evidence is required")
-    for citation in citations:
-        if not citation.quote.strip() or citation.quote not in passages.get(citation.passage_id,""):
-            raise ValueError("Evidence quote does not exist in its passage")
+        raise EvidenceValidationError(dict(code="evidence_required",statement_index=statement_index))
+    for index,citation in enumerate(citations):
+        diagnostic=dict(statement_index=statement_index,citation_index=index,
+            passage_id=citation.passage_id,quote=citation.quote[:500])
+        if not citation.quote.strip():
+            raise EvidenceValidationError(dict(code="empty_evidence_quote",**diagnostic))
+        if citation.passage_id not in passages:
+            raise EvidenceValidationError(dict(code="unknown_evidence_passage",**diagnostic))
+        if citation.quote not in passages[citation.passage_id]:
+            raise EvidenceValidationError(dict(code="quote_not_in_passage",**diagnostic))
