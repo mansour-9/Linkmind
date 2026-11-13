@@ -3,28 +3,47 @@ from app import providers
 from app.contracts import GroundedAnswer,AnswerVerdict
 PASSAGES=[{"id":"source","text":"Project Alpha is owned by Amal."}]
 
-@pytest.mark.parametrize("eventual_success",[True,False])
-def test_answer_correction_is_bounded_and_revalidated(monkeypatch,eventual_success):
+@pytest.mark.parametrize("supported",[[True],[False],[],[True,True]])
+def test_answer_verification_abstains_on_rejection_or_mismatched_verdict(monkeypatch,supported):
     monkeypatch.setattr(providers,"configured",lambda:True)
     calls=[]
-    checks=0
     def structured(contract,system,payload,scope,operation,*args,**kwargs):
-        nonlocal checks
         calls.append(operation)
         if operation=="answer":
             return GroundedAnswer(statements=[{"text":"Project Alpha is owned by Amal.",
                 "evidence":[{"passage_id":"source","quote":"Project Alpha is owned by Amal."}]}],insufficient_evidence=False)
         assert operation=="answer_verification"
         assert payload["passages"]==PASSAGES
-        checks+=1
-        return AnswerVerdict(supported=[eventual_success and checks==2])
+        return AnswerVerdict(supported=supported)
     monkeypatch.setattr(providers,"structured",structured)
-    if eventual_success:
-        result=providers.answer("Who owns Project Alpha?",PASSAGES,{})
+    result=providers.answer("Who owns Project Alpha?",PASSAGES,{})
+    if supported==[True]:
         assert result.statements[0].text=="Project Alpha is owned by Amal."
+        assert result.insufficient_evidence is False
     else:
-        with pytest.raises(ValueError): providers.answer("Who owns Project Alpha?",PASSAGES,{})
-    assert calls==["answer","answer_verification","answer","answer_verification"]
+        assert result.statements==[]
+        assert result.insufficient_evidence is True
+    assert calls==["answer","answer_verification"]
+
+
+def test_invalid_quote_correction_is_bounded_and_revalidated(monkeypatch):
+    monkeypatch.setattr(providers,"configured",lambda:True)
+    calls=[]
+    def structured(contract,system,payload,scope,operation,*args,**kwargs):
+        calls.append(operation)
+        if operation=="answer":
+            quote="Fabricated quote" if len(calls)==1 else PASSAGES[0]["text"]
+            if len(calls)>1:
+                assert payload["validation_feedback"]
+            return GroundedAnswer(statements=[{"text":PASSAGES[0]["text"],
+                "evidence":[{"passage_id":"source","quote":quote}]}],insufficient_evidence=False)
+        assert operation=="answer_verification"
+        return AnswerVerdict(supported=[True])
+    monkeypatch.setattr(providers,"structured",structured)
+    result=providers.answer("Who owns Project Alpha?",PASSAGES,{})
+    assert result.statements[0].text==PASSAGES[0]["text"]
+    assert result.insufficient_evidence is False
+    assert calls==["answer","answer","answer_verification"]
 
 def test_fabricated_quote_is_not_sent_for_verification(monkeypatch):
     monkeypatch.setattr(providers,"configured",lambda:True)

@@ -204,5 +204,5 @@ def _answer_once(question,passages,scope,history=None,authorize=None,feedback=No
                  for p in passages if p["id"] in {c.passage_id for s in result.statements for c in s.evidence}]},
             scope,"answer_verification","BEDROCK_ANSWER_MODEL",authorize=authorize)
         if len(verdict.supported)!=len(result.statements) or not all(verdict.supported):
-            raise ValueError("Answer did not pass citation verification.")
+            return GroundedAnswer(statements=[],insufficient_evidence=True)
     return result
