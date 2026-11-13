@@ -7,7 +7,7 @@ This is a focused increment before F1.3; no F1.3 migration or main-data rollout.
 ## Behavior
 
 - Familiar greetings and application help return brief local guidance without model
-  calls. [Link9's persona](ASSISTANT_PERSONA.md) governs the tone; unfamiliar social/help
+  calls. [Linkmind's persona](ASSISTANT_PERSONA.md) governs the tone; unfamiliar social/help
   requests can use bounded model understanding plus nonfactual-reply verification.
 - Source discovery searches current authorized filenames approximately, including
   transposed acronyms such as PREFQA/PRFAQ, and falls back to passage retrieval

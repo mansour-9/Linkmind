@@ -20,8 +20,8 @@ def test_greeting_does_not_repeat_introduction_on_followup(workspace):
     id=chat()
     first=ask(id,'hi')
     second=ask(id,'hi')
-    assert 'Link9' in first['message'] and '👋' in first['message']
-    assert 'Link9' not in second['message']
+    assert 'Linkmind' in first['message'] and '👋' in first['message']
+    assert 'Linkmind' not in second['message']
     thanks=ask(id,'thanks')
     assert thanks['message']=="You're welcome 🙂"
     assert thanks['evidence']==[]
@@ -40,14 +40,14 @@ def test_nontrivial_social_reply_is_personalized_and_checked(monkeypatch):
         calls.append(operation)
         kwargs['authorize']()
         if operation=='query_understanding':
-            assert 'You are Link9' in system and 'TRUTH AND ACTION BOUNDARIES' in system
-            return QueryPlan(route='social',query='',use_previous=False,reply="I'm Link9 🙂 Tell me what you're working on.")
+            assert 'You are Linkmind' in system and 'TRUTH AND ACTION BOUNDARIES' in system
+            return QueryPlan(route='social',query='',use_previous=False,reply="I'm Linkmind 🙂 Tell me what you're working on.")
         assert operation=='conversation_verification'
-        assert 'passages' not in payload and payload['reply'].startswith("I'm Link9")
+        assert 'passages' not in payload and payload['reply'].startswith("I'm Linkmind")
         return ConversationVerdict(allowed=True,requires_sources=False)
     monkeypatch.setattr(providers,'structured',structured)
     result=plan('Introduce yourself like a colleague would.',[],{},lambda:None)
-    assert result['reply'].startswith("I'm Link9")
+    assert result['reply'].startswith("I'm Linkmind")
     assert calls==['query_understanding','conversation_verification']
 
 
@@ -66,7 +66,7 @@ def test_social_verifier_blocks_unsupported_capabilities_or_company_facts(monkey
 
 
 def test_user_language_and_upload_help_are_respected():
-    assert local_reply('مين انت','help').startswith('أنا Link9')
+    assert local_reply('مين انت','help').startswith('أنا Linkmind')
     assert 'Add documents' in local_reply('how do I upload a file?','help')
     assert len(local_reply('what can you do?','help'))<200
 

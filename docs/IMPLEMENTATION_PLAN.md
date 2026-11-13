@@ -31,7 +31,7 @@ run, without resetting/increasing it. Main cutover remains a separately reviewed
 
 See [conversation tests and current operational limits](CONVERSATIONAL_TESTING.md).
 
-2026-11-13 persona follow-up: the user requested a natural Link9 identity, concise
+2026-11-13 persona follow-up: the user requested a natural Linkmind identity, concise
 friendly interaction, light emoji use and a detailed system prompt. This is locally
 implemented and backported to the user's schema-0010 Sonnet preview without a
 database migration or paid evaluation. See [persona behavior and checks](ASSISTANT_PERSONA.md).
