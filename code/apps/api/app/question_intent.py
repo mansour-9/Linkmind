@@ -7,6 +7,12 @@ def intent(question):
     text = " ".join(text.split())
     if text in {"hi", "hello", "hey", "good morning", "good evening", "مرحبا", "مرحباً", "اهلا", "السلام عليكم"}:
         return "greeting"
+    if text in {"thanks","thank you","thank u","thx","شكرا","شكرًا","شكراً","يعطيك العافية"}:
+        return "social"
+    if (text in {"who are you","what is your name","what's your name","are you chatgpt","can you help me","can you help","help me",
+                 "مين انت","من انت","وش اسمك","انت مين","ممكن تساعدني","تقدر تساعدني"}
+            or re.fullmatch(r"what (?:is )?(?:can you|you can|u can) do(?: (?:for|form) me)?",text)):
+        return "help"
     if (re.search(r"^(what|how) (is |does |do |can )?(this |the )?(chat|caht|assistant|linkmind|you)\b.{0,25}\b(do|help|work|use|can)$", text)
             or re.search(r"^(how (do|can) i upload|help me upload|how (do|can) i (use (this |the )?(chat|assistant|linkmind)|add (data|documents|files)))\b", text)
             or text in {"help", "what can you do", "what can i ask", "كيف استخدمك", "وش تقدر تسوي", "وش يسوي الشات", "كيف ارفع ملف"}):

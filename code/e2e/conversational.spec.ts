@@ -31,7 +31,8 @@ test("uploads support approximate discovery, clarification and scoped follow-ups
       await expect(page.locator(".pending-turn")).toHaveCount(0);
     };
     await send("what is this caht do ?");
-    await expect(page.locator(".answer-message").last()).toContainText("Add data source");
+    await expect(page.locator(".answer-message").last()).toContainText("find answers");
+    await expect(page.locator(".answer-message").last()).not.toContainText("Supported files");
     await send("is there any file called ChatPilot PREFQA?");
     await expect(page.locator(".chat-turn").last().getByLabel("Matching sources")).toContainText("Harbor_ChatPilot_PRFAQ_Updated.md");
     await expect(page.locator(".chat-turn").last()).not.toContainText("Sonnet");

@@ -65,7 +65,7 @@ def test_greeting_and_ambiguous_reference_do_not_invoke_model(workspace,monkeypa
     monkeypatch.setattr(main,'answer',lambda *args,**kwargs: pytest.fail('Nonfactual guidance must not spend on inference'))
     conversation=main.create_conversation(main.NewConversation(),viewer())
     response=main.ask(conversation['id'],main.Question(question='hi ?'),viewer())
-    assert response['provider']=='system' and response['message'].startswith('Hello')
+    assert response['provider']=='system' and 'Link9' in response['message']
     response=main.ask(conversation['id'],main.Question(question='what is that?'),viewer())
     assert response['provider']=='system' and 'Select a document' in response['message']
     other=main.create_conversation(main.NewConversation(),viewer())

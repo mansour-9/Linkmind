@@ -34,7 +34,7 @@ test("greetings give guidance and new information stays searchable in mock mode"
   await page.goto("/");
   await page.getByLabel("Ask a question").fill("hi");
   await page.getByRole("button", { name: "Send question", exact: true }).click();
-  await expect(page.locator(".answer-message")).toContainText("Hello!");
+  await expect(page.locator(".answer-message")).toContainText("Link9");
   await expect(page.getByText("Show work", { exact: false })).toHaveCount(0);
   await page.goto("/admin/sources");
   await page.getByText("Try sample documents", { exact: false }).click();

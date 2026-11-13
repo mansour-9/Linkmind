@@ -11,6 +11,7 @@ from botocore.config import Config
 from app.contracts import Extraction, GroundedAnswer, AnswerVerdict, validate_extraction, validate_citations
 from app.db import engine, sql
 from app.inference_budget import reserve,settle
+from app.assistant_persona import CONVERSATION_SYSTEM
 
 class ProviderUnavailable(RuntimeError):
     pass
@@ -74,6 +75,8 @@ def structured(contract, system, payload, scope, operation, model_var="BEDROCK_E
             "name":contract.__name__,"schema":json.dumps(simplify(schema))}}}})
     if operation=="query_understanding":
         request["inferenceConfig"]["maxTokens"]=512
+    elif operation=="conversation_verification":
+        request["inferenceConfig"]["maxTokens"]=256
     from app.model_limits import pace
     pace(model,os.getenv("AWS_REGION","us-east-1"))
     if authorize is not None:
@@ -191,7 +194,7 @@ def _answer_once(question,passages,scope,history=None,authorize=None,feedback=No
         return GroundedAnswer(statements=[
             {"text":p["text"],"evidence":[{"passage_id":p["id"],"quote":p["text"]}]} for p in passages[:4]],
             insufficient_evidence=False)
-    result=structured(GroundedAnswer,UNTRUSTED+
+    result=structured(GroundedAnswer,CONVERSATION_SYSTEM+"\nSOURCE ANSWERING — MANDATORY GROUNDING\n"+UNTRUSTED+
         "Use conversation history only to interpret follow-up references. Factual support must come from the current passages. "
         "Respect every qualifier in the question. Never equate same-name projects or people without an explicit identifier or source-backed identity link. "
         "Source entity metadata lists canonical identities; distinct IDs do not prove the same entity. "

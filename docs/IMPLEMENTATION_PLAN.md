@@ -31,6 +31,12 @@ run, without resetting/increasing it. Main cutover remains a separately reviewed
 
 See [conversation tests and current operational limits](CONVERSATIONAL_TESTING.md).
 
+2026-11-13 persona follow-up: the user requested a natural Link9 identity, concise
+friendly interaction, light emoji use and a detailed system prompt. This is locally
+implemented and backported to the user's schema-0010 Sonnet preview without a
+database migration or paid evaluation. See [persona behavior and checks](ASSISTANT_PERSONA.md).
+It does not start F2 or authorize the pending main cutover.
+
 ## Status and evidence rules
 
 - **Completed:** a bounded delivered feature/checkpoint with recorded evidence.

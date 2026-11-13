@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from app import source_discovery as catalog
 from app.contracts import GroundedAnswer
-from app.conversation_routing import HELP,plan
+from app.conversation_routing import plan
 from app.question_intent import intent,needs_selection
 from app.retrieval import dependencies_allowed,selected_context
 
@@ -57,17 +57,17 @@ def response(viewer,question,previous,document_ids,engine,search,answer,configur
             effective_scope=[UUID(previous_matches[0]["document_id"])]
             matches=previous_matches
             used_previous=True
-        elif route not in {"help","greeting"} and previous[0]["response"].get("clarification"):
+        elif route not in {"help","greeting","social"} and previous[0]["response"].get("clarification"):
             matches=previous_matches
             clarification=True
             message="Which source do you mean? Choose one below, describe it, or say ‘both’."
-        elif route not in {"help","greeting"}:
+        elif route not in {"help","greeting","social"}:
             effective_scope=[UUID(item["document_id"]) for item in previous_matches]
             matches=previous_matches
             used_previous=True
 
-    if not message and route in {"greeting","help"}:
-        message="Hello! Ask about your organization's sources, or select a document and ask what it is about." if route=="greeting" else HELP
+    if not message and route in {"greeting","help","social"}:
+        message=routing["reply"]
         matches=[]
     elif not message and route=="find_sources":
         with engine.connect() as conn:
