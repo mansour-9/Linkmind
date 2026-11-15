@@ -19,3 +19,10 @@ Keep source, synthetic fixtures and reviewed validation summaries versioned. Ful
 provider responses, local preflight/checkpoint outputs, credentials, databases and
 private source files remain ignored and preserved locally. Do not use destructive
 cleanup, force pushes or a new spend ledger to obtain a clean working tree.
+
+Clean-checkout CI includes the application root on the Python import path so the
+offline company-runner tests can import `scripts`. The two private-original Lantern
+checks explicitly require `LANTERN_ACCEPTANCE_DIR`; public CI skips those two checks
+with a reason rather than publishing the originals. They remain part of the recorded
+315-test local acceptance when the private fixture directory is supplied. All ordinary
+source, connector, grounding and permission checks remain enabled in CI.

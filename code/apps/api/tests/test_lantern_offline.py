@@ -16,6 +16,9 @@ from app.db import sql
 from app.parsers import parse_document
 from test_search_readiness import ORG,OMAR,viewer,source
 
+pytestmark=pytest.mark.skipif(not os.getenv('LANTERN_ACCEPTANCE_DIR'),
+    reason='Private Lantern originals are local-only; set LANTERN_ACCEPTANCE_DIR for offline acceptance.')
+
 
 @pytest.fixture
 def lantern_workspace(monkeypatch):
