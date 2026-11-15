@@ -21,7 +21,7 @@ class CustomMCPProvider:
         record=self.record(result)
         if record.native_id!=native_id:raise SourceFailure('outside_scope')
         return record
-    def authorize(self,native_id):self.get(native_id)
+    def authorize(self,native_id):return self.get(native_id)
     def page(self,cursor):
         data=self.mcp.call('list_resources',{'scope_id':self.spec.scope_id,'cursor':cursor.get('token')})
         if not isinstance(data.get('records'),list) or len(data['records'])>25 or not isinstance(data.get('complete'),bool):raise SourceFailure('incomplete_page')

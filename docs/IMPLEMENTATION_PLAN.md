@@ -2,6 +2,14 @@
 
 ## Unified Company Repository, Retrieval First
 
+Latest RF5 checkpoint, 2026-11-15: the user requested the Git/GitHub checkpoint and a
+separate branch for new work. RF1-RF4 is published on `checkpoint/rf1-rf4-local`; RF5
+local implementation is on `rf5/cross-source-journey`. The new 5196 preview passed
+**341 API / 43 browser / build**, with final 3 browser checks. It combines explicitly
+selected stored/live evidence with typed references and transient reauthorized results.
+No new paid trial or real account was used. See [RF5 results](RF5_RESULTS.md).
+
+
 Updated **2026-11-15**. This is the **single active roadmap**. RF1/RF2 are locally
 implemented and validated. The user subsequently authorized finishing RF3 repairs and
 continuing RF4 locally. The new isolated **5195** follow-up passed **315 API / 39 browser /
@@ -100,7 +108,7 @@ Historical reports/ledger figures are not observations of current runtime state.
 | RF2 — Repository/catalog/evidence | Reliable resource identity, non-graph metadata and common evidence | Completed isolated acceptance: 231 API / 32 browser / build; live contract tested offline |
 | RF3 — Retrieval and routing | Useful bilingual source-only answers; bounded index/live planning | Implemented; 264 API / 34 browser / build pass; real quality gate open after two reviewed failures |
 | RF4 — Sources & MCP Connections | Admin lifecycle and local connector foundation for Jira, Confluence, OneDrive, SharePoint and Custom MCP | Implemented/validated locally at 5194; real auth, scopes and source acceptance pending |
-| RF5 — Cross-source journey | Combined answers and light organization over accepted sources | Accepted RF4 lifecycles; graph optional |
+| RF5 - Cross-source journey | Combined answers and light organization over accepted sources | Local explicit stored/live foundation validated at 5196; real source and independent AI acceptance pending |
 | RF6 — Core release/rollout | Held-out quality, measured load/cost, production auth, tested recovery | Cross-cutting preparation; security before real employee use; separate rollout approval |
 | Later capabilities | Rich authoring/Spaces, detailed enterprise design, advanced graph/research/actions | Separately requested; no implicit RF1–RF5 dependency |
 
@@ -277,9 +285,19 @@ authorized access/budget; this plan does not connect accounts or run imports.
 
 ## 9. RF5 — Cross-source company journey and light organization
 
-Status: **planned**. Use complementary accepted sources by employee value/access,
-for example Jira + OneDrive/SharePoint, after their RF4 lifecycle gates. Additional
-systems beyond RF4's four planned sources remain separately selected.
+Status: **local cross-source foundation implemented and validated; real-source and
+model acceptance pending**. Explicit selected documents plus up to two live resources,
+exact passage/typed-field citations, bounded partial results and transient access/revision
+checks are implemented at 5196. 341 API / 43 browser / build and final 3 browser checks
+passed. See [RF5 results](RF5_RESULTS.md). Accepted real source lifecycles and independent
+combined quality/cost/latency acceptance remain necessary; mock excerpts do not prove synthesis.
+
+- [x] Deliver an explicit, bounded stored/live question flow without automatic ingestion,
+  new persistence infrastructure, guessed identity joins or mandatory graph enrichment.
+- [x] Validate local exact/typed support, no retention, history/current separation,
+  source failure, owner isolation, access/revision changes and responsive source evidence.
+
+The gates below remain real-source/representative acceptance requirements.
 
 - [ ] Reuse accepted evidence/live/sync contracts, proving each participating source's own
   permission, pagination, history and failure lifecycle.
@@ -357,12 +375,13 @@ later requirements. Do not implement their future editor/permissions/conflict sc
 | Mandatory GraphRAG before connectors | Superseded; graph optional and measured |
 | H1/H2/M5/M6 | RF6 release gates plus separately approved hosting |
 
-**RF1/RF2 are complete locally. RF3 deterministic checks pass, but two real-model
-grounding failures remain open. Next: bounded RF3 quality repair/regression; RF4 planning
-was requested on 2026-11-15 for Jira, Confluence, OneDrive and SharePoint, with exact
-account/resource scopes still to choose.** See the
-[RF4 planning draft](RF4_PLAN.md). Main rollout and connector implementation remain
-separately scoped.
+**RF1/RF2 are complete locally. RF3's measured grounding repairs have bounded Sonnet
+regression evidence. RF4's local management/OAuth foundation and RF5's explicit
+cross-source foundation are validated. Real MCP/provider tests remain deferred.**
+Next acceptance work is source consent/permissions/live-sync lifecycle and independent
+combined question quality on approved scopes. RF6 remains planned; deployment and any
+new paid trial require their concrete separate scope. Continue new work on the RF5
+branch, preserving the published checkpoint and all runtime/data environments.
 Do not resume old extraction repair, repeat completed work, execute the old main cutover,
 run a paid comparison or start F2 because an archived handoff says so. Documentation
 verification does not authorize implementation automatically.

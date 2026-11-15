@@ -15,6 +15,7 @@ import { Button, Feedback, SearchField, Sheet } from "./ui";
 import type { Conversation } from "./contracts";
 
 const Assistant = lazy(() => import("./Assistant").then(m => ({ default: m.Assistant })));
+const SourceQuestion = lazy(() => import('./SourceQuestion'));
 const Knowledge = lazy(() => import("./Knowledge").then(m => ({ default: m.Knowledge })));
 const Repository = lazy(() => import("./Repository").then(m => ({ default: m.Repository })));
 const Connections = lazy(() => import('./Connections'));
@@ -54,12 +55,12 @@ function Workspace({ token, onSwitch }: { token: string; onSwitch: (token: strin
   const profileButton = useRef<HTMLButtonElement>(null);
   const conversations = useQuery({ queryKey: ["conversations"], queryFn: () => service.json<Conversation[]>("/conversations"), refetchInterval: 10000 });
   const admin = location.pathname.startsWith("/admin");
-  const assistant = location.pathname === "/" || location.pathname.startsWith("/chat/");
+  const assistant = location.pathname === "/" || location.pathname.startsWith("/chat/") || location.pathname==='/ask/sources';
   const operational = ["admin", "reviewer"].includes(viewer.data?.role ?? "");
   const graph = location.pathname === "/graph" || location.pathname === "/content/graph";
   const title = admin ? administration.find(d => d.path === location.pathname)?.title ?? "Admin Console" : assistant ? "Assistant" : graph ? "Graph" : location.pathname.startsWith("/people") ? "People" : location.pathname.startsWith("/content") ? "Content" : "Search";
   useEffect(() => { document.title = title + " · Linkmind"; setMenu(false); }, [title, location.pathname]);
-  const navigation = <nav aria-label="Workspace">{primary.map(({ path, title: label, icon: Icon }) => <NavLink key={path} to={path} end={path === "/"} className={"nav-item" + (path === "/" && location.pathname.startsWith("/chat/") ? " active-assistant" : "")} title={label} aria-label={label} onClick={() => setMenu(false)}><Icon size={21} strokeWidth={1.7} /><span>{label}</span></NavLink>)}</nav>;
+  const navigation = <nav aria-label="Workspace">{primary.map(({ path, title: label, icon: Icon }) => <NavLink key={path} to={path} end={path === "/"} className={"nav-item" + (path === "/" && (location.pathname.startsWith("/chat/") || location.pathname==='/ask/sources') ? " active-assistant" : "")} title={label} aria-label={label} onClick={() => setMenu(false)}><Icon size={21} strokeWidth={1.7} /><span>{label}</span></NavLink>)}</nav>;
   const recents = <div className="sidebar-recents"><h2>Recent</h2>
     {conversations.isPending && <p className="sidebar-hint">Loading conversations…</p>}
     {conversations.isError && <Button variant="ghost" onClick={() => void conversations.refetch()}>Retry history</Button>}
@@ -80,6 +81,7 @@ function Workspace({ token, onSwitch }: { token: string; onSwitch: (token: strin
         {location.pathname.startsWith("/content") && <nav className="section-tabs" aria-label="Content views"><NavLink to="/content" className={!location.pathname.startsWith("/content/documents") ? "selected" : ""} end>Knowledge</NavLink><NavLink to="/content/documents">Documents</NavLink></nav>}
         <Suspense fallback={<div className="page"><Feedback>Loading…</Feedback></div>}><Routes>
           <Route path="/" element={<Assistant />} /><Route path="/chat/:conversationId" element={<Assistant />} />
+          <Route path="/ask/sources" element={<SourceQuestion />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/admin/connections" element={<Connections />} />
           <Route path="/people" element={<Knowledge people />} /><Route path="/people/:entityId" element={<Knowledge people />} />

@@ -1,5 +1,16 @@
 # Linkmind
 
+## RF5 local preview - 2026-11-15
+
+[Ask across sources](http://127.0.0.1:5196/ask/sources) now combines explicitly selected
+stored documents with bounded connected-resource observations. Typed fields and exact
+passages retain distinct references; live results are transient and reauthorized.
+**341 API / 43 browser / build**, final 3 browser checks passed. This preview is mock;
+real MCP/provider and combined AI quality acceptance remain deferred.
+Completed RF1-RF4 source is on `checkpoint/rf1-rf4-local`; new work is on
+`rf5/cross-source-journey`. See [RF5 results](docs/RF5_RESULTS.md) and
+[the single roadmap](docs/IMPLEMENTATION_PLAN.md).
+
 Linkmind is being shaped as a **unified company knowledge repository with intelligent
 search and an AI assistant**. It retains selected uploaded/synchronized knowledge,
 organizes it lightly and answers employee questions using relevant stored and live

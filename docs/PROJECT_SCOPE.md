@@ -1,5 +1,12 @@
 # Linkmind - Product Scope and Decisions
 
+Latest scope, 2026-11-15: the user authorized publishing the completed source checkpoint
+and starting new RF work on a separate branch. RF5's explicit cross-source local
+question foundation is implemented at 5196, with 341 API / 43 browser / build and final
+3 browser checks. This does not accept real provider lifecycles or combined AI quality;
+those trials remain deferred. No new paid evaluation or production rollout was started.
+See [RF5 results](RF5_RESULTS.md) and [Git workflow](GIT_CHECKPOINT.md).
+
 Latest implementation checkpoint, 2026-11-15: the user authorized RF3 repairs and
 local RF4 completion. The new isolated 5195 preview passed **315 API / 39 browser / build**,
 final 8 OAuth checks and 16/16 mock retrieval. RF3's known grounding failures now have

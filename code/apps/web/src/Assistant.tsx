@@ -160,7 +160,7 @@ export function Assistant() {
       </div>
       <div className="conversation-footer">{showLatest && <Button className="latest-button icon-button" variant="outline" aria-label="Scroll to latest" onClick={() => { atBottom.current = true; scroller.current?.scrollTo({ top: scroller.current.scrollHeight }); setShowLatest(false); }}><ArrowDown size={18} /></Button>}{composer}<p className="composer-note">Answers are grounded in the sources you can access.</p></div>
     </> : <div className="assistant-home"><h1>Ask Linkmind</h1>{composer}
-      <div className="home-actions"><Link to="/search"><Search size={17} />Search knowledge</Link><Link to="/content"><FileText size={17} />Browse content</Link><Link to="/admin/sources"><FileText size={17} />Add documents</Link><Link to="/content/graph"><Network size={17} />Explore connections</Link></div>
+      <div className="home-actions"><Link to="/ask/sources"><Network size={17}/>Ask across sources</Link><Link to="/search"><Search size={17} />Search knowledge</Link><Link to="/content"><FileText size={17} />Browse content</Link><Link to="/admin/sources"><FileText size={17} />Add documents</Link><Link to="/content/graph"><Network size={17} />Explore connections</Link></div>
       {pending && <Feedback>Starting your conversation…</Feedback>}{error && <Feedback error>{error}</Feedback>}
     </div>}
   </div>;

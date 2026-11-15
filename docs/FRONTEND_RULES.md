@@ -1,5 +1,13 @@
 # Linkmind frontend rules
 
+Latest RF5 UI, 2026-11-15: Home links to the working `/ask/sources` flow. Reuse
+FocusSources with explicit-only semantics: zero stored selections never means search-all
+in this flow. Users choose at most two connected resources. Distinguish actual field
+values from original prose quotations and label source origin/time, demo data, partial
+coverage and transient results. Recheck permission/revision before source panels open;
+hide results on failed checks. No token/configuration UI is exposed to ordinary users.
+See [RF5 results](RF5_RESULTS.md). Existing ordinary chat behavior is preserved.
+
 Latest UI checkpoint, 2026-11-15: the new 5195 Sources & MCP Connections preview
 includes secure provider sign-in initiation, honest registration-pending states,
 metadata-only accessible-scope selection and retest-before-enable. Token/client-secret

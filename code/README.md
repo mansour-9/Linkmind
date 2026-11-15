@@ -1,5 +1,14 @@
 # Linkmind local development
 
+> **RF5 local foundation - 2026-11-15.**
+> [Ask across sources at 5196](http://127.0.0.1:5196/ask/sources) combines explicitly
+> selected saved context with up to two connected resources. Exact passages and typed
+> fields use distinct validated references. Results are transient; no live ingestion.
+> **341 API / 43 browser / build**, final 3 browser checks passed. Mock only, zero new
+> paid usage, same schema 0018, protected older previews unchanged.
+> Branch: `rf5/cross-source-journey`; completed source checkpoint:
+> `checkpoint/rf1-rf4-local`. See [RF5 results/commands](../docs/RF5_RESULTS.md).
+
 > **Latest RF3/RF4 local follow-up - 2026-11-15.**
 > [Preview at 5195](http://127.0.0.1:5195/admin/connections): known RF3 grounding repairs,
 > encrypted server-owned native OAuth lifecycle, accessible scopes and five labelled demos.

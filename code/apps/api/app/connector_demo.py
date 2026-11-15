@@ -19,5 +19,5 @@ class DemoProvider:
     def get(self,native_id,**kwargs):
         if native_id!='demo-1': raise SourceFailure('resource_missing')
         return self.record()
-    def authorize(self,native_id): self.get(native_id)
+    def authorize(self,native_id): return self.get(native_id)
     def page(self,cursor): return [self.record()],{},True

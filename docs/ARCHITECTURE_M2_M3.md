@@ -1,5 +1,15 @@
 # Linkmind - Current Architecture and Retrieval-First Target
 
+Latest RF5 local architecture, 2026-11-15: `/source-answers` combines explicit selected
+documents/retained history with at most two selected live resources. It reuses existing
+adapters, query limits, source authorization and model/spend guards. A new typed citation
+contract distinguishes literal passages from exact JSON field/value support; independent
+semantic verification remains required for real synthesis. Results are transient with
+no new persistence tables, services, graph writes or automatic corpus selection. Access,
+connection generation and live revision are checked before model exposure/delivery and
+before evidence opening. Owner-bound runtime source choices do not expose admin config.
+Schema stays 0018. See [RF5 results](RF5_RESULTS.md); actual source/model acceptance remains open.
+
 Latest architecture checkpoint, 2026-11-15: current source/new isolated 5195 preview
 requires **0018_connection_oauth** and `grounded-v10-qualified-statement-support`.
 The full-statement answer audit checks temporal, authority and operational freshness

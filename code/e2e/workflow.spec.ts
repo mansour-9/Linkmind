@@ -140,6 +140,19 @@ test("graph demo loads, reuses uploads and connects shared people with real evid
  for(const job of first.jobs) await request.delete("/api/v1/documents/"+job.document_id,{headers:auth()});
 });
 
+test("initial graph discovery preserves a query typed while loading", async ({page})=>{
+ let release!:()=>void;const loading=new Promise<void>(resolve=>{release=resolve;});
+ await page.route('**/api/v1/graph/search?**',async route=>{
+  if(!new URL(route.request().url()).searchParams.get('q'))await loading;
+  await route.continue();
+ });
+ try{
+  await page.goto('/graph');await page.getByLabel('Find an entity').fill('CB-ALPHA');release();
+  await expect(page.getByRole('button',{name:'Center graph on Project Alpha',exact:true})).toBeVisible();
+  await expect(page.getByLabel('Find an entity')).toHaveValue('CB-ALPHA');
+ }finally{release();}
+});
+
 test("canvas-only view fills the page and preserves the graph when exiting", async ({ page }) => {
  await page.goto("/graph"); await page.getByLabel("Find an entity").fill("CB-ALPHA");
  await page.getByRole("button", {name:"Center graph on Project Alpha",exact:true}).click();

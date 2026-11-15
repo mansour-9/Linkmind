@@ -1,5 +1,21 @@
 # Linkmind — Project Guidance
 
+## Latest RF5 local checkpoint - 2026-11-15
+
+Git checkpoint `checkpoint/rf1-rf4-local` is published (e020372, clean-checkout CI fix
+925e880). New work is on `rf5/cross-source-journey`, as explicitly requested. The new
+isolated mock preview at **5196/ask/sources** implements explicit stored/live questions,
+exact passage versus typed-field references, transient results and access/revision
+reauthorization. **341 local API / 43 browser / build**, final 3 focused browser
+workflows passed. See [RF5 results](docs/RF5_RESULTS.md) and
+[validation](docs/RF5_VALIDATION.json). Schema stays 0018; no new infrastructure.
+
+This is a local RF5 foundation, not real source/model acceptance. Real MCP/provider
+trials remain user-deferred. No paid AI calls were made; the original ledger remains
+USD 4.2788470600 spent and USD 0.0566168200 historical unknown reservations under the
+same USD 10 cap. All 114 pre-existing container IDs/builds/data are preserved. No main
+merge, history rewrite, branch deletion, account activation or deployment occurred.
+
 ## Latest Git and RF5 authorization — 2026-11-15
 
 The user requested cleaning up Git/GitHub, publishing the latest completed checkpoint,

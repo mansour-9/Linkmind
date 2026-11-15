@@ -125,12 +125,14 @@ class Provider:
 
     def authorize(self, native_id):
         if self.spec.kind in {'jira', 'confluence'}:
-            self.get(native_id)
+            return self.get(native_id)
         else:
             if not re.fullmatch(r'[A-Za-z0-9!_,.-]{1,200}', native_id): raise SourceFailure('invalid_resource_id')
             data = self.client.get(self.base + f'/drives/{quote(self.spec.drive_id)}/items/{quote(native_id)}')
+            if data.get('id')!=native_id:raise SourceFailure('outside_scope')
             if 'deleted' in data: raise SourceFailure('resource_missing')
             self.in_folder(data)
+            return data
 
     def get(self, native_id, *, mcp=False):
         if not re.fullmatch(r'[A-Za-z0-9!_,.-]{1,200}', native_id): raise SourceFailure('invalid_resource_id')
@@ -139,13 +141,18 @@ class Provider:
             data = (AtlassianMCP(s.mcp_credential_ref, self.limits).call('getJiraIssue',
                 {'cloudId': s.cloud_id, 'issueIdOrKey': native_id}) if mcp and s.transport == 'atlassian_mcp'
                 else self.client.get(self.base + '/rest/api/3/issue/' + quote(native_id), {'fields': 'summary,description,status,assignee,updated,project'}))
-            return self.jira(data)
+            record=self.jira(data)
+            if native_id not in {record.native_id,data.get('key')}:raise SourceFailure('outside_scope')
+            return record
         if s.kind == 'confluence':
             data = (AtlassianMCP(s.mcp_credential_ref, self.limits).call('getConfluencePage',
                 {'cloudId': s.cloud_id, 'pageId': native_id, 'contentFormat': 'storage'}) if mcp and s.transport == 'atlassian_mcp'
                 else self.client.get(self.base + '/wiki/api/v2/pages/' + quote(native_id), {'body-format': 'storage'}))
-            return self.confluence(data)
+            record=self.confluence(data)
+            if record.native_id!=native_id:raise SourceFailure('outside_scope')
+            return record
         data = self.client.get(self.base + f'/drives/{quote(s.drive_id)}/items/{quote(native_id)}')
+        if data.get('id')!=native_id:raise SourceFailure('outside_scope')
         self.in_folder(data)
         return self.graph(data)
 
@@ -170,7 +177,7 @@ class Provider:
             dict(field='description', value=adf_text(fields.get('description')))]
         text = '\n'.join(v['field'] + ': ' + json.dumps(v['value'], ensure_ascii=False) for v in values)
         updated = timestamp(fields.get('updated'))
-        return Record(str(data['id']), fields['updated'], updated, self.base + '/browse/' + key,
+        return Record(str(data['id']), fields['updated'], updated, self.spec.site_url + '/browse/' + key,
             key + '.md', text.encode(), data, values)
 
     def confluence(self, data):
@@ -183,7 +190,7 @@ class Provider:
         version = data.get('version', {})
         updated = timestamp(version.get('createdAt'))
         id = str(data['id'])
-        return Record(id, str(version['number']), updated, self.base + '/wiki/pages/viewpage.action?pageId=' + quote(id),
+        return Record(id, str(version['number']), updated, self.spec.site_url + '/wiki/pages/viewpage.action?pageId=' + quote(id),
             id + '.md', text.encode(), data, [])
 
     def graph(self, data):
@@ -219,15 +226,17 @@ class Provider:
         if s.kind == 'confluence':
             path = '/wiki/api/v2/spaces/' + quote(s.scope_id) + '/pages'
             url = cursor.get('next') or self.base + path
-            safe_url(url, self.host, path)
+            safe_url(url, self.host, urlsplit(self.base).path+path)
             data = self.client.get(url, {'body-format': 'storage', 'limit': 25} if not cursor else None)
             if not isinstance(data.get('results'), list): raise SourceFailure('malformed_source')
             records = [self.confluence(item) for item in data.get('results', [])]
             next_url = data.get('_links', {}).get('next')
             if next_url:
-                next_url = self.base + next_url if next_url.startswith('/') else next_url
-                safe_url(next_url, self.host, path)
-                if urlsplit(next_url).path != path: raise SourceFailure('unsafe_source_url')
+                if next_url.startswith('/'):
+                    prefix=urlsplit(self.base).path
+                    next_url=('https://'+self.host+next_url if prefix and next_url.startswith(prefix+'/') else self.base+next_url)
+                safe_url(next_url, self.host, urlsplit(self.base).path+path)
+                if urlsplit(next_url).path != urlsplit(self.base).path+path: raise SourceFailure('unsafe_source_url')
             return records, ({'next': next_url} if next_url else {}), not next_url
         # Folder-only traversal avoids reading an entire drive to filter it later.
         pending = list(cursor.get('pending', [s.scope_id]))

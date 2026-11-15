@@ -40,9 +40,11 @@ export function GraphWorkspace() {
   const expandedRoots = useRef("");
 
   function update(changes: Record<string, string | null>, replace = false) {
-    const next = new URLSearchParams(params);
-    Object.entries(changes).forEach(([key, value]) => value ? next.set(key, value) : next.delete(key));
-    setParams(next, { replace });
+    setParams(current => {
+      const next = new URLSearchParams(current);
+      Object.entries(changes).forEach(([key, value]) => value ? next.set(key, value) : next.delete(key));
+      return next;
+    }, { replace });
   }
   function center(id: string) {
     if (id !== root) {
@@ -88,10 +90,10 @@ export function GraphWorkspace() {
     if (expanded.isError) setExpandedGraphs({});
   }, [expanded.data, expanded.isSuccess, expanded.isError]);
   useEffect(() => {
-    if (root || !discovery.isSuccess || resultOffset) return;
+    if (root || q || !discovery.isSuccess || resultOffset) return;
     const first = discovery.data.nodes.find(node => node.kind === "project") ?? discovery.data.nodes[0];
     if (first) { setFallbackScope(first.id); update({ scope: first.id, node: first.id }, true); }
-  }, [discovery.data, discovery.isSuccess, root, resultOffset]);
+  }, [discovery.data, discovery.isSuccess, root, resultOffset, q]);
 
   const graph = useMemo(() => mergeGraphs(primaryGraph, expandedGraphs), [primaryGraph, expandedGraphs]);
   const selectedNode = graph.nodes.find(node => node.id === selected);

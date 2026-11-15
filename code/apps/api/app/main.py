@@ -29,7 +29,7 @@ app=FastAPI(title="Company Brain",version="0.3.0",openapi_url="/api/v1/openapi.j
 
 @app.exception_handler(RequestValidationError)
 async def validation_error(request:Request,exc:RequestValidationError):
-    if request.url.path.startswith('/api/v1/connections'):
+    if request.url.path.startswith(('/api/v1/connections','/api/v1/source-answers')):
         # Never echo accidentally submitted credentials or credential-bearing URLs.
         return JSONResponse(status_code=422,content={'detail':[
             {'loc':list(item['loc']),'type':item['type'],'msg':item['msg']} for item in exc.errors()]})
@@ -67,6 +67,8 @@ def authenticate(credentials:Annotated[HTTPAuthorizationCredentials|None,Depends
 Identity=Annotated[Viewer,Depends(authenticate)]
 from app.connectors import install as install_connectors
 install_connectors(app,Identity)
+from app.source_answers import install as install_source_answers
+install_source_answers(app,Identity)
 
 @app.middleware("http")
 async def headers(request:Request,call_next):

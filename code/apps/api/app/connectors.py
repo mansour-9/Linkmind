@@ -167,18 +167,19 @@ def live(viewer, id, body):
         from app.parsers import parse_document
         passages = parse_document(record.filename, record.content)
         text = '\n'.join(p.text for p in passages[:8])[:12000]
-        evidence = SourceEvidence(reference_id='live-' + hashlib.sha256(record.content).hexdigest()[:24],
+        reference=json.dumps([str(id),record.native_id,record.revision]).encode()+record.content
+        evidence = SourceEvidence(reference_id='live-' + hashlib.sha256(reference).hexdigest()[:24],
             synthetic=row.config.get('execution')=='mock',
             identity=identity, origin='live', original_url=record.original_url, source_revision=record.revision,
             source_updated_at=record.updated, observed_at=now(), access_dependencies=[identity],
             fields=[FieldEvidence(**v) for v in record.fields], excerpt=None if record.fields else text,
             coverage=EvidenceCoverage(complete=False, description='One bounded live resource observation; not complete source coverage.'))
-        result = dict(evidence=evidence.model_dump(mode='json'), retained=False,synthetic=row.config.get('execution')=='mock')
+        context = [dict(id=f'{evidence.reference_id}-{i}', text=p.text, filename=record.filename, locator=p.locator, observation_kind='live')
+            for i, p in enumerate(passages[:8]) if sum(len(x.text) for x in passages[:i+1]) <= 12000]
+        result = dict(evidence=evidence.model_dump(mode='json'), passages=context,retained=False,synthetic=row.config.get('execution')=='mock')
         if body.question:
             from app import providers
             from app.query_limits import question_limits
-            context = [dict(id=f'{evidence.reference_id}-{i}', text=p.text, filename=record.filename, locator=p.locator, observation_kind='live')
-                for i, p in enumerate(passages[:8]) if sum(len(x.text) for x in passages[:i+1]) <= 12000]
             def authorize():
                 with engine.connect() as conn:
                     current = owned(conn, viewer, id)

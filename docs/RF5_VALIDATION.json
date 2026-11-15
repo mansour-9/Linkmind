@@ -1,0 +1,96 @@
+{
+  "date": "2026-11-15",
+  "branch": "rf5/cross-source-journey",
+  "base_checkpoint": "925e880",
+  "status": "local_foundation_validated_real_source_and_synthesis_acceptance_pending",
+  "preview": "http://127.0.0.1:5196/ask/sources",
+  "project": "linkmind-rf5-validation",
+  "schema": "0018_connection_oauth",
+  "source_answer_policy": "source-answer-v1-exact-passages-and-typed-fields",
+  "validation": {
+    "full_api_passed": 341,
+    "private_original_tests_included": 2,
+    "new_rf5_api_cases": 26,
+    "full_browser_passed": 43,
+    "final_focused_browser_passed": 3,
+    "frontend_build": "passed",
+    "initial_browser_failures_preserved": 2,
+    "browser_fixes": [
+      "unique fixture content and explicit filename search",
+      "graph discovery preserves typed query with loading regression"
+    ],
+    "widths": [
+      1440,
+      1024,
+      390,
+      1920
+    ],
+    "visual_review": {
+      "checks": [
+        {
+          "width": 1440,
+          "overflow": false
+        },
+        {
+          "width": 390,
+          "overflow": false
+        }
+      ],
+      "errors": [],
+      "mixed_result": true,
+      "field_evidence": true
+    }
+  },
+  "capabilities": {
+    "explicit_document_limit": 30,
+    "explicit_live_resource_limit": 2,
+    "max_query_retrievals": 3,
+    "max_context_items": 24,
+    "max_context_characters": 22000,
+    "max_model_calls": 7,
+    "passage_and_field_citations_distinct": true,
+    "exact_json_types_checked": true,
+    "semantic_support_audit_required_for_real_answers": true,
+    "automatic_live_ingestion": false,
+    "saved_live_answers": false,
+    "access_generation_and_revision_rechecked": true,
+    "real_source_calls": 0,
+    "new_paid_model_calls": 0,
+    "mock_only_quality_claim": true
+  },
+  "protected": {
+    "original_container_count": 114,
+    "preserved_count": 114,
+    "missing_original_ids": []
+  },
+  "budget": {
+    "run": "northstar-sonnet-2026-11-12",
+    "cap_usd": "10.0000000000",
+    "spent_usd": "4.2788470600",
+    "historical_unknown_reservations_usd": "0.0566168200",
+    "unchanged": true,
+    "new_preview_budget_runs": 0
+  },
+  "github_checkpoint": {
+    "branch": "checkpoint/rf1-rf4-local",
+    "snapshot": "e020372",
+    "ci_fix": "925e880",
+    "ci_status": "success",
+    "ci_url": "https://github.com/mansour-9/Linkmind/actions/runs/43684279870",
+    "main_merged": false,
+    "force_push": false,
+    "branches_deleted": false
+  },
+  "remaining": [
+    "user-deferred real provider/MCP registration, consent and lifecycle acceptance",
+    "independent combined synthesis/coverage/identity/freshness quality acceptance",
+    "representative cost/latency acceptance",
+    "RF6 production sign-in/delegation, recovery and reviewed rollout"
+  ],
+  "preview_data": {
+    "synthetic_connections": 5,
+    "synthetic_review_notes": 2,
+    "connection_mode": "live",
+    "ai_provider": "mock"
+  }
+}
