@@ -45,6 +45,13 @@
       "draft_preserved_during_own_scope_navigation": true,
       "created_request_scope_asserted": true,
       "full_browser_passed_after_fix": 43
+    },
+    "graph_latest_query_regression": {
+      "discovered_in_github_run": 43689746734,
+      "latest_query_preserved_synchronously": true,
+      "workflow_cases": 7,
+      "rounds": 3,
+      "passed": 21
     }
   },
   "capabilities": {

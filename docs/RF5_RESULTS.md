@@ -81,6 +81,10 @@ current draft, while external navigation keeps its reset behavior. The existing
 workflow additionally checks that the created request contains exactly the two selected
 document IDs. The final local full run again passed all 43 workflows; the failed
 GitHub log/trace is retained in ignored local evidence.
+The next GitHub run exposed a remaining graph-query timing case. Graph URL changes
+now read synchronously maintained latest parameters, with committed URL synchronization,
+so delayed default discovery cannot overwrite a newer query. Seven graph workflows
+passed three consecutive local rounds (21/21) after this final correction.
 
 All **114 pre-existing container IDs** were preserved. The original USD 10 ledger
 remains **USD 4.2788470600 spent / USD 0.0566168200 historical unknown reservations**;
