@@ -85,6 +85,7 @@ export function Assistant() {
   const [error, setError] = useState("");
   const busy = useRef(false);
   const createdRoute = useRef<string | null>(null);
+  const scopeRoutes = useRef(new Set<string>());
   const textarea = useRef<HTMLTextAreaElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
@@ -95,7 +96,11 @@ export function Assistant() {
   useLayoutEffect(() => { const el = textarea.current; if (el) { el.style.height = "auto"; el.style.height = Math.min(200, el.scrollHeight) + "px"; } }, [question]);
   useEffect(() => {
     // A fast failed answer can settle before navigation commits. Keep its draft/error.
-    if (conversationId && createdRoute.current === conversationId) { createdRoute.current = null; return; }
+    if (conversationId && createdRoute.current === conversationId) { createdRoute.current = null; scopeRoutes.current.clear(); return; }
+    // Local source changes already set scope and preserve the draft. Their delayed
+    // navigation effect must not erase a question typed after applying the selection.
+    if (scopeRoutes.current.delete(location.pathname + location.search)) return;
+    scopeRoutes.current.clear();
     atBottom.current = true; setShowLatest(false); setError(""); setQuestion(params.get("q") ?? ""); setScope(sourceScope(params));
   }, [conversationId, params, location.key]);
   useLayoutEffect(() => { const el = scroller.current; if (el && atBottom.current) el.scrollTop = el.scrollHeight; }, [history.data, pending]);
@@ -134,7 +139,10 @@ export function Assistant() {
     const next = new URLSearchParams(question ? { q: question } : {});
     for (const id of ids) next.append("scope", id);
     setScope(ids);
-    navigate("/" + (next.size ? "?" + next : ""), { replace: !conversationId });
+    setError("");atBottom.current=true;setShowLatest(false);
+    const target="/" + (next.size ? "?" + next : "");
+    scopeRoutes.current.add(target);
+    navigate(target, { replace: !conversationId });
   }
   const composer = <form className="assistant-composer" onSubmit={e => { e.preventDefault(); void send(); }} aria-label="Message composer">
     {runtime.isSuccess && <p className="answer-provider">{runtime.data.provider === "mock" ? "Demo mode · returns source excerpts. Select a document to explore its contents." : "Sonnet test mode · grounded answers"}

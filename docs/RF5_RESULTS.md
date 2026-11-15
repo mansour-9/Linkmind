@@ -75,6 +75,13 @@ replace a newly typed query. The fixture now has unique content and explicit sea
 the graph URL update preserves the search and has a new loading/query regression.
 The corrected full run passed all 43 workflows without relaxing assertions.
 
+A later GitHub run also exposed a delayed source-selection navigation effect clearing
+a newly typed question before submission. Own scope transitions now preserve the
+current draft, while external navigation keeps its reset behavior. The existing
+workflow additionally checks that the created request contains exactly the two selected
+document IDs. The final local full run again passed all 43 workflows; the failed
+GitHub log/trace is retained in ignored local evidence.
+
 All **114 pre-existing container IDs** were preserved. The original USD 10 ledger
 remains **USD 4.2788470600 spent / USD 0.0566168200 historical unknown reservations**;
 zero additional paid usage and zero new preview budget runs. Five labelled demo

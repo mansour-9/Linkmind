@@ -39,6 +39,12 @@
       "errors": [],
       "mixed_result": true,
       "field_evidence": true
+    },
+    "scope_navigation_regression": {
+      "discovered_in_github_run": 43688212777,
+      "draft_preserved_during_own_scope_navigation": true,
+      "created_request_scope_asserted": true,
+      "full_browser_passed_after_fix": 43
     }
   },
   "capabilities": {

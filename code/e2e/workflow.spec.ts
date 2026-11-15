@@ -84,7 +84,11 @@ test("topic discovery, multi-source selection, reload and clearing scope", async
  await page.screenshot({ path: "results/screens/focus-sources-topic-search.png", fullPage: true });
  await page.getByRole("button", { name: "Apply selection", exact: true }).click();
  await expect(page.locator(".selected-source-chip")).toHaveCount(2);
- await page.getByLabel("Ask a question").fill("Who owns CB-ALPHA?"); await page.getByRole("button", { name: "Send question" }).click(); await expect(page.locator(".answer-statement").first()).toBeVisible();
+ await page.getByLabel("Ask a question").fill("Who owns CB-ALPHA?");
+ const createdRequest=page.waitForRequest(r=>r.url().endsWith('/api/v1/conversations')&&r.method()==='POST');
+ await page.getByRole("button", { name: "Send question" }).click();
+ expect(new Set((await createdRequest).postDataJSON().document_ids)).toEqual(new Set([charter.document_id,review.document_id]));
+ await expect(page.locator(".answer-statement").first()).toBeVisible();
  const id=page.url().split("/chat/")[1]; const history=await (await request.get("/api/v1/conversations/"+id,{headers:auth()})).json(); expect(new Set(history.document_ids)).toEqual(new Set([charter.document_id,review.document_id]));
  await page.reload(); await expect(page.locator(".selected-source-chip")).toHaveCount(2); await expect(page.locator(".selected-source-chips")).toContainText("alpha-charter.md");
  await page.getByLabel("Ask a question").fill("Keep my question"); await page.getByRole("button", { name: "Use all sources", exact: true }).click();
