@@ -4,7 +4,7 @@
 > [Ask across sources at 5196](http://127.0.0.1:5196/ask/sources) combines explicitly
 > selected saved context with up to two connected resources. Exact passages and typed
 > fields use distinct validated references. Results are transient; no live ingestion.
-> **341 API / 43 browser / build**, final 3 browser checks passed. Mock only, zero new
+> **349 API / 43 browser / build**, final 3 browser checks passed. Mock only, zero new
 > paid usage, same schema 0018, protected older previews unchanged.
 > Branch: `rf5/cross-source-journey`; completed source checkpoint:
 > `checkpoint/rf1-rf4-local`. See [RF5 results/commands](../docs/RF5_RESULTS.md).
@@ -31,7 +31,7 @@
 > **RF3 testing — 2026-11-15.** Mock preview: <http://127.0.0.1:5192>.
 > Separate Sonnet/Bedrock preview: <http://127.0.0.1:5193>; both require schema 0015.
 > **264 API / 34 browser / frontend build passed**; fictional evidence coverage 16/16.
-> Eight live prompts cost USD 0.1341612200 from the original shared USD 10 ledger.
+> Eight live prompts cost USD 0.1349612200 from the original shared USD 10 ledger.
 > **Two real answers failed source review; RF3 quality acceptance remains open.**
 > See [RF3 results, limits and exact runtime commands](../docs/RF3_RESULTS.md).
 > AI background uploads are lexical-only/mock; fixture embeddings were explicitly scoped.

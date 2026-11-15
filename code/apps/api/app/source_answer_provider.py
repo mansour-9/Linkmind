@@ -2,7 +2,7 @@
 import json
 from app import providers
 from app.contracts import AnswerSupportVerdict,recover_whitespace_quote
-from app.source_answer_contracts import SourceAnswer
+from app.source_answer_contracts import SourceAnswer,WireSourceAnswer
 from app.query_language import arabic,operational_question
 
 
@@ -44,15 +44,17 @@ def answer(question,sources,scope,authorize):
         return validate(SourceAnswer(statements=statements[:12],insufficient_evidence=True),sources),'demo_excerpts'
     system=providers.CONVERSATION_SYSTEM+'\n'+providers.UNTRUSTED+'''
 Answer each supported part of the question using only supplied sources. Respond in the user's language.
-Treat a source's actual structured fields as field/value evidence: cite their exact JSON types and values with kind=field. Never invent a prose quotation for a field.
-For kind=passage cite an exact substring of that single source text. Every clause needs supporting references. Do not infer identity from names, authority from a narrower role, or temporal/causal relations not explicitly supported.
+Treat a source's actual structured fields as field/value evidence: cite their exact JSON types and values with kind=field, field=<actual field name>, quote=null and value_json=<a JSON-encoded string of the exact source value>. For a string value Blocked, value_json is the JSON string literal "Blocked" including its JSON quotation marks; for true it is true, for null it is null, and for an object/array encode that exact JSON value inside the value_json string. Never invent a prose quotation for a field.
+For kind=passage cite an exact substring of that single source text, with field=null and value_json=null. Every clause needs supporting references. Do not infer identity from names, authority from a narrower role, or temporal/causal relations not explicitly supported.
 Keep dated stored reasons and current live fields distinguishable. Live evidence establishes only the observed resource at its observation time; saved facts are recorded facts. Never use today's live state as evidence for a missing past state.
 Receipt/observation time is not a business effective date. Null fields do not establish an explanation or prove why a value is unavailable.
 Attribute disagreements instead of silently picking a winner. Do not claim complete source review from partial context. If a requested part lacks support, give only supported statements and insufficient_evidence=true. Do not invent a source error explanation or expose internal IDs as business facts.
 '''
-    result=providers.structured(SourceAnswer,system,dict(question=question,answer_language='Arabic' if arabic(question) else 'English',sources=sources),scope,'answer','BEDROCK_ANSWER_MODEL',authorize=authorize)
-    try:validate(result,sources)
-    except ValueError:return SourceAnswer(statements=[],insufficient_evidence=True),'citation_failed'
+    wire=providers.structured(WireSourceAnswer,system,dict(question=question,answer_language='Arabic' if arabic(question) else 'English',sources=sources),scope,'answer','BEDROCK_ANSWER_MODEL',authorize=authorize)
+    try:
+        result=wire.to_answer()
+        validate(result,sources)
+    except (ValueError,RecursionError):return SourceAnswer(statements=[],insufficient_evidence=True),'citation_failed'
     if result.statements:
         cited={c.reference_id for s in result.statements for c in s.evidence}
         verdict=providers.structured(AnswerSupportVerdict,providers.ANSWER_SUPPORT_SYSTEM+'''

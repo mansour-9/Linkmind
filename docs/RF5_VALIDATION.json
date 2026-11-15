@@ -8,9 +8,9 @@
   "schema": "0018_connection_oauth",
   "source_answer_policy": "source-answer-v1-exact-passages-and-typed-fields",
   "validation": {
-    "full_api_passed": 341,
+    "full_api_passed": 349,
     "private_original_tests_included": 2,
-    "new_rf5_api_cases": 26,
+    "new_rf5_api_cases": 34,
     "full_browser_passed": 43,
     "final_focused_browser_passed": 3,
     "frontend_build": "passed",
@@ -56,7 +56,9 @@
     "access_generation_and_revision_rechecked": true,
     "real_source_calls": 0,
     "new_paid_model_calls": 0,
-    "mock_only_quality_claim": true
+    "mock_only_quality_claim": true,
+    "model_transport": "flat non-recursive schema; JSON-encoded field values decoded and strictly matched locally",
+    "bedrock_schema_subset_checked_offline": true
   },
   "protected": {
     "original_container_count": 114,

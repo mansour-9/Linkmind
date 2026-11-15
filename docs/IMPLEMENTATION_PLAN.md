@@ -5,7 +5,7 @@
 Latest RF5 checkpoint, 2026-11-15: the user requested the Git/GitHub checkpoint and a
 separate branch for new work. RF1-RF4 is published on `checkpoint/rf1-rf4-local`; RF5
 local implementation is on `rf5/cross-source-journey`. The new 5196 preview passed
-**341 API / 43 browser / build**, with final 3 browser checks. It combines explicitly
+**349 API / 43 browser / build**, with final 3 browser checks. It combines explicitly
 selected stored/live evidence with typed references and transient reauthorized results.
 No new paid trial or real account was used. See [RF5 results](RF5_RESULTS.md).
 
@@ -288,7 +288,7 @@ authorized access/budget; this plan does not connect accounts or run imports.
 Status: **local cross-source foundation implemented and validated; real-source and
 model acceptance pending**. Explicit selected documents plus up to two live resources,
 exact passage/typed-field citations, bounded partial results and transient access/revision
-checks are implemented at 5196. 341 API / 43 browser / build and final 3 browser checks
+checks are implemented at 5196. 349 API / 43 browser / build and final 3 browser checks
 passed. See [RF5 results](RF5_RESULTS.md). Accepted real source lifecycles and independent
 combined quality/cost/latency acceptance remain necessary; mock excerpts do not prove synthesis.
 

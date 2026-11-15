@@ -5,7 +5,7 @@
 [Ask across sources](http://127.0.0.1:5196/ask/sources) now combines explicitly selected
 stored documents with bounded connected-resource observations. Typed fields and exact
 passages retain distinct references; live results are transient and reauthorized.
-**341 API / 43 browser / build**, final 3 browser checks passed. This preview is mock;
+**349 API / 43 browser / build**, final 3 browser checks passed. This preview is mock;
 real MCP/provider and combined AI quality acceptance remain deferred.
 Completed RF1-RF4 source is on `checkpoint/rf1-rf4-local`; new work is on
 `rf5/cross-source-journey`. See [RF5 results](docs/RF5_RESULTS.md) and

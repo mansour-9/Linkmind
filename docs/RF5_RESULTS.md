@@ -26,6 +26,13 @@ still checks the complete statement's temporal, authority and freshness claims.
 All real dispatch would use existing per-question bounds and persistent budget guards;
 no new SDK client, provider fallback or spend store exists.
 
+The model transport uses a flat, non-recursive output schema. A field value is encoded
+as a JSON string for transport, then decoded into the strict application contract and
+matched against the original field including its JSON type. Local length/cardinality
+validation is retained. This avoids unsupported recursive/arbitrary-object model
+schemas documented in the [Bedrock structured-output guide](https://docs.aws.amazon.com/bedrock/latest/userguide/structured-output.html).
+Eight offline transport/schema/type cases were added; no paid compatibility probe was run.
+
 Results show source origin, revision, update/observation time, exact passage or fields,
 partial context, synthetic labels and source-specific failures. Results are transient:
 no live content or answer is added to the repository, graph or conversation history.
@@ -47,8 +54,8 @@ Live reference IDs now distinguish identical content from different source resou
 
 ## Validation
 
-Full API validation: **341 passed**, including the two private-original offline Lantern
-checks with their local fixture directory supplied. The suite includes **26 new RF5
+Full API validation: **349 passed**, including the two private-original offline Lantern
+checks with their local fixture directory supplied. The suite includes **34 new RF5
 cases** for mixed evidence, exact/typed references, semantic acceptance/rejection stubs,
 no retention, tenant/owner denial before reads, source outage, generation/revision
 revocation, revocation during generation, retained history, past-state protection,

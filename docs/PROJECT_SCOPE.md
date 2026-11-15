@@ -2,7 +2,7 @@
 
 Latest scope, 2026-11-15: the user authorized publishing the completed source checkpoint
 and starting new RF work on a separate branch. RF5's explicit cross-source local
-question foundation is implemented at 5196, with 341 API / 43 browser / build and final
+question foundation is implemented at 5196, with 349 API / 43 browser / build and final
 3 browser checks. This does not accept real provider lifecycles or combined AI quality;
 those trials remain deferred. No new paid evaluation or production rollout was started.
 See [RF5 results](RF5_RESULTS.md) and [Git workflow](GIT_CHECKPOINT.md).
@@ -29,7 +29,7 @@ model trial, protected environment rollout or AWS hosting was activated.
 completed in isolated local stacks (mock 5192, Sonnet 5193). **264 API / 34 browser /
 build passed**, but two of eight real-model cases failed source review despite passing
 semantic verification; RF3 quality acceptance remains open. See [RF3 results](RF3_RESULTS.md).
-The trial spent USD 0.1341612200 against the original cumulative USD 10 ledger;
+The trial spent USD 0.1349612200 against the original cumulative USD 10 ledger;
 no new allowance or protected-environment rollout occurred. RF4 **planning** is now
 requested for **Jira, Confluence, OneDrive and SharePoint**, with convenient MCP options
 to be evaluated. Exact account/resource scopes are unselected and connector execution

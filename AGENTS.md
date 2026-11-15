@@ -6,7 +6,7 @@ Git checkpoint `checkpoint/rf1-rf4-local` is published (e020372, clean-checkout 
 925e880). New work is on `rf5/cross-source-journey`, as explicitly requested. The new
 isolated mock preview at **5196/ask/sources** implements explicit stored/live questions,
 exact passage versus typed-field references, transient results and access/revision
-reauthorization. **341 local API / 43 browser / build**, final 3 focused browser
+reauthorization. **349 local API / 43 browser / build**, final 3 focused browser
 workflows passed. See [RF5 results](docs/RF5_RESULTS.md) and
 [validation](docs/RF5_VALIDATION.json). Schema stays 0018; no new infrastructure.
 
@@ -103,7 +103,7 @@ RF3 is at **5193**, schema 0015, `grounded-v8-bounded-source-context`. See
 [RF3 results](docs/RF3_RESULTS.md) and [bounded AI scope](docs/RF3_AI_SCOPE.md).
 
 RF3 is **not fully accepted**. The eight-prompt real trial completed for USD
-0.1341612200, but agent source review rejected two cases: an unsupported temporal
+0.1349612200, but agent source review rejected two cases: an unsupported temporal
 modifier and promotion of a Product Manager role into overall project leadership.
 The semantic verifier accepted both; do not present exact citations or passing mock
 tests as proof of complete grounding. Six authored cases were accepted; independent

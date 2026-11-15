@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from app import main,processing,retrieval,providers,connectors,source_answers as combined,source_answer_provider as synthesis
 from app.connector_providers import ConnectionSpec,Provider
 from app.connector_demo import DemoProvider
-from app.source_answer_contracts import SourceAnswer
+from app.source_answer_contracts import SourceAnswer,WireSourceAnswer
 from app.contracts import AnswerSupportVerdict
 from app.db import sql
 from test_search_readiness import workspace,source,viewer,OMAR
@@ -168,7 +168,7 @@ def test_semantic_rejection_still_hides_exact_field_reference(monkeypatch):
     sources=[dict(reference_id='live',kind='fields',fields=[dict(field='status',value='Blocked')],origin='live')]
     def structured(contract,system,payload,scope,operation,*a,**k):
         calls.append(operation)
-        if operation=='answer':return SourceAnswer(statements=[dict(text='The project is cancelled.',evidence=[dict(reference_id='live',kind='field',field='status',value='Blocked')])],insufficient_evidence=False)
+        if operation=='answer':return WireSourceAnswer(statements=[dict(text='The project is cancelled.',evidence=[dict(reference_id='live',kind='field',field='status',quote=None,value_json='"Blocked"')])],insufficient_evidence=False)
         return AnswerSupportVerdict(reviews=[dict(statement='The project is cancelled.',supported=False,unsupported_fragments=['cancelled'],temporal_scope_supported=True,authority_scope_supported=True,freshness_supported=True,reason='Blocked does not establish cancelled.')])
     monkeypatch.setattr(providers,'structured',structured)
     result,state=synthesis.answer('What is the status?',sources,{},lambda:None)
@@ -182,9 +182,9 @@ def test_mixed_source_answer_accepts_exact_passage_and_typed_field_support(monke
         dict(reference_id='live',kind='fields',fields=[dict(field='status',value='Blocked')],origin='live')]
     def structured(contract,system,payload,scope,operation,*a,**k):
         calls.append(operation)
-        if operation=='answer':return SourceAnswer(statements=[
-            dict(text='The saved note attributes the move to incomplete tests.',evidence=[dict(reference_id='saved',kind='passage',quote='tests were incomplete')]),
-            dict(text='The observed issue status is Blocked.',evidence=[dict(reference_id='live',kind='field',field='status',value='Blocked')])],insufficient_evidence=False)
+        if operation=='answer':return WireSourceAnswer(statements=[
+            dict(text='The saved note attributes the move to incomplete tests.',evidence=[dict(reference_id='saved',kind='passage',quote='tests were incomplete',field=None,value_json=None)]),
+            dict(text='The observed issue status is Blocked.',evidence=[dict(reference_id='live',kind='field',field='status',quote=None,value_json='"Blocked"')])],insufficient_evidence=False)
         assert {s['kind'] for s in payload['sources']}=={'passage','fields'}
         return AnswerSupportVerdict(reviews=[dict(statement=s['text'],supported=True,unsupported_fragments=[],temporal_scope_supported=True,authority_scope_supported=True,freshness_supported=True,reason='Explicit synthetic supported verdict.') for s in payload['statements']])
     monkeypatch.setattr(providers,'structured',structured)
@@ -225,3 +225,30 @@ def test_confluence_oauth_cursor_stays_on_the_verified_gateway_path(gateway_rela
     records,cursor,complete=provider.page({});assert not complete
     assert provider.page(cursor)[2]
     assert all(url.startswith('https://api.atlassian.com'+prefix+path) for url in calls)
+
+
+@pytest.mark.parametrize('value',[{'nested':[True,1,None,'Blocked']},True,1,None,'Blocked'])
+def test_flat_model_wire_preserves_arbitrary_json_field_types(value):
+    wire=WireSourceAnswer(statements=[dict(text='Source value',evidence=[dict(reference_id='s',kind='field',quote=None,field='value',value_json=json.dumps(value))])],insufficient_evidence=False)
+    result=wire.to_answer()
+    synthesis.validate(result,[dict(reference_id='s',kind='fields',fields=[dict(field='value',value=value)])])
+    assert type(result.statements[0].evidence[0].value) is type(value)
+
+
+def test_model_wire_schema_avoids_recursive_json_and_unsupported_constraints():
+    schema=WireSourceAnswer.model_json_schema()
+    def visit(node):
+        if isinstance(node,dict):
+            assert not any(k in node for k in ('minLength','maxLength','minimum','maximum','maxItems','minItems'))
+            if node.get('type')=='object':assert node.get('additionalProperties') is False
+            for value in node.values():visit(value)
+        elif isinstance(node,list):
+            for value in node:visit(value)
+    visit(schema)
+    assert 'JsonValue' not in json.dumps(schema)
+
+
+@pytest.mark.parametrize('value',['NaN','not valid JSON'])
+def test_invalid_wire_json_is_rejected(value):
+    wire=WireSourceAnswer(statements=[dict(text='Invalid candidate',evidence=[dict(reference_id='s',kind='field',quote=None,field='value',value_json=value)])],insufficient_evidence=False)
+    with pytest.raises(ValueError):wire.to_answer()
