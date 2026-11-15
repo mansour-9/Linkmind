@@ -9,7 +9,8 @@ export type Job = {
   status: "queued" | "processing" | "ready" | "extraction_unavailable" | "failed" | "cancelled" | "enrichment_staged_failed";
   document_id: string; stage: string; processed_at: string | null; can_manage: boolean;
   search_ready_at: string | null; search_status: "ready" | "pending" | "failed" | "cancelled";
-  enrichment_status: "ready" | "queued" | "processing" | "unavailable" | "failed" | "cancelled" | "enrichment_staged_failed"; can_retry: boolean;
+  enrichment_requested: boolean;
+  enrichment_status: "not_requested" | "ready" | "queued" | "processing" | "unavailable" | "failed" | "cancelled" | "enrichment_staged_failed"; can_retry: boolean;
   can_reprocess: boolean; staged_version_id: string | null; active_enrichment_version_id: string | null;
   preserved_enrichment: boolean; staged_activation_state: "live" | "staged" | "rolled_back" | null;
   current_version_id: string | null; extraction_provider: string | null; embedding_status: string;
@@ -26,7 +27,8 @@ export type ExplorerGraph = Omit<GraphData, "nodes"> & { root: string; depth: nu
   truncated: boolean; visible_node_count: number; visible_edge_count: number; root_connection_count: number };
 export type ExplorerSearch = { nodes: ExplorerNode[]; total: number; offset: number; limit: number; has_more: boolean };
 export type EntityOverview = { entity: ExplorerNode; graph: ExplorerGraph } | null;
-export type Evidence = { id: string; filename: string; version_id: string; line_number: number; quote: string; locator?: Record<string, unknown> };
+export type Evidence = { id: string; filename: string; version_id: string; line_number: number; quote: string; locator?: Record<string, unknown>;
+  provenance?: { origin: 'stored' | 'live'; synthetic?:boolean; observed_at: string; source_updated_at: string | null; original_url?: string | null; fields?: {field:string;value:unknown}[]; coverage: { complete: boolean; description: string } } };
 export type EntityDetails = Entity & {
   claims: { id: string; predicate: string; value: string; chunk_id: string; line_number: number; quote: string; filename: string; locator?: Record<string, unknown> }[];
 };
@@ -39,7 +41,8 @@ export function api(token: string) {
     });
     if (!response.ok) {
       const error: { detail?: unknown } = await response.json().catch(() => ({}));
-      throw new Error(typeof error.detail === "string" ? error.detail : "Request failed (" + response.status + ").");
+      const detail = error.detail;
+      throw new Error(typeof detail === 'string' ? detail : detail && typeof detail === 'object' && 'message' in detail && typeof detail.message === 'string' ? detail.message : "Request failed (" + response.status + ").");
     }
     return response;
   }

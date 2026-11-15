@@ -1,5 +1,13 @@
 # M3.2A diagnostic runner
 
+> **Historical diagnostic tooling — 2026-11-14.**
+> This runner and the Gemma comparison are not active RF work. The
+> [single roadmap](../../../../docs/IMPLEMENTATION_PLAN.md) prioritizes lightweight
+> source ingestion/retrieval; no model comparison, paid run or service command is
+> authorized by this documentation update. Keep frozen artifacts and Sonnet-only
+> ongoing model policy. Original runner mechanics/budget limits below are historical
+> implementation details, not permission to repeat the experiment.
+
 This package is explicitly invoked and is not imported by the API or worker.
 Production providers, schemas, jobs, documents and model settings are unchanged.
 See `docs/M3_2A_RESULTS.md` for the frozen pilot and limitations.

@@ -1,5 +1,16 @@
 # Lantern identifier/evidence repair
 
+> **Historical evidence / compatibility note — 2026-11-14.**
+> The dated implementation, checks, budgets and environment observations below are
+> retained; they were not rerun or re-scored by this documentation update.
+> The [active roadmap](IMPLEMENTATION_PLAN.md) and [scope](PROJECT_SCOPE.md) now
+> prioritize source-only ingestion, a durable selected-source repository and bounded
+> retrieval. [RF1](RF1_RESULTS.md) subsequently implements default-off enrichment in
+> isolated current code; old next tasks/manual or paid commands are not authorization.
+> Historical evidence/security/history remains intact; existing environments are unchanged.
+> Its failed extraction gate remains an honest historical result. It is not a
+> prerequisite to source-only RF1/RF3 acceptance or a task to rerun automatically.
+
 Work started 2026-11-13; final local checks completed 2026-11-14, on
 `m3.2/baseline-gemma`. **Real end-to-end acceptance did not pass. No rollout.**
 

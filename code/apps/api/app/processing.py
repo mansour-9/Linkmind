@@ -2,6 +2,7 @@
 import hashlib
 import json
 import logging
+import os
 from uuid import UUID, uuid4, uuid5
 from pydantic import ValidationError
 from app.artifacts import resolve
@@ -250,7 +251,7 @@ def process_one():
                 WHEN staged_version_id IS NOT NULL THEN 'enrichment_staged_failed' ELSE 'failed' END,
                 lease_token=NULL,error='Worker lease expired.',error_code='lease_expired'
                 WHERE id=ANY(:ids)""",ids=expired)
-        row=sql(conn,"""SELECT j.*,v.artifact_key,v.filename,v.document_id,v.search_ready_at,v.processed_at FROM processing_jobs j
+        row=sql(conn,"""SELECT j.*,v.artifact_key,v.filename,v.document_id,v.search_ready_at,v.processed_at,v.embedding_status FROM processing_jobs j
             JOIN document_versions v ON v.id=j.version_id JOIN documents d ON d.id=v.document_id
             WHERE j.status='queued' AND j.available_at<=clock_timestamp() AND d.deleted_at IS NULL
             ORDER BY j.available_at,j.created_at LIMIT 1 FOR UPDATE OF j SKIP LOCKED""").mappings().first()
@@ -289,9 +290,11 @@ def process_one():
                 passages=[dict(id=str(p.id),text=p.text,locator=p.locator) for p in sql(conn,
                     "SELECT id,text,locator FROM chunks WHERE version_id=:id ORDER BY line_number,id",
                     id=job.version_id).mappings()]
+            if job.embedding_status=="pending" and not job.staged_version_id:
+                index_passages(job,passages,scope,is_graph_demo)
         else:
             passages=prepare_content(job,content,scope,is_graph_demo)
-        if not job.processed_at or job.staged_version_id:
+        if job.enrichment_requested and (not job.processed_at or job.staged_version_id):
             enrich(job,content,passages,scope,use_bedrock,is_graph_demo)
     except (ProviderUnavailable,BudgetStopped) as exc:
         status="extraction_unavailable"
@@ -344,31 +347,56 @@ def prepare_content(job,content,scope,is_graph_demo):
         expected={signature(p["text"],p["locator"]) for p in passages}
         if any(signature(p.text,p.locator) not in expected for p in existing):
             raise ValueError("Stored source passages differ from parsing; explicit reprocessing is required.")
+    # Publish lexical availability first. Optional semantic work cannot gate source use.
+    set_stage(job,"publishing_content")
+    with engine.begin() as conn:
+        publish_content(conn,job,"pending")
+    index_passages(job,passages,scope,is_graph_demo)
+    return passages
+
+
+def index_passages(job,passages,scope,is_graph_demo):
+    """Resume indexing and reuse compatible unchanged text only within this document."""
     set_stage(job,"embedding")
     embedding_failed=False
     embedded=0
+    model=None if is_graph_demo else os.getenv("BEDROCK_EMBEDDING_MODEL")
+    dimensions=int(os.getenv("BEDROCK_EMBEDDING_DIMENSIONS","256"))
     for p in passages:
         set_stage(job,"embedding")
         vector=None
         embedding_error=None
+        if model:
+            with engine.connect() as conn:
+                publication_guard(conn,job,require_search=True)
+                cached=sql(conn,"""SELECT k.embedding::text FROM chunks k
+                    JOIN document_versions v ON v.id=k.version_id
+                    WHERE v.organization_id=:org AND v.document_id=:document AND v.source_version_id IS NULL
+                    AND k.text=:text AND k.embedding_model=:model AND k.embedding_dimensions=:dimensions
+                    AND k.embedding IS NOT NULL AND vector_dims(k.embedding)=:dimensions AND k.embedding_error IS NULL
+                    ORDER BY (v.id=:version) DESC,v.created_at DESC,k.id LIMIT 1""",
+                    org=job.organization_id,document=job.document_id,version=job.version_id,
+                    text=p["text"],model=model,dimensions=dimensions).scalar()
+                if cached:
+                    vector=json.loads(cached)
         try:
-            vector=embed(p["text"],scope) if not is_graph_demo else None
+            if vector is None and not is_graph_demo:
+                vector=embed(p["text"],scope)
         except Exception as exc:
             embedding_failed=True
             embedding_error=type(exc).__name__
         embedded+=bool(vector)
-        import os
         with engine.begin() as conn:
-            publication_guard(conn,job)
+            publication_guard(conn,job,require_search=True)
             sql(conn,"""UPDATE chunks SET embedding=CAST(:vector AS vector),embedding_model=:model,
                 embedding_dimensions=:dimensions,embedding_error=:error WHERE id=:id""",
                 id=UUID(p["id"]),vector=json.dumps(vector) if vector else None,
-                model=os.getenv("BEDROCK_EMBEDDING_MODEL") if vector else None,
+                model=model if vector else None,
                 dimensions=len(vector) if vector else None,error=embedding_error)
-    set_stage(job,"publishing_content")
     with engine.begin() as conn:
-        publish_content(conn,job,"failed" if embedding_failed else ("ready" if embedded==len(passages) else "unavailable"))
-    return passages
+        publication_guard(conn,job,require_search=True)
+        sql(conn,"UPDATE document_versions SET embedding_status=:status WHERE id=:version",
+            version=job.version_id,status="failed" if embedding_failed else ("ready" if embedded==len(passages) else "unavailable"))
 
 
 def enrich(job,content,passages,scope,use_bedrock,is_graph_demo):

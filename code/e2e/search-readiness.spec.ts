@@ -8,7 +8,7 @@ test.beforeAll(() => {
   expect(process.env.BRAIN_E2E_DISPOSABLE, "Readiness checks require a disposable mock database").toBe("1");
 });
 
-test("source text remains searchable and citable when enrichment is unavailable", async ({ page, request }) => {
+test("ordinary source text is ready without enrichment and optional failures do not hide it", async ({ page, request }) => {
   const marker = "ReadinessBrowser" + Date.now();
   const name = marker + ".md";
   const text = marker + " confirms the release review is on Thursday.\n";
@@ -22,11 +22,13 @@ test("source text remains searchable and citable when enrichment is unavailable"
     await expect(page.getByRole("dialog")).toHaveCount(0);
     const source = page.locator(".upload-list > li").filter({ hasText: name });
     await expect(source).toContainText("Search Ready");
-    await expect(source).toContainText("Enrichment unavailable");
+    await expect(source).toContainText("Ready for search and answers");
     const sources = await (await request.get("/api/v1/sources", { headers: auth() })).json();
     const job = sources.find((j: any) => j.filename === name);
     documentId = job.document_id;
-    expect(job.status).toBe("extraction_unavailable");
+    expect(job.status).toBe("ready");
+    expect(job.enrichment_status).toBe("not_requested");
+    expect(job.enrichment_requested).toBe(false);
     expect(job.search_status).toBe("ready");
     expect(job.entity_count).toBe(0);
     expect(await (await request.get("/api/v1/search?q=" + marker, { headers: auth("demo-omar") })).json()).toEqual([]);
@@ -38,17 +40,20 @@ test("source text remains searchable and citable when enrichment is unavailable"
     await page.getByRole("button", { name: "Download original", exact: true }).click();
     expect((await download).suggestedFilename()).toBe(name);
     await page.keyboard.press("Escape");
+    // Enrichment is an explicit action, with an honest unsupported-mock failure.
+    expect((await request.post(`/api/v1/jobs/${job.id}/reprocess`, { headers: auth() })).status()).toBe(202);
+    await expect.poll(async () => (await (await request.get(`/api/v1/jobs/${job.id}`, { headers: auth() })).json()).status).toBe("enrichment_staged_failed");
     await page.goto("/admin/processing");
     const card = page.locator(".process-card").filter({ hasText: name });
     await expect(card).toContainText("Search Ready");
     await card.getByRole("button", { name: "Retry enrichment", exact: true }).click();
-    await expect.poll(async () => (await (await request.get("/api/v1/jobs/" + job.id, { headers: auth() })).json()).attempt_history.length).toBe(2);
-    await expect(card).toContainText("Enrichment unavailable");
+    await expect.poll(async () => (await (await request.get("/api/v1/jobs/" + job.id, { headers: auth() })).json()).attempt_history.length).toBe(3);
+    await expect(card).toContainText("Knowledge refresh failed");
     await card.scrollIntoViewIfNeeded();
     await page.screenshot({ path: "results/screens/f11-1440-processing.png", fullPage: true });
     await card.getByRole("button", { name: "Processing details", exact: true }).click();
     await expect(page.getByRole("dialog")).toContainText("Search: ready");
-    await expect(page.getByRole("dialog").locator(".knowledge-card")).toHaveCount(2);
+    await expect(page.getByRole("dialog").locator(".knowledge-card")).toHaveCount(3);
     await page.keyboard.press("Escape");
     await expect(card.getByRole("button", { name: "Processing details", exact: true })).toBeFocused();
     await page.setViewportSize({ width: 390, height: 900 });
@@ -73,6 +78,8 @@ test("a search-ready replacement hides old graph facts and suppresses saved answ
   const old = await uploaded.json();
   try {
     await expect.poll(async () => (await (await request.get("/api/v1/jobs/" + old.id, { headers: auth() })).json()).status).toBe("ready");
+    expect((await request.post(`/api/v1/jobs/${old.id}/reprocess`, { headers: auth() })).status()).toBe(202);
+    await expect.poll(async () => (await (await request.get("/api/v1/jobs/" + old.id, { headers: auth() })).json()).enrichment_status).toBe("ready");
     const prior = await (await request.get("/api/v1/search?q=CB-ALPHA&document_id=" + old.document_id, { headers: auth() })).json();
     expect(prior.length).toBeGreaterThan(0);
     const conversation = await (await request.post("/api/v1/conversations", { headers: auth(), data: { document_ids: [old.document_id] } })).json();

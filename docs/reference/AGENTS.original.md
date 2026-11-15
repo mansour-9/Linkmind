@@ -1,3 +1,9 @@
+> **Historical original instructions; not active — 2026-11-14.**
+> Preserve the original body below as a record. Its immediate implementation, mandatory
+> extraction/graph and old milestone order do not override [current agent guidance](../../AGENTS.md),
+> [scope](../PROJECT_SCOPE.md) or the [single RF roadmap](../IMPLEMENTATION_PLAN.md).
+> Follow the latest user authorization/current roadmap; do not execute these original instructions.
+
 # Company Brain — Codex Agent Operating Instructions
 
 Read `COMPANY_BRAIN_CODEX_MASTER_SPEC.md` in full. It defines the product, features, data model, security rules, graph UX, AWS target, acceptance tests, and implementation order.

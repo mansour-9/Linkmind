@@ -1,3 +1,4 @@
+from answer_support import support_verdict
 import pytest
 from app import providers
 from app.contracts import GroundedAnswer,AnswerVerdict
@@ -6,6 +7,7 @@ PASSAGES=[{"id":"source","text":"Project Alpha is owned by Amal."}]
 @pytest.mark.parametrize("supported",[[True],[False],[],[True,True]])
 def test_answer_verification_abstains_on_rejection_or_mismatched_verdict(monkeypatch,supported):
     monkeypatch.setattr(providers,"configured",lambda:True)
+    monkeypatch.setattr(providers,"record",lambda *a,**k:None)
     calls=[]
     def structured(contract,system,payload,scope,operation,*args,**kwargs):
         calls.append(operation)
@@ -14,7 +16,7 @@ def test_answer_verification_abstains_on_rejection_or_mismatched_verdict(monkeyp
                 "evidence":[{"passage_id":"source","quote":"Project Alpha is owned by Amal."}]}],insufficient_evidence=False)
         assert operation=="answer_verification"
         assert payload["passages"]==PASSAGES
-        return AnswerVerdict(supported=supported)
+        return support_verdict(payload,supported)
     monkeypatch.setattr(providers,"structured",structured)
     result=providers.answer("Who owns Project Alpha?",PASSAGES,{})
     if supported==[True]:
@@ -38,7 +40,7 @@ def test_invalid_quote_correction_is_bounded_and_revalidated(monkeypatch):
             return GroundedAnswer(statements=[{"text":PASSAGES[0]["text"],
                 "evidence":[{"passage_id":"source","quote":quote}]}],insufficient_evidence=False)
         assert operation=="answer_verification"
-        return AnswerVerdict(supported=[True])
+        return support_verdict(payload,[True])
     monkeypatch.setattr(providers,"structured",structured)
     result=providers.answer("Who owns Project Alpha?",PASSAGES,{})
     assert result.statements[0].text==PASSAGES[0]["text"]
@@ -69,7 +71,7 @@ def test_citation_verifier_receives_original_text_without_internal_entities(monk
                 "evidence":[{"passage_id":"source","quote":"Project Alpha is owned by Amal."}]}],insufficient_evidence=False)
         assert operation=="answer_verification"
         assert payload["passages"]==PASSAGES
-        return AnswerVerdict(supported=[True])
+        return support_verdict(payload,[True])
     monkeypatch.setattr(providers,"structured",structured)
 
     assert providers.answer("Who owns Project Alpha?",[source],{}).statements
@@ -111,7 +113,7 @@ def test_internal_id_correction_is_exact_and_bounded(monkeypatch):
             issue=payload["validation_feedback"]["previous_evidence_errors"][0]
             assert issue=={"code":"internal_identity_id","statement_index":0,"internal_id":internal_id}
         text="The identifier is "+internal_id[:8] if len(calls)==1 else PASSAGES[0]["text"]
-        return GroundedAnswer(statements=[{"text":text,"evidence":[{"passage_id":"source","quote":PASSAGES[0]["text"]}]}],insufficient_evidence=False) if len(calls)<3 else AnswerVerdict(supported=[True])
+        return GroundedAnswer(statements=[{"text":text,"evidence":[{"passage_id":"source","quote":PASSAGES[0]["text"]}]}],insufficient_evidence=False) if len(calls)<3 else support_verdict(payload,[True])
     monkeypatch.setattr(providers,"structured",structured)
     result=providers.answer("Who owns Project Alpha?",passages,{})
     assert result.statements[0].text==PASSAGES[0]["text"]

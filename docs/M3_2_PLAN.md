@@ -1,99 +1,83 @@
 # M3.2 — Document-processing reliability
 
-Planning checkpoint: 2026-11-12. M3.2A diagnostics completed; M3.2B implementation pending approval.
+> **Superseded delivery plan — 2026-11-14; retained for history.**
+> Use [the active RF roadmap](IMPLEMENTATION_PLAN.md), [scope](PROJECT_SCOPE.md)
+> and [current/target architecture](ARCHITECTURE_M2_M3.md). Old unchecked work and
+> next-task wording below are not an active queue. F1.2 and F1.3 were subsequently
+> implemented locally; main rollout remains pending. RF1 targets default-off
+> enrichment, not another mandatory extraction-repair cycle. No implementation,
+> model call or rollout is authorized by the current documentation request.
 
-## Decision
+Updated 2026-11-12 for the main roadmap's F1 foundation. **A completed; B partial:
+F1.1 implemented and validated in an isolated stack, main-data rollout pending;
+F1.2/F1.3 planned.** See [F1.1 results](F1_1_RESULTS.md).
+This is a focused supporting plan, not a second roadmap.
+The [main roadmap](IMPLEMENTATION_PLAN.md) owns phase order and acceptance status.
 
-Keep **one milestone with two sequential checkpoints**, M3.2A and M3.2B. Diagnosis
-defines the implementation and acceptance dataset, so separate milestones would
-create an artificial completion boundary. M3.3 retrieval/identity, M3.4 verified
-GraphRAG, and M4.1 read-only Jira retain their existing order.
+Model decision (2026-11-12): ongoing work uses Sonnet only. Gemma is unavailable per
+the user; no Gemma repair, comparison rerun or adoption task is active. The completed
+pilot and frozen results below remain historical evidence. No runtime configuration
+change or new paid evaluation is authorized by this documentation update.
 
-## Starting point
+## Preserved checkpoint A
 
-The app has immutable uploaded revisions, retained source passages/locators, exact
-quote validation, bounded extraction correction, atomic publication, role/source
-permissions and persisted processing attempts. Graph, Search and Chat already use
-authorized current knowledge. The UI checkpoint includes the loaded synthetic
-38-entity/105-relationship Graph demo and canvas-only mode.
+M3.2 remains one milestone with A diagnostics and B implementation checkpoints.
+The frozen format matrix, reproduction and six-case Gemma/Sonnet pilot are complete.
+Recorded results: 23/23 offline cases, 48/48 API tests, 20/20 browser workflows, frontend
+build, 17 inference attempts and US$0.12665844 estimated token cost. No production
+model/schema/data changes occurred. This is historical validation, not a fresh run.
 
-The existing `M3_2_BASELINE.json` records an older preparation snapshot. Retain it
-as history; create a newly dated baseline tied to the Git checkpoint when M3.2A
-starts. Historical live-model results do not substitute for a current benchmark.
+Read [M3.2A results](M3_2A_RESULTS.md) and its frozen artifacts. Do not rewrite the gold
+after observing outputs or rerun the pilot using its old approval. The exact original
+private-PDF bad quotations remain unavailable; synthetic reproduction establishes the
+failure class, not that those original files are fixed. Gemma's fenced JSON rejection
+does not establish factual inaccuracy, nor does Sonnet verification prove every edge.
 
-## M3.2A — Reproduction and a measurable baseline
+The historical M3_2_BASELINE.json and docs/m32 records remain immutable references.
+Independent representative-company quality review and numeric targets are still open.
 
-Deliverables:
+## Revised checkpoint B — F1 in the main roadmap
 
-- Audit current parsing, passage creation, quote validation, job retries, embeddings
-  and publication. Record which concerns already have working safeguards.
-- Reproduce the reported PDF exact-quote failure using an authorized sample or a
-  synthetic case. Classify parsing, normalization, locator, schema and provider
-  failures separately. Do not assume the root cause before reproduction.
-- Establish a format matrix covering selectable PDF, DOCX paragraphs/tables, TXT
-  and Markdown. Include Unicode, punctuation/ligatures, line endings, headings,
-  long sections, tables, empty/malformed/large files and scanned PDF rejection.
-- Freeze current source/fixture/test hashes and independently review expected
-  evidence for the representative cases. Keep benchmark expectations unchanged.
-- Record baseline success/failure categories, processing-stage time, evidence
-  accuracy and available model usage/cost. Compare custom and managed approaches
-  using official documentation; do not provision or migrate infrastructure.
-- Propose numerical quality/latency/cost targets from the measured baseline and
-  record which need user/domain review before evaluating the implementation.
+The previous all-or-nothing publication design is superseded: content search readiness
+must be independent of knowledge enrichment and cross-document conflict assessment.
+This change is required for uploads, native pages and connected resource sync alike.
 
-Exit gate: a repeatable failure case, a reproducible baseline, a documented format
-matrix, and a concrete implementation design. If the reported failure cannot be
-reproduced without the original file, identify that dependency honestly and continue
-the independent synthetic/format checks. Do not claim the failure resolved.
+1. **F1.1:** make valid authorized indexed content searchable even if enrichment fails;
+   keep source versions and current/historical relationship behavior consistent.
+2. **F1.2:** safe mapped quotation repair, bounded correction and deterministic direction
+   checks justified by A's findings; unsupported items still fail.
+3. **F1.3:** safe versioned reprocessing and improved context/index generation, only adding
+   metadata needed for reproducibility/activation and stable citations.
 
-## M3.2B — Reliable processing and safe reprocessing
+Detailed implementation proposal and tests are in [M3.2B](M3_2B_PLAN.md). No main database
+migration is included in the isolated F1.1 delivery. Other slices remain planned.
 
-Implement only the changes justified by M3.2A:
+## Reuse and boundaries
 
-- Add normalization with mappings to retained original text and original source
-  locations. A displayed citation must resolve to the exact supporting source.
-- Add structure/token-aware bounded chunks, measured overlap and parent context
-  while preserving paragraphs, headings, tables and page/line/row locators.
-- Apply bounded repair to recoverable schema/quote errors. Keep the same exact
-  grounding validator; unsupported facts still fail after the repair limit.
-- Version processing/index generations and backfill alongside the current data.
-  Validate a new generation before switching; preserve immutable document versions,
-  old citations, permissions and a tested rollback path.
-- Show actual stages and actionable failure categories, distinguishing provider
-  credentials/access from invalid evidence and unreadable source content.
-- Measure results against the frozen cases and agreed targets. Run permission,
-  tenant, revision, retry/concurrency, source-download and saved-answer regressions.
+Reuse immutable uploaded versions, retained chunks/locators, evidence validators,
+lease/retry/accounting and existing UI/API contracts. Keep useful conflict and identity
+review functionality and historical records; do not expand conflict workflows here.
+Show actual content/enrichment states and distinguish source-access, parsing, provider,
+formatting and semantic failures. Keep deterministic fixture processing honest.
 
-Exit gate: the reproduced PDF failure passes without weakening evidence validation;
-the format matrix and existing regressions pass; a failed/revoked/superseded job
-cannot publish invalid knowledge; reprocessing and rollback preserve existing data
-and citations; measured limits and untested behavior are documented.
+F2 identity/group planning and early Jira authorization feasibility may proceed as
+design work alongside this milestone; the old rigid M3.3 → M3.4 → all connector work
+ordering is replaced by dependencies in the main plan. Bilingual evidence evaluation
+is included where relevant. Full localization, rich editor, Spaces, connectors, hosted
+deployment and OCR/Excel remain elsewhere in the main roadmap. Model replacement is
+not an active task under the Sonnet-only decision. No new infrastructure is needed
+to implement F1 locally.
 
-## Boundaries
+## Exit gate
 
-OCR, image/Excel ingestion, Jira credentials/import/sync, new orchestration, hosted
-deployment and Arabic are outside M3.2. Original Jira links and future saved graph
-views remain in the [Jira discussion](JIRA_KNOWLEDGE_NEXT_STEPS.md).
-Default development and CI remain deterministic mock mode. Any live-model evaluation
-must have an agreed run scope and usage budget; no new AWS resources are required.
-This plan authorizes preparation, not an automatic migration of the main database.
+- Searchable text survives extraction/conflict failure without unsupported graph facts.
+- New content revisions never inherit old relationships as current.
+- The diagnosed formatting/direction regressions pass without relaxing source truth.
+- Existing evidence/downloads, review history, permissions and saved-answer invalidation
+  remain correct through retry, reprocessing, revision races and rollback.
+- Relevant disposable API/build/browser tests pass; held-out/live results, untested
+  original files, cost estimates and independent review remain accurately distinguished.
 
-## Delivery record
-
-Each checkpoint updates its issue with changed behavior, commands/results, source
-locators/screenshots when relevant, and limitations. Code changes use focused pull
-requests. M3.2 closes after both checkpoints and the outstanding quality review are
-complete; a green synthetic test suite alone does not establish live model quality.
-
-
-## M3.2A completed — 2026-11-12
-
-The approved expanded A scope included the six-case Gemma/Sonnet pilot with 24
-maximum inference attempts and a US$5 projected-spend guard. It completed with
-17 attempts and US$0.12665844 estimated token cost. The results do not justify a
-production Gemma switch. The main application and its data remain unchanged.
-
-Read [A findings and validation](M3_2A_RESULTS.md) and the
-[proposed M3.2B implementation plan](M3_2B_PLAN.md). B has not started. The baseline
-and error-class reproduction are complete; the original private-PDF response bodies
-are unavailable, so their precise invalid quotations remain unconfirmed.
+Record progress per slice without marking B or M3.2 complete prematurely. The next
+development slice, when requested, is F1.2. Do not repeat the completed F1.1
+implementation, UI handoff or pilot. Main-data rollout remains separately tracked.

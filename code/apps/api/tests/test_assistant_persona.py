@@ -1,3 +1,4 @@
+from answer_support import support_verdict
 import pytest
 from app import providers
 from app.assistant_persona import CONVERSATION_SYSTEM,local_reply
@@ -74,12 +75,13 @@ def test_user_language_and_upload_help_are_respected():
 def test_personality_does_not_replace_answer_grounding_prompt(monkeypatch):
     from app.contracts import GroundedAnswer,AnswerVerdict
     monkeypatch.setattr(providers,'configured',lambda:True)
+    monkeypatch.setattr(providers,'record',lambda *a,**k:None)
     def structured(contract,system,payload,scope,operation,*args,**kwargs):
         if operation=='answer':
             assert CONVERSATION_SYSTEM in system
             assert 'MANDATORY GROUNDING' in system and 'Every factual statement needs exact supporting quotations.' in system
             return GroundedAnswer(statements=[dict(text='Amal owns Project Alpha.',evidence=[dict(passage_id='source',quote='Amal owns Project Alpha.')])],insufficient_evidence=False)
-        return AnswerVerdict(supported=[False])
+        return support_verdict(payload,[False])
     monkeypatch.setattr(providers,'structured',structured)
     result=providers.answer('Who owns Project Alpha?',[dict(id='source',text='Amal owns Project Alpha.')],{})
     assert result.insufficient_evidence and not result.statements

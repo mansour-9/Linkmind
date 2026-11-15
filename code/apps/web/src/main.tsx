@@ -8,6 +8,7 @@ import "./styles.css";
 import "./intelligence.css";
 import "./linkmind.css";
 import "./graph.css";
+import "./repository.css";
 import { SettingsPage, Sources } from "./Pages";
 import { identities, Session, useSession, useViewer } from "./session";
 import { Button, Feedback, SearchField, Sheet } from "./ui";
@@ -15,13 +16,15 @@ import type { Conversation } from "./contracts";
 
 const Assistant = lazy(() => import("./Assistant").then(m => ({ default: m.Assistant })));
 const Knowledge = lazy(() => import("./Knowledge").then(m => ({ default: m.Knowledge })));
+const Repository = lazy(() => import("./Repository").then(m => ({ default: m.Repository })));
+const Connections = lazy(() => import('./Connections'));
 const SearchPage = lazy(() => import("./IntelligencePages").then(m => ({ default: m.SearchPage })));
 const Processing = lazy(() => import("./IntelligencePages").then(m => ({ default: m.Processing })));
 const Conflicts = lazy(() => import("./IntelligencePages").then(m => ({ default: m.Conflicts })));
 const Usage = lazy(() => import("./IntelligencePages").then(m => ({ default: m.UsageDashboard })));
 const Graph = lazy(() => import("./GraphWorkspace").then(m => ({ default: m.GraphWorkspace })));
 const primary = [{ path: "/", title: "Home", icon: House }, { path: "/search", title: "Search", icon: Search }, { path: "/graph", title: "Graph", icon: Network }, { path: "/people", title: "People", icon: Users }, { path: "/content", title: "Content", icon: BookOpen }];
-const administration = [{ path: "/admin/sources", title: "Data Sources" }, { path: "/admin/processing", title: "Processing" }, { path: "/admin/conflicts", title: "Conflicts" }, { path: "/admin/usage", title: "AI Usage" }, { path: "/admin/settings", title: "Settings" }];
+const administration = [{ path: "/admin/sources", title: "Data Sources" }, {path:'/admin/connections',title:'Sources & Connections'}, { path: "/admin/processing", title: "Processing" }, { path: "/admin/conflicts", title: "Conflicts" }, { path: "/admin/usage", title: "AI Usage" }, { path: "/admin/settings", title: "Settings" }];
 
 function LegacyRoute({ to }: { to?: string }) {
   const location = useLocation();
@@ -73,14 +76,15 @@ function Workspace({ token, onSwitch }: { token: string; onSwitch: (token: strin
     <div className="workspace-body"><header className="mobile-topbar"><Button ref={menuButton} variant="ghost" className="icon-button" aria-label="Open navigation" onClick={() => setMenu(true)}><Menu size={21} /></Button><Link to="/" className="mobile-brand"><Link2 size={21} />Linkmind</Link><Button variant="ghost" className="icon-button" aria-label="Profile and workspace" onClick={() => setProfile(true)}><Settings size={19} /></Button></header>
       {!assistant && <header className="context-bar"><span>{admin ? "Admin Console" : title}</span><span>{viewer.data?.organization}</span></header>}
       <main id="workspace-content" className={assistant ? "assistant-main" : graph ? "graph-main-route" : ""} tabIndex={-1}>
-        {admin && <nav className="section-tabs admin-tabs" aria-label="Admin Console">{administration.filter(d => d.path !== "/admin/usage" || operational).map(d => <NavLink key={d.path} to={d.path}>{d.title}</NavLink>)}</nav>}
+        {admin && <nav className="section-tabs admin-tabs" aria-label="Admin Console">{administration.filter(d => (d.path !== "/admin/usage" || operational) && (d.path !== "/admin/connections" || viewer.data?.role === "admin")).map(d => <NavLink key={d.path} to={d.path}>{d.title}</NavLink>)}</nav>}
         {location.pathname.startsWith("/content") && <nav className="section-tabs" aria-label="Content views"><NavLink to="/content" className={!location.pathname.startsWith("/content/documents") ? "selected" : ""} end>Knowledge</NavLink><NavLink to="/content/documents">Documents</NavLink></nav>}
         <Suspense fallback={<div className="page"><Feedback>Loading…</Feedback></div>}><Routes>
           <Route path="/" element={<Assistant />} /><Route path="/chat/:conversationId" element={<Assistant />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/admin/connections" element={<Connections />} />
           <Route path="/people" element={<Knowledge people />} /><Route path="/people/:entityId" element={<Knowledge people />} />
           <Route path="/content" element={<Knowledge />} /><Route path="/content/:entityId" element={<Knowledge />} />
-          <Route path="/content/documents" element={<Sources />} /><Route path="/content/graph" element={<LegacyRoute to="/graph" />} /><Route path="/graph" element={<Graph />} />
+          <Route path="/content/documents" element={<Repository />} /><Route path="/content/graph" element={<LegacyRoute to="/graph" />} /><Route path="/graph" element={<Graph />} />
           <Route path="/admin" element={<Navigate replace to="/admin/sources" />} />
           <Route path="/admin/sources" element={<Sources />} /><Route path="/admin/processing" element={<Processing />} />
           <Route path="/admin/conflicts" element={<Conflicts />} /><Route path="/admin/settings" element={<SettingsPage />} />

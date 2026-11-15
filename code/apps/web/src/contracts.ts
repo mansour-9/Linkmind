@@ -10,6 +10,8 @@ export type WikiPage = Omit<EntityDetails, "claims"> & {
 };
 export type Answer = { statements: { text: string; evidence: { passage_id: string; quote: string }[] }[]; insufficient_evidence: boolean; provider: string; evidence: Passage[];
   message?: string; clarification?: boolean; search_notice?: string;
+  answer_state?: { code: string }; freshness_notice?: string;
+  retrieval_activity?: { operation: string; mode: string; returned_passages: number; source_count: number; semantic_status: string | null }[];
   source_matches?: { document_id: string; version_id: string; filename: string; search_ready: boolean; match: string }[];
   coverage?: { mode: string; selected_sources: number; covered_sources: number; supplied_passages: number; total_passages: number; partial: boolean } };
 export type Conversation = { id: string; title: string; document_ids: string[] };

@@ -80,6 +80,7 @@ export function StatusBadge({ status }: { status: Job["status"] }) {
 }
 
 const enrichmentLabels: Record<Job["enrichment_status"], string> = {
+  not_requested: "Ready for search and answers",
   ready: "Knowledge Enriched", queued: "Enrichment queued", processing: "Enriching knowledge",
   unavailable: "Enrichment unavailable", failed: "Enrichment failed", cancelled: "Enrichment cancelled",
   enrichment_staged_failed: "Knowledge refresh failed",

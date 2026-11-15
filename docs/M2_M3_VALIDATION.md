@@ -1,5 +1,14 @@
 # M2/M3 validation record
 
+> **Historical evidence / compatibility note — 2026-11-14.**
+> The dated implementation, checks, budgets and environment observations below are
+> retained; they were not rerun or re-scored by this documentation update.
+> The [active roadmap](IMPLEMENTATION_PLAN.md) and [scope](PROJECT_SCOPE.md) now
+> prioritize source-only ingestion, a durable selected-source repository and bounded
+> retrieval. [RF1](RF1_RESULTS.md) subsequently implements default-off enrichment in
+> isolated current code; old next tasks/manual or paid commands are not authorization.
+> Historical evidence/security/history remains intact; existing environments are unchanged.
+
 Core local workflows and the two-document live Bedrock acceptance scenario are implemented and verified. This is a local MVP; independent review of the benchmark and hosted readiness remain outstanding.
 
 ## Implemented and exercised

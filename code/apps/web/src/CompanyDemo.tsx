@@ -47,7 +47,7 @@ export function CompanyDemo() {
       })}
     </details>
     <details className="mt-3"><summary>Add information or test a revision</summary>
-      <p className="muted mt-2">Upload your own text through Add data source. In mock mode it becomes searchable without invented graph facts. Sonnet mode can enrich new content.</p>
+      <p className="muted mt-2">Upload your own text through Add data source. It is indexed for search and answers without automatic enrichment. You can request optional enrichment through Manage source.</p>
       <Button variant="ghost" onClick={() => void download("your-addition", "your-addition.txt")}>Download an addition to upload</Button>
       <Button variant="ghost" onClick={() => void download("atlas-handover-revision", "atlas-handover-revision.md")}>Download Atlas handover revision</Button>
       <p className="muted">Upload the revision through Manage source → New revision on atlas-handover.md. Its task deadline changes to December 8; old evidence remains historical.</p>

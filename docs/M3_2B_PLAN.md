@@ -1,121 +1,177 @@
-# M3.2B — Evidence-safe processing and versioned reprocessing
+# M3.2B — Independent search readiness and evidence-safe processing
 
-**Proposal for approval; not implemented by M3.2A.** Keep Sonnet as the production
-extractor and verifier. The Gemma pilot did not satisfy the strict-output gate.
-No further paid evaluation is authorized by this document.
+> **Superseded delivery plan — 2026-11-14; retained for history.**
+> Use [the active RF roadmap](IMPLEMENTATION_PLAN.md), [scope](PROJECT_SCOPE.md)
+> and [current/target architecture](ARCHITECTURE_M2_M3.md). Old unchecked work and
+> next-task wording below are not an active queue. F1.2 and F1.3 were subsequently
+> implemented locally; main rollout remains pending. RF1 targets default-off
+> enrichment, not another mandatory extraction-repair cycle. No implementation,
+> model call or rollout is authorized by the current documentation request.
 
-## Why these changes
+Updated 2026-11-12. **F1.1 implemented and validated in an isolated local stack;
+F1.2/F1.3 remain planned.** The user requested starting F1.1; the main running
+database/application has not been migrated. See [results](F1_1_RESULTS.md). This
+elaborates F1 in the [main roadmap](IMPLEMENTATION_PLAN.md); other slices, new
+infrastructure and paid evaluation are not authorized. Use Sonnet only for ongoing
+model-backed work and retain its existing configuration. Gemma is unavailable per the
+user's 2026-11-12 decision; repairing, re-evaluating or adopting it is not an active task.
+The completed comparison and its frozen results remain historical evidence.
 
-M3.2A found: (1) line-wrap/hyphenation changes can invalidate otherwise plausible
-PDF quotations; exact validation currently raises before correction is reached;
-(2) the common semantic verifier accepted a reversed task-assignment edge;
-(3) fixed 2,400-character source passages can split long sections without parent
-context; and (4) published versions currently cannot be safely reprocessed in place.
-The original two private PDF response bodies are unavailable, so their precise
-bad quotations remain unconfirmed. Do not promise those files fixed until tested.
+## Findings retained from M3.2A
 
-## 1. Preserve source truth and bound correction
+Exact quotation validation currently raises before semantic correction; a synthetic
+line-wrap case reproduced the failure class. A reversed task-assignment edge passed
+the common model verifier. Gemma returned fenced JSON rejected by the strict integration;
+that is not a factual-quality verdict. Fixed 2,400-character passages can lose context,
+and published versions cannot safely be reprocessed in place. Original private-PDF
+response bodies are unavailable; do not promise those files fixed before checking them.
 
-- Retain original bytes, parsed source passages, IDs and locators unchanged.
-  Introduce a separate normalized view with a reversible character-range map to
-  each original passage. Normalize NFC, line endings, Unicode whitespace and
-  typographic quotation marks. Join whitespace after a hyphen only when followed
-  by a line break and a lowercase continuation; retain the hyphen itself.
-- Validate the model output strictly first. If a quotation is not exact, allow a
-  deterministic mapping only when its normalized text has one unambiguous match
-  inside the referenced original passage. Replace the quotation with that exact
-  original slice, record the mapping/repair category, and rerun the unchanged exact
-  citation validator. Never alter names, numbers, dates, word order, or passage IDs.
-- Reject ambiguous matches and cross-passage automatic replacements. Route
-  recoverable JSON/schema/reference/quote and semantic failures through one shared
-  correction envelope: at most two extraction attempts total, at most one semantic
-  verification per locally valid attempt. The correction receives the validation
-  feedback and the same authorized original passages. Never retry indefinitely.
-- Reject failed or unsupported results after the correction limit. Keep the old
-  current projection during a failed revision/reprocessing attempt.
+## Design change from the earlier proposal
 
-## 2. Validate relationship direction and periods
+Previously, one complete validated projection gated all publication. Now **searchable
+content and structured enrichment have separate readiness/activation boundaries**.
+An enrichment or cross-document conflict failure cannot hide valid authorized text.
+Preserve the previous search revision if parsing/index preparation fails. Once a new
+content revision is search-ready, do not keep the older revision's relationships active
+as though they describe the new current content. Preserve those records as history.
 
-- Give the verifier structured subject/predicate/object records, entity kinds and
-  literal identifiers, exact citations, and corresponding original passages.
-  Require it to check direction, attribution and effective periods explicitly.
-- Add deterministic type constraints for the known predicates: `assigned_to`
-  task → person/team; `belongs_to` task → project; `owned_by` project/task →
-  person/team; `owns` is the declared inverse; `uses` project/system →
-  technology/system; `approved_by` decision → person/team; `leads` person → team.
-  Reject violations and request correction; do not guess by swapping endpoints.
-- Preserve the custom-predicate path with full semantic verification. Do not infer
-  unknown predicate meanings from names or silently equate management with ownership.
-  Require ordered relationship date ranges, just as claims already require them.
-- Add a held-out reversed-assignment regression which fails even if a mocked model
-  verifier says every assertion is supported. Add inverse, period, ambiguous-name,
-  source-revocation and untrusted-instruction controls.
+This is not permission to skip source/ACL checks, publish unsupported relationships,
+or delete useful conflict review. It removes a blocking dependency, not evidence safety.
 
-## 3. Add a separate, bounded context/index generation
+## F1.1 — Search-ready content independently of enrichment
 
-- Keep the existing `chunks` records as immutable citation passages. Do not rewrite
-  their text, IDs or evidence spans to implement a new chunk size.
-- Add a versioned context builder: respect headings, DOCX paragraphs/table rows and
-  PDF page boundaries. Use conservative UTF-8 byte counts as the initial token
-  upper-bound estimator, explicitly labeled as an estimator. Target 1,024 units,
-  maximum 1,536; overlap at most 128 units only inside a long section. Add a parent
-  heading/paragraph window capped at 4,096 units. Keep source-ID delimiters and
-  mappings on every fragment; never combine different documents or permissions.
-- Store new retrieval/context units separately with source-passage span mappings,
-  policy hash, embedding model/dimensions and generation ID. Search/answer payloads
-  still cite original passage IDs. Parent passages supplied to an answer become
-  permission-checked saved dependencies using the existing contract.
-- Keep this policy opt-in/shadow until the frozen and held-out cases show no
-  citation/mandatory-fact regression. Record context duplication, unit counts,
-  measured provider tokens, latency and available cost; do not infer savings from
-  the estimator. No new embedding provider or vector database is introduced.
+- [x] Add a regression for valid parsed text with extraction/conflict assessment failure.
+  Search and answers may use its authorized source passages, while graph results omit
+  unsupported enrichment. Test new uploads and revisions separately.
+- [x] Design the smallest additive readiness representation using existing document
+  versions/chunks/jobs; keep content and enrichment status distinguishable internally.
+- [x] Publish the search-ready revision after bounded parsing/indexing and source/access
+  checks. If embeddings fail but lexical indexing succeeds, expose degraded semantic
+  readiness honestly. An authorization failure never becomes degraded public access.
+- [x] Update retrieval, current graph/wiki projections and saved dependencies consistently.
+  Old evidence remains addressable to authorized viewers; no stale current relationships.
+- [x] Separate enrichment execution/failure from content publication using existing
+  worker patterns. Preserve conflict/review records and useful existing review behavior.
+- [x] Expose real Processing/Search Ready/Enrichment states without rewriting old job
+  history or falsely marking full knowledge enrichment complete.
 
-## 4. Compatible generation schema and management
+Exit: extraction/conflict failure does not prevent supported search; concurrent revision,
+deletion, revoked access and replaced leases cannot publish unauthorized or stale state.
 
-- Add `processing_generations` with organization/version IDs, immutable policy
-  configuration/hash, state, timestamps and validation summary. Add a nullable
-  generation reference to jobs and generation references to derived entity,
-  claim and relationship projections. Backfill a `legacy-v1` generation for each
-  existing publication before making those references required.
-- Add an active-generation pointer on each document version. Existing versions and
-  citation passages remain immutable. Every current Graph/Wiki/Search/conflict
-  projection must filter by both the current source version and active generation.
-  Historical source evidence/downloads retain their existing authorization behavior.
-- A new generation builds alongside the active one. Activate in one transaction
-  only after complete validation, rechecking source access, deletion, latest
-  revision, expected active generation and job lease. Preserve old records/reviews.
-  A concurrent revision or activation returns a conflict rather than overwriting it.
-- Add management endpoints under `/api/v1`: `POST /documents/{id}/reprocess`
-  (policy allowlist `legacy-v1` / `m32-v2`, returns a queued job/generation),
-  `POST /processing-generations/{id}/activate`, and
-  `POST /processing-generations/{id}/rollback`. Activation/rollback bodies contain
-  `expected_active_generation_id`; return HTTP 409 on mismatch. Require existing
-  source access plus the existing owner/operator management rule for all actions.
-  Use an organization/version/policy lock and uniqueness constraint for idempotency.
-- Keep generation states distinct from existing job-status values. Existing
-  `/api/v1` fields remain compatible; add generation/policy/error-category metadata
-  without changing conversation scope or answer/citation schemas. Expose the
-  supported management actions in Processing; show actual stages and errors.
+### Focused F1.1 implementation sequence
 
-## 5. Verification and rollout gates
+Prepared and implemented 2026-11-12 from inspection of processing.py, retrieval.py,
+main.py, existing migrations/tests and the Processing UI. The first slice passed
+isolated validation; F1.2/F1.3 remain later slices. Use Sonnet for model-backed extraction,
+verification and answers; retain the separately configured embedding model.
 
-1. Add the migration and generation filters in a disposable database first. Verify
-   the backfill preserves legacy query results and every original citation URL.
-2. Implement normalization/correction and direction guards with deterministic
-   regressions. Keep existing benchmark expectations and validation strictness.
-3. Build `m32-v2` in shadow mode. Verify no duplicate current facts, stale generation
-   leaks, lost review history, cross-tenant access, or changed source downloads.
-4. Test activation/rollback, concurrent revisions, expired leases, failed jobs,
-   deletion/revocation and saved answers. Reindexing unchanged original evidence
-   must not invalidate its IDs; changed/revoked source versions still suppress it.
-5. Run the full API/build/browser suites and report known limitations. Request a
-   separately bounded live regression run before claiming live-quality improvement.
-6. Prepare a main-database backup and concrete generation preview. Main migration,
-   backfill activation and deployment occur only after the approved rollout step.
-   Compare original row fingerprints and test rollback before switching.
+1. **Freeze the failure and acceptance cases.** Add disposable-database regressions
+   for a new upload and a replacement revision whose valid parsed text survives
+   extraction failure, plus a conflict-assessment failure. Verify source passage
+   retrieval/citation independently of enriched entities and relationships. Keep
+   arbitrary-document fixture extraction unavailable honestly; do not fabricate AI.
+2. **Define compatible readiness and activation.** Record search readiness separately
+   from enrichment completion using the smallest additive version metadata. Prefer
+   retaining current_version_id as the active content revision and explicitly gating
+   current enrichment to that revision's successful publication; confirm all consumers
+   before finalizing the schema. Preserve processed_at's existing meaning or migrate
+   its consumers explicitly. Backfill only demonstrably published legacy content;
+   previously failed revisions must not become active merely because chunks exist.
+3. **Separate the worker publication boundaries.** Prepare bounded parsed/indexed
+   content and activate it before extraction/conflict assessment. Each activation
+   rechecks lease ownership/expiry, deletion and revision ordering under appropriate
+   locks. Preserve previous active content on parsing/index-preparation failure.
+   Enrichment uses its own atomic validated publication and cannot revert the content
+   pointer. Its failure leaves searchable text available with an honest error.
+4. **Align retrieval and evidence consumers.** Audit Search, Chat dependencies, graph,
+   generated knowledge, conflicts, People/entity views and document/source pickers.
+   Text matching must work without an entity join. Query-embedding failure must not
+   discard valid lexical results; preserve authorization and report degradation.
+   A newly active revision invalidates old saved-answer dependencies and excludes old
+   relationships from current views while retaining authorized historical citations.
+5. **Make retries and UI states truthful.** Review retry/immutability guards so a
+   search-ready revision with failed enrichment can safely retry that unfinished work
+   without duplicating enrichment or changing passage IDs. Distinguish search readiness,
+   enrichment failure and semantic-index availability in API contracts and shared UI.
+   Preserve existing attempt history, downloads and working fixture journeys.
+6. **Validate and report before rollout.** Cover parser failure, unavailable/failed
+   embeddings, extraction/conflict failure, duplicate retries, superseding revisions,
+   expired/replaced leases, deletion, access changes and historical citations. Run
+   relevant API regressions, frontend build and affected browser workflows on disposable
+   services. Inspect desktop/mobile and keyboard states. Record actual results and
+   remaining independent-quality limitations; do not mark all F1 or M3.2 complete.
 
-Success requires: exact source-backed citations for every admitted item; rejection
-of the known reversed assignment even if the model judge approves it; no weakening
-of tenant/source permissions; unchanged old source evidence; failed builds leaving
-the active generation intact; and a verified reversible switch. OCR, Jira, hosting,
-Arabic, GraphRAG orchestration and a production Gemma switch remain outside this plan.
+Deliverables: focused regression coverage, compatible readiness migration if needed,
+worker/retrieval/API/UI changes, and updated architecture/runbook/status evidence.
+Prepare a backup, concrete backfill preview and tested rollback before touching the
+main database. F1.1 migrated only disposable databases and made no paid model call. M2/M3's
+representative document/question review can be prepared alongside F1.1; the full
+dataset is not a prerequisite for these deterministic reliability regressions.
+
+## F1.2 — Safe correction and relationship safeguards
+
+- [ ] Retain original bytes, passages, IDs and locators. Build a normalized comparison
+  view only where necessary, with a reversible map to original character ranges.
+- [ ] Strictly validate first. Recover a quote only when one unambiguous normalized
+  match maps to an exact original slice; rerun original-source validation and record
+  the repair. Never alter names, numbers, dates, ordering or passage identity.
+- [ ] Evaluate NFC/line-ending/whitespace/typographic-quote normalization against frozen
+  cases. The earlier hyphen/line-break heuristic is a candidate, not a license to change
+  word meaning. Reject ambiguous or cross-passage automatic replacements.
+- [ ] Allow bounded transport formatting repair (such as a sole fenced JSON object)
+  without accepting malformed schemas or unsupported content. Do not reinterpret the
+  frozen Gemma pilot scores after repair or switch the production provider implicitly.
+  This is a general Sonnet processing safeguard, not a Gemma compatibility task.
+- [ ] Route recoverable format/schema/reference/quote failures through one bounded
+  correction envelope: at most two extraction attempts, no unbounded retries.
+- [ ] Enforce known predicate endpoint types and direction: task assigned_to person/team;
+  project/task owned_by person/team; uses appropriate project/system and system/technology
+  endpoints; decision approved_by person/team. Retain declared inverses deliberately.
+  Do not guess by swapping endpoints or equate assignee, manager and owner.
+- [ ] Validate periods and unknown/custom predicates carefully; uncertain semantics
+  receive deeper verification or remain unpromoted. Give semantic checks ordered
+  subject/predicate/object and original evidence/context when invoked.
+- [ ] Keep essential deterministic checks always. Evaluate selective semantic verification
+  by uncertainty/consequence against the existing baseline before reducing blanket calls.
+  A verifier boolean or exact quote alone is not proof of factual support.
+
+Exit: reversed-edge regression fails even with an approving mock verifier; valid repaired
+quotes cite exact originals; unsupported results remain excluded without hiding valid text.
+
+## F1.3 — Reprocessing, context and compatible activation
+
+- [ ] Keep chunks as stable citation passages. Store only the derived context/index
+  mappings and generation metadata required for repeatable reprocessing and rollback.
+  Preserve source version, policy/model/dimension identifiers and active generation.
+- [ ] Evaluate structure-aware context respecting headings, paragraphs, table rows and
+  page boundaries. Bound overlap and parent context; never combine permissions/sources.
+- [ ] Earlier proposed 1,024 target / 1,536 maximum / 128 overlap / 4,096 parent units
+  based on UTF-8 bytes are candidate experiment settings, not tokens or accepted optimum.
+  Measure provider tokens, retrieval benefit, duplication, latency and cost before adoption.
+- [ ] Backfill a legacy generation compatibly if a new generation table is necessary.
+  Build beside active data, validate each projection and switch under expected version/
+  generation/lease checks. Preserve review history and citation URLs. No new queue per stage.
+- [ ] Reprocessing/activation/rollback controls must be authorized and race-safe; exact
+  API routes/schema are implementation design, not mandatory complexity. The former
+  /documents/{id}/reprocess and /processing-generations/{id}/activate|rollback routes
+  remain possible compatible designs, not an instruction to build three services.
+- [ ] Keep search activation independent from enrichment success. Reject a failed derived
+  generation without corrupting current evidence. Historical rollback must be deliberate
+  and must not bypass source deletion/access or make superseded facts current accidentally.
+
+## Validation and rollout
+
+Use a disposable database first. Test old-citation preservation, original downloads,
+legacy queries, parser/format limits, generation/revision races, duplicate retries,
+lease expiry, partial enrichment, graph version filters, permissions and saved answers.
+Run relevant API/build/browser suites. Preserve old gold, reports and fingerprints.
+
+Before a main-data migration, prepare backup, concrete backfill/activation preview and
+tested rollback. F1.1 main-data rollout is still pending. Live-model regression
+requires its own approved scope/budget; mock success is not proof of live answer quality.
+Record original-PDF uncertainty and independent-quality-review limits explicitly.
+
+No new conflict engine/review queue/ownership routing belongs here. Existing conflict
+functionality is preserved where useful, decoupled from searchability. Rich authoring,
+Space management, connectors and hosted deployment remain in the main roadmap, not
+out of product scope. Arabic/English evidence tests inform this work; full RTL UI is L1.

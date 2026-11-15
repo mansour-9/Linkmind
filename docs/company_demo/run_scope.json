@@ -1,0 +1,16 @@
+{
+  "authorized_date": "2026-11-12",
+  "maximum_usd": 10,
+  "run_id": "northstar-sonnet-2026-11-12",
+  "region": "us-east-1",
+  "text_models": [
+    "us.anthropic.claude-sonnet-4-6"
+  ],
+  "embedding_model": "amazon.titan-embed-text-v2:0",
+  "dataset_sha256": "42b8b946460f085a7232ae3a700e288c0654a31dee8523ca3d1e7e6d3b2d1dd3",
+  "initial_documents": 24,
+  "questions": 15,
+  "source_policy": "Fictional corpus and the checked-in fictional addition/revision only; no existing uploaded private PDFs.",
+  "sdk_automatic_retries": 0,
+  "budget_policy": "Database-shared conservative reservations; stop on unknown usage; do not reset run ID or increase the authorized limit."
+}

@@ -27,3 +27,11 @@ credentials
 **/.aws/
 tmp/
 .local/
+
+# Full local provider-run outputs; reviewed scopes, rates and summaries are versioned.
+docs/company_demo/budget_interruption.json
+docs/company_demo/live_checkpoint.json
+docs/company_demo/live_interrupted_expired_session.json
+docs/company_demo/sonnet_continuation.json
+docs/company_demo/preflight.json
+docs/company_demo/resumed_preflight/preflight.json

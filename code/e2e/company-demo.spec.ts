@@ -50,7 +50,7 @@ test("greetings give guidance and new information stays searchable in mock mode"
   await page.getByRole("button", { name: "Upload file", exact: true }).click();
   const row = page.locator(".upload-list > li").filter({ hasText: "company-user-addition.txt" });
   await expect(row).toContainText("Search Ready");
-  await expect(row).toContainText("Enrichment unavailable");
+  await expect(row).toContainText("Ready for search and answers");
   const jobs = await (await request.get("/api/v1/sources", { headers })).json();
   const job = jobs.find((j: any) => j.filename === "company-user-addition.txt");
   try {

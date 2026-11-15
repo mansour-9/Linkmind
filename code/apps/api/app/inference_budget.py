@@ -3,13 +3,30 @@ import json
 import os
 from pathlib import Path
 from decimal import Decimal, InvalidOperation
+from functools import lru_cache
 from uuid import uuid4
+from sqlalchemy import create_engine
 
 from app.db import engine, sql
 
 
 class BudgetStopped(RuntimeError):
     pass
+
+
+@lru_cache(maxsize=1)
+def _shared_engine(url):
+    return create_engine(url,pool_pre_ping=True,pool_timeout=5,connect_args={"connect_timeout":5})
+
+
+def ledger_engine(fallback=None):
+    """Separate preview data from the existing spend/pacing database; never copy it."""
+    url=os.getenv("BEDROCK_BUDGET_DATABASE_URL")
+    if url:
+        if not os.getenv("BEDROCK_BUDGET_RUN"):
+            raise BudgetStopped("A shared spend guard requires its existing approved run ID.")
+        return _shared_engine(url)
+    return engine if fallback is None else fallback
 
 
 def rates(model):
@@ -27,6 +44,8 @@ def rates(model):
 def reserve(model, operation, request, max_output):
     run = os.getenv("BEDROCK_BUDGET_RUN")
     if not run:
+        if os.getenv("BEDROCK_BUDGET_DATABASE_URL"):
+            raise BudgetStopped("A shared spend guard requires its existing approved run ID.")
         return None
     try:
         limit = Decimal(os.environ["BEDROCK_BUDGET_USD"])
@@ -40,9 +59,13 @@ def reserve(model, operation, request, max_output):
     # for budgeted runs so an unobserved attempt cannot escape the ledger.
     incoming = len(json.dumps(request, ensure_ascii=False, default=str).encode("utf-8")) + 8192
     cost = (incoming * pricing["input"] + max_output * pricing["output"]) / 1_000_000
-    with engine.begin() as conn:
-        sql(conn, "INSERT INTO inference_budget_runs(id,limit_usd) VALUES(:id,:limit) ON CONFLICT DO NOTHING", id=run, limit=limit)
-        row = sql(conn, "SELECT * FROM inference_budget_runs WHERE id=:id FOR UPDATE", id=run).mappings().one()
+    budget_db=ledger_engine()
+    with budget_db.begin() as conn:
+        if not os.getenv("BEDROCK_BUDGET_DATABASE_URL"):
+            sql(conn, "INSERT INTO inference_budget_runs(id,limit_usd) VALUES(:id,:limit) ON CONFLICT DO NOTHING", id=run, limit=limit)
+        row = sql(conn, "SELECT * FROM inference_budget_runs WHERE id=:id FOR UPDATE", id=run).mappings().first()
+        if row is None:
+            raise BudgetStopped("The shared approved spend run was not found. No replacement budget was created.")
         if row.limit_usd != limit or row.paused or row.spent_usd + row.reserved_usd + cost > limit:
             raise BudgetStopped("The Sonnet test budget is reached or paused. No additional paid call was made.")
         id = uuid4()
@@ -50,7 +73,8 @@ def reserve(model, operation, request, max_output):
             VALUES(:id,:run,:model,:operation,:incoming,:outgoing,:cost,'reserved')""",
             id=id, run=run, model=model, operation=operation, incoming=incoming, outgoing=max_output, cost=cost)
         sql(conn, "UPDATE inference_budget_runs SET reserved_usd=reserved_usd+:cost WHERE id=:id", id=run, cost=cost)
-    return dict(id=id, run=run, rates=pricing, input_bound=incoming, output_bound=max_output, cost=cost)
+    return dict(id=id, run=run, rates=pricing, input_bound=incoming, output_bound=max_output, cost=cost,
+                ledger_engine=budget_db)
 
 
 def settle(reservation, response, error):
@@ -61,7 +85,8 @@ def settle(reservation, response, error):
     known = all(isinstance(v, int) and not isinstance(v, bool) and v >= 0 for v in (incoming, outgoing))
     cost = (incoming * reservation["rates"]["input"] + outgoing * reservation["rates"]["output"]) / 1_000_000 if known else None
     uncertain = not known or incoming > reservation["input_bound"] or outgoing > reservation["output_bound"] or cost > reservation["cost"] or response.get("ResponseMetadata", {}).get("RetryAttempts", 0) > 0
-    with engine.begin() as conn:
+    # Settle against the exact ledger used for this dispatch, even if configuration changes.
+    with reservation.get("ledger_engine",engine).begin() as conn:
         sql(conn, "SELECT id FROM inference_budget_runs WHERE id=:id FOR UPDATE", id=reservation["run"])
         call = sql(conn, "SELECT status FROM inference_budget_calls WHERE id=:id FOR UPDATE", id=reservation["id"]).scalar_one()
         if call != "reserved":
@@ -78,7 +103,11 @@ def settle(reservation, response, error):
 def status():
     run = os.getenv("BEDROCK_BUDGET_RUN")
     if not run:
+        if os.getenv("BEDROCK_BUDGET_DATABASE_URL"):
+            raise BudgetStopped("A shared spend guard requires its existing approved run ID.")
         return None
-    with engine.connect() as conn:
+    with ledger_engine().connect() as conn:
         row = sql(conn, "SELECT id,limit_usd,spent_usd,reserved_usd,paused FROM inference_budget_runs WHERE id=:id", id=run).mappings().first()
+    if row is None and os.getenv("BEDROCK_BUDGET_DATABASE_URL"):
+        raise BudgetStopped("The shared approved spend run was not found. No replacement budget was created.")
     return dict(row) if row else dict(id=run, limit_usd=os.environ.get("BEDROCK_BUDGET_USD"), spent_usd=0, reserved_usd=0, paused=False)

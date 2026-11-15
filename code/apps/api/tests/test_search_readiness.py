@@ -47,7 +47,8 @@ def viewer(user=AMAL):
     return main.Viewer(id=user, organization_id=ORG, name="Test", organization="Test", role="admin" if user == AMAL else "member")
 
 
-def source(conn, content=b"ReadinessZebra project evidence remains searchable.", document=None, visibility="team"):
+def source(conn, content=b"ReadinessZebra project evidence remains searchable.", document=None, visibility="team", *, enrichment_requested=True):
+    """Legacy enrichment tests explicitly opt in; RF1 tests pass False."""
     did, vid, jid = document or uuid4(), uuid4(), uuid4()
     checksum = hashlib.sha256(content).hexdigest()
     if document is None:
@@ -56,9 +57,9 @@ def source(conn, content=b"ReadinessZebra project evidence remains searchable.",
     sql(conn, """INSERT INTO document_versions(id,organization_id,document_id,filename,checksum,byte_count,artifact_key,created_at)
         VALUES(:id,:org,:doc,'readiness.md',:checksum,:size,:artifact,clock_timestamp())""",
         id=vid, org=ORG, doc=did, checksum=checksum, size=len(content), artifact=save(ORG, checksum, content))
-    sql(conn, """INSERT INTO processing_jobs(id,organization_id,version_id,owner_id,checksum,available_at)
-        VALUES(:id,:org,:version,:owner,:checksum,clock_timestamp()-interval '100 years')""",
-        id=jid, org=ORG, version=vid, owner=AMAL, checksum=checksum)
+    sql(conn, """INSERT INTO processing_jobs(id,organization_id,version_id,owner_id,checksum,available_at,enrichment_requested)
+        VALUES(:id,:org,:version,:owner,:checksum,clock_timestamp()-interval '100 years',:enrich)""",
+        id=jid, org=ORG, version=vid, owner=AMAL, checksum=checksum,enrich=enrichment_requested)
     return SimpleNamespace(id=jid, version_id=vid, document_id=did)
 
 
@@ -222,6 +223,7 @@ def test_deletion_during_enrichment_cannot_resurrect_source(workspace, monkeypat
 def test_lost_lease_cannot_publish_or_finish(workspace, monkeypatch, boundary, lease_change):
     job = source(workspace, FIXTURES["cloud-migration"].path.read_bytes())
     original = processing.mock_extract
+    original_stage = processing.set_stage
     new_token = uuid4()
 
     def lose_lease(*args):
@@ -231,7 +233,14 @@ def test_lost_lease_cannot_publish_or_finish(workspace, monkeypatch, boundary, l
             sql(workspace, "UPDATE processing_jobs SET lease_token=:token WHERE id=:id", id=job.id, token=new_token)
         return original(*args) if boundary == "enrichment" else None
 
-    monkeypatch.setattr(processing, "mock_extract" if boundary == "enrichment" else "embed", lose_lease)
+    def stage(job, name):
+        if name == "publishing_content":
+            lose_lease()
+        return original_stage(job, name)
+
+    # Lexical publication now precedes embeddings; inject at its actual boundary.
+    monkeypatch.setattr(processing, "mock_extract" if boundary == "enrichment" else "set_stage",
+                        lose_lease if boundary == "enrichment" else stage)
     assert processing.process_one()
     details = main.job(job.id, viewer())
     assert details["processed_at"] is None and details["entity_count"] == 0
@@ -241,6 +250,7 @@ def test_lost_lease_cannot_publish_or_finish(workspace, monkeypatch, boundary, l
         assert sql(workspace, "SELECT lease_token FROM processing_jobs WHERE id=:id", id=job.id).scalar() == new_token
     else:
         monkeypatch.setattr(processing, "mock_extract", original)
+        monkeypatch.setattr(processing, "set_stage", original_stage)
         monkeypatch.setattr(processing, "embed", lambda *args: None)
         assert processing.process_one()
         assert main.job(job.id, viewer())["enrichment_status"] == "ready"

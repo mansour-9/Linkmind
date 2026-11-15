@@ -1,0 +1,11 @@
+# Optional, only for a separately scoped real-source trial in the RF4 project.
+# Keep credentials in an ignored, local file; do not layer over protected previews.
+services:
+  api:
+    env_file: ["${RF4_CONFIG_FILE:?Set the reviewed private connector environment file}"]
+    environment:
+      AI_PROVIDER: mock
+  worker:
+    env_file: ["${RF4_CONFIG_FILE:?Set the reviewed private connector environment file}"]
+    environment:
+      AI_PROVIDER: mock

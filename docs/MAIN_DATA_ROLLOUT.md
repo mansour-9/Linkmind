@@ -1,5 +1,14 @@
 # Main-data rollout review: F1 readiness and staged enrichment
 
+> **Historical cutover proposal; safety reference only — 2026-11-14.**
+> No cutover is authorized. The [RF roadmap](IMPLEMENTATION_PLAN.md) replaces the
+> old enrichment-first next task. Keep the backup/restore and inference-accounting
+> safeguards below, but reinspect actual images/schema/ledger configuration and
+> prepare an RF-specific candidate/acceptance/rollback review before execution.
+> This proposal targets 0011; later source includes 0012. Do not blindly run its
+> commands or require successful full extraction before source-only retrieval value.
+> Main and all preview data/services remain untouched by this documentation update.
+
 Prepared 2026-11-13. **Execution against `company-brain` is pending approval.**
 F1.3 implementation and rollout preparation are authorized; the user chose to
 complete those before F2. No main application mutation, infrastructure provisioning,

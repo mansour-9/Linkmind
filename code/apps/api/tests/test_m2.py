@@ -25,7 +25,7 @@ def call(path,token="demo-amal",body=None,method=None):
             return r.status,json.loads(r.read())
     except HTTPError as r:
         return r.code,json.loads(r.read())
-def upload(name,token="demo-amal",visibility="team",revision=None):
+def upload(name,token="demo-amal",visibility="team",revision=None,*,enrich=True):
     boundary=uuid4().hex
     content=(ROOT/(name+".md")).read_bytes()
     data=(f'--{boundary}\r\nContent-Disposition: form-data; name="visibility"\r\n\r\n{visibility}\r\n'
@@ -33,7 +33,13 @@ def upload(name,token="demo-amal",visibility="team",revision=None):
     path=f"/documents/{revision}/revisions" if revision else "/sources/upload"
     with urlopen(Request(BASE+path,data=data,headers={"Authorization":"Bearer "+token,"Content-Type":f"multipart/form-data; boundary={boundary}"}),timeout=30) as r:
         assert r.status==202
-        return json.loads(r.read())
+        job=json.loads(r.read())
+    if enrich:
+        ready=wait(job,token)
+        if not ready["processed_at"]:
+            code,job=call("/jobs/"+job["id"]+"/reprocess",token,body={})
+            assert code==202,job
+    return job
 def wait(job,token="demo-amal",seconds=90):
     deadline=time.monotonic()+seconds
     while time.monotonic()<deadline:

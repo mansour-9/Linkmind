@@ -1,5 +1,19 @@
 # Linkmind frontend rules
 
+Latest UI checkpoint, 2026-11-15: the new 5195 Sources & MCP Connections preview
+includes secure provider sign-in initiation, honest registration-pending states,
+metadata-only accessible-scope selection and retest-before-enable. Token/client-secret
+fields never appear in the browser. Preserve the native OAuth versus explicit MCP
+server-auth distinction. **39 browser workflows/build** passed; scope picker and OAuth
+setup were visually reviewed on mobile. See [current results](RF34_RESULTS.md).
+
+2026-11-15 RF4: **Sources & MCP Connections** is now a working Admin Settings section
+and Admin Console destination at `/admin/connections` in the isolated 5194 preview.
+Maintain the add/edit/authenticate/test/enable/disable/remove lifecycle, explicit source
+scopes, Demo/Real labels and live/collection health. No browser token/password exposure
+or fake real-provider sign-in. Real auth remains clearly unconfigured until supplied;
+mock fixtures are labelled and never imply real source access. See [RF4 results](RF4_RESULTS.md).
+
 ## Preserved M3.1 direction and current status
 
 The user approved a complete Glean-inspired redesign on 2026-11-11, using
@@ -8,11 +22,27 @@ This supersedes the earlier Royal Blue theme and dashboard references.
 The supplied product screenshots and recording are the primary visual references;
 exclude marketing navigation, tour overlays, sales widgets and protected assets.
 
-The [main roadmap](IMPLEMENTATION_PLAN.md) now targets production-quality phased
-delivery. Current routes/limits below are implemented behavior, not a permanent ceiling
-on authoring, Spaces, chat interaction or localization. Native editing and streaming/
-cancellation controls must ship with actual backend support, not remain indefinitely
-excluded. Preserve useful existing journeys and URLs while evolving them.
+## Active product direction — 2026-11-14
+
+The [single roadmap](IMPLEMENTATION_PLAN.md) now prioritizes a unified company
+repository, lightweight ingestion, useful search and evidence-based AI. RF1 was later
+authorized and is locally implemented: ordinary source-only success, optional Enrich
+knowledge/Refresh knowledge, honest semantic status and revised guidance. See
+[RF1 results](RF1_RESULTS.md). Remaining target behavior is planned; preserve current
+working navigation. No main/existing-preview rollout is included.
+
+RF2 is now implemented locally at port 5191: **Documents is a paginated resource
+library**, with content/title/project/team discovery, source/format/group/date filters,
+explicit metadata editing and original revision inspection. Sources/Processing keep
+their operational role; Manage source deep-links with document scope. See
+[RF2 results](RF2_RESULTS.md). RF1 Sonnet/main remain untouched. Arabic/answer-style
+enhancements remain RF3; no prompt/Arabic behavior changed in RF2.
+
+Ordinary content must be useful without extracted entities/relationships. Preserve
+existing working graph, source evidence and review journeys, URLs and permissions.
+Native rich authoring, managed Spaces, detailed enterprise access UX and advanced
+graph/conflict workflows are deferred. Their former UX requirements remain preserved
+in the [prior scope](reference/pre_restructure_2026_11_14/PROJECT_SCOPE.md).
 
 ## Design system
 
@@ -101,33 +131,47 @@ excluded. Preserve useful existing journeys and URLs while evolving them.
   User instruction permits independent automated validation and follow-up work
   without waiting for a manual test of every screen.
 
-## Target product UX — planned, not implemented
+## Target core UX — planned, not implemented
 
-- Deliver a polished Knowledge Hub: rich editor, safe autosave/edit conflict handling,
-  preview, publishing audience, library/discovery, revision comparison/restoration,
-  archive and deliberate merge. Reuse existing components where they fit; do not
-  limit the product to the current generated entity-page UI.
-- Published pages have one primary destination. Preselect the current Space or suggest
-  one; authorized general knowledge is the fallback. Drafts require no destination.
-  Category/tag/related/duplicate suggestions are optional and permission-filtered.
-- Show author/editors, maintainer, AI provenance and optional official revision approval
-  distinctly; author is not automatically the person responsible for described work.
-- Spaces integrate overview, knowledge, connected resources, people, decisions,
-  relationships, meaningful updates and contextual chat. Retain Graph and People;
-  graph exploration supports the experience rather than requiring graph expertise.
-- Delegate Space creation and suggest accessible similar Spaces without blocking names.
-  Show default inheritance or explicitly restricted access, audience previews on publish/
-  move, and no permission change from links. Never reveal restricted counts or titles.
-- Space chat searches its relevant connected scopes by default; broader search is an
-  explicit request or simple enabled option, not repeated tool confirmation dialogs.
-- Current operational questions use relevant live tools. Show source, observed time,
-  partial coverage and dated fallback honestly. Show actual activity and supported
-  cancellation without fabricating reasoning, progress or unavailable integrations.
-- Connector administration exposes practical modes/scopes, health, last successful sync
-  and actionable errors. Do not expose technical internals unless needed to make a choice.
-- Introduce Knowledge Hub, Spaces, Updates, Integrations and later work/agent surfaces
-  as working end-to-end capabilities. Do not add empty navigation to imply completeness.
-- Arabic/RTL and mixed-direction authoring/evidence require deliberate design and
-  keyboard/mobile validation; English remains implemented state, not target-only language.
-- Existing conflict review/evidence remains useful; advanced resolution/delegated
-  verification workflows are later. No mandatory ordinary publishing approval.
+- Make Assistant, direct Search and the stored resource library useful with zero graph
+  facts. Discover by topic and source metadata; do not require exact filenames.
+- Uploads/synchronized text finish as usable knowledge after parsing/indexing. Separate
+  availability from semantic-index readiness. Optional not-requested enrichment must not
+  look failed, incomplete or required. Existing enriched source controls remain supported.
+- Inputs already provide readable text/extractable PDFs. Explain unsupported files
+  honestly; do not imply Linkmind OCR/conversion capability or add an OCR setup journey.
+- Show original source/link, content version where available, source-updated time,
+  observed/last-successful-sync time, semantic degradation and meaningful coverage limits.
+- Distinguish stored knowledge from live observations. Current operational questions
+  use the relevant live source where available; historical questions need dated evidence.
+  A dated fallback is not newly confirmed live status.
+- Show actual queried sources and inspectable citations. Do not fabricate tool calls,
+  progress percentages or private reasoning. Add cancellation/streaming only when supported.
+- Source selection/routing should avoid unnecessary configuration for employees. Clarify
+  consequential ambiguity; do not ask approval for each authorized read step. Expansion
+  remains within the user's selected/enabled scope and server-enforced budgets.
+- Broad summaries disclose coverage; ordinary top-passage answers never imply complete
+  company/document review. Failed optional enrichment cannot make text unusable.
+- Connector administration exposes practical Live Only / Live + Sync / Not Connected
+  modes, selected folder/project/channel/repository scopes, health and recovery errors.
+  Live Only does not automatically add shared records. Do not add inactive connector tiles
+  or claim the app can use Codex's accounts.
+- Light project/team/resource grouping may use reliable metadata/explicit links without
+  managed Spaces or a rich editor. Similar names and AI guesses are not confirmed links.
+- Graph remains optional navigation over reliable links. Do not require a populated
+  canvas for upload success, search or answers. Preserve existing graph/People/review
+  routes and attribution; changes require a compatible, working journey.
+- Keep existing org/owner/source boundaries on titles/counts/previews/history/caches.
+  Detailed group/Space access administration is later; do not remove current controls.
+- Native authoring, managed Spaces and advanced review/research/actions remain later
+  complete journeys. Introduce their navigation only when implemented, not as placeholders.
+- Evaluate Arabic/English questions and evidence early. Full Arabic/RTL UI remains an
+  explicit later release choice; preserve mixed-direction source identifiers and keyboard/
+  mobile accessibility. English is the current interface language.
+
+## Target cost and processing copy
+
+Use plain distinctions: saved/indexed content, semantic search availability, synchronization
+and explicitly optional enrichment. Do not expose extraction machinery or internal generation
+IDs in the main employee journey. Diagnostic detail belongs in authorized operational views.
+Embeddings still have processing/cost; avoid claiming uploads perform no AI work at all.

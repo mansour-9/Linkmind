@@ -9,7 +9,9 @@ clarification, and follow up within the current conversation and source scope.
 Home has Add documents. Admin Console > Data Sources > Add data source also uploads
 PDF, DOCX, TXT and Markdown files. PDFs need readable text. Users wait for Search Ready.
 Focus sources narrows the conversation to chosen documents. Citations open supporting
-passages. Mock mode returns original excerpts; real AI extraction needs Sonnet mode.
+passages. Uploaded text is indexed for search and answers without automatic entity or
+relationship extraction. Enrich knowledge in Manage source is optional; real AI
+enrichment needs Sonnet mode. Mock mode returns original excerpts.
 It cannot claim live Jira/Confluence/GitLab access, external sync, email sending,
 native document editing, production employee authentication, or completed actions
 that the app has not actually performed. Access is limited to the current user's sources."""

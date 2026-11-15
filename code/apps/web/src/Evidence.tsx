@@ -12,6 +12,10 @@ export function SourcePreview({ evidence }: { evidence: Evidence }) {
     <span className="source-file-icon"><FileText size={22} /></span>
     <h2>{evidence.filename}</h2>
     <p className="muted">{sourceLocation(evidence.locator, evidence.line_number)}</p>
+    {evidence.provenance && <p className="muted">{evidence.provenance.origin === 'stored' ? 'Stored passage · Received ' : 'Live observation · Observed '}{new Date(evidence.provenance.observed_at).toLocaleString('en')}</p>}
+    {evidence.provenance?.synthetic?<p className="muted">Synthetic connector demonstration · no external company data</p>:evidence.provenance?.original_url && <p><a href={evidence.provenance.original_url} target="_blank" rel="noopener noreferrer">Open original source</a></p>}
+    {evidence.provenance?.source_updated_at && <p className="muted">Source updated {new Date(evidence.provenance.source_updated_at).toLocaleString('en')}</p>}
+    {!!evidence.provenance?.fields?.length && <p className="muted">Structured source record snapshot. The passage below renders the original field values.</p>}
     <blockquote className="source-quote" dir="auto">{evidence.quote}</blockquote>
     <Button variant="outline" disabled={download.isPending} onClick={() => download.mutate()}><Download size={16} />{download.isPending ? "Downloading…" : "Download original"}</Button>
     {download.isError && <Feedback error>{download.error.message}</Feedback>}

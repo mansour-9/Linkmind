@@ -28,14 +28,18 @@ function AnswerContent({ answer, onChoose, disabled }: { answer: Answer; onChoos
   return <div className="answer-block">
     {!!answer.evidence.length && <details className="show-work"><summary>Show work <span>{answer.evidence.length} passages</span></summary>
       <div className="work-content"><p>Source passages supplied for this answer</p>
-        <p className="muted">These are retrieved passages, not a recorded search activity log.</p>
+        <p className="muted">{answer.retrieval_activity?.length ? 'Completed retrieval operations and supplied source passages.' : 'These are retrieved passages, not a recorded search activity log.'}</p>
+        {!!answer.retrieval_activity?.length && <ul className="retrieval-activity" aria-label="Retrieval activity">{answer.retrieval_activity.map((step, i) => <li key={i}>
+          {({ indexed_search: 'Searched the stored index', adjacent_passages: 'Read adjacent source passages', selected_source_context: 'Read selected source context', retained_revision_context: 'Read retained source revisions' } as Record<string, string>)[step.operation] ?? 'Retrieved source evidence'}
+          {' · '}{step.returned_passages} passages from {step.source_count} sources
+        </li>)}</ul>}
         {[true, false].map(isCited => { const passages = answer.evidence.filter(p => cited.has(p.id) === isCited); return passages.length ? <section key={String(isCited)}>
           <h3>{isCited ? "Cited evidence" : "Additional context"}</h3><div className="evidence-row">{passages.map(p => <EvidenceAction key={p.id} id={p.id} title={p.filename} />)}</div>
         </section> : null; })}
       </div>
     </details>}
     {answer.provider === "mock-extractive" && <p className="answer-provider">Demo · verbatim evidence excerpts</p>}
-    {answer.provider === "bedrock" && <p className="answer-provider">{answer.statements.length ? "Sonnet · cited source evidence" : "Sonnet · insufficient evidence"}</p>}
+    {answer.provider === "bedrock" && <p className="answer-provider">{answer.statements.length ? "Sonnet · cited source evidence" : ['verification_failed','citation_failed'].includes(answer.answer_state?.code ?? '') ? 'Sonnet · answer not verified' : "Sonnet · insufficient evidence"}</p>}
     {answer.message && <p className="answer-message" dir="auto">{answer.message}</p>}
     {!!answer.source_matches?.length && <div className="source-choices" aria-label="Matching sources">{answer.source_matches.map(source =>
       <Button key={source.document_id} className="source-choice" variant="outline" disabled={disabled || !onChoose}
@@ -43,8 +47,9 @@ function AnswerContent({ answer, onChoose, disabled }: { answer: Answer; onChoos
         <FileText size={16} /><span dir="auto">{source.filename}<small>{!source.search_ready ? "Not search ready" : source.match === "similar_name" ? "Similar name" : source.match === "filename" ? "Filename match" : "Related source"}</small></span>
       </Button>)}</div>}
     {answer.search_notice && <Feedback>{answer.search_notice}</Feedback>}
-    {answer.coverage?.partial && <Feedback>This overview uses {answer.coverage.supplied_passages} of {answer.coverage.total_passages} passages from {answer.coverage.covered_sources} of {answer.coverage.selected_sources} selected sources. It covers only part of the content.</Feedback>}
-    {answer.insufficient_evidence && <Feedback>I couldn’t find enough evidence to answer this question. Try a different question or add a source.</Feedback>}
+    {answer.freshness_notice && <Feedback>{answer.freshness_notice}</Feedback>}
+    {answer.coverage?.partial && <Feedback>{answer.coverage.mode === 'document_overview' ? 'This overview uses' : 'This context uses'} {answer.coverage.supplied_passages} of {answer.coverage.total_passages} passages from {answer.coverage.covered_sources} of {answer.coverage.selected_sources} selected sources. It covers only part of the content.</Feedback>}
+    {answer.insufficient_evidence && !answer.message && <Feedback>{answer.statements.length ? 'Only part of this request is supported by the supplied evidence.' : 'The supplied evidence did not establish a verified answer. Inspect the source context or narrow the question.'}</Feedback>}
     <div className="answer-body">
       {answer.statements.map((statement, i) => <div className="answer-statement" key={i}>
         <div className="markdown" dir="auto"><Markdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: props => <a {...props} target="_blank" rel="noopener noreferrer" /> }}>{statement.text}</Markdown></div>

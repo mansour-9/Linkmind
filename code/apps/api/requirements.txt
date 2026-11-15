@@ -10,3 +10,5 @@ pypdf==6.21.4
 python-docx==1.2.0
 
 httpx==0.28.1
+Authlib==1.9.6
+cryptography==50.0.2

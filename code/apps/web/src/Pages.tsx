@@ -14,7 +14,7 @@ export function Sources() {
   const { token, service } = useSession();
   const location = useLocation();
   const [filter, setFilter] = useState("");
-  const jobs = useJobs();
+  const jobs = useJobs(new URLSearchParams(location.search).get('document_id') ?? undefined);
   const ingest = useIngest();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -75,7 +75,7 @@ export function Sources() {
       <details className="sample-documents"><summary>Try sample documents <span>Demo data</span></summary><section className="panel-padding" aria-labelledby="sample-title">
         <span className="tile-icon tile-teal"><UploadCloud size={21} /></span>
         <h2 className="mt-3" id="sample-title">Sample documents</h2>
-        <p className="muted mt-2">Use demo documents to explore graph relationships and verify access.</p>
+        <p className="muted mt-2">Use demo documents to try search and verify access. Optional enrichment adds graph relationships.</p>
         <div className="mt-4 flex flex-col items-start gap-2">
           <Button variant="outline" disabled={ingest.isPending}
             onClick={() => ingest.mutate({ sample: "cloud-migration", visibility: "team" })}>Load Cloud Migration sample</Button>
@@ -110,6 +110,7 @@ export function SettingsPage() {
   const viewer = useViewer();
   return <div className="page">
     <PageHeading title="Settings" description="Your active workspace, identity, and access." />
+    {viewer.data?.role==='admin'&&<section className="panel settings-panel"><div className="panel-heading"><Database size={20}/><h2>Sources & MCP Connections</h2></div><div className="panel-padding"><p>Configure approved sources, authentication, scopes and synchronization.</p><Button variant="outline" asChild><Link to="/admin/connections">Manage sources and connections</Link></Button></div></section>}
     {viewer.isPending && <Feedback>Loading settings…</Feedback>}
     {viewer.isError && <Feedback error>Workspace settings could not be loaded. <Button variant="outline" onClick={() => void viewer.refetch()}>Retry</Button></Feedback>}
     {viewer.isSuccess && <section className="panel settings-panel">

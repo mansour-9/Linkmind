@@ -1,5 +1,16 @@
 # T1 — Fictional company testing
 
+> **Historical evidence / compatibility note — 2026-11-14.**
+> The dated implementation, checks, budgets and environment observations below are
+> retained; they were not rerun or re-scored by this documentation update.
+> The [active roadmap](IMPLEMENTATION_PLAN.md) and [scope](PROJECT_SCOPE.md) now
+> prioritize source-only ingestion, a durable selected-source repository and bounded
+> retrieval. [RF1](RF1_RESULTS.md) subsequently implements default-off enrichment in
+> isolated current code; old next tasks/manual or paid commands are not authorization.
+> Historical evidence/security/history remains intact; existing environments are unchanged.
+> T1 acceptance below applies only to its dated fictional-company test pack; it does
+> not establish later Lantern, general real-company, or RF architecture acceptance.
+
 Updated 2026-11-12. The user authorized the complete test experience and **US$10
 maximum** for the new Sonnet extraction/embedding/chat run. Mock workflows are
 implemented and validated. The Sonnet run is **complete**; real-model acceptance is

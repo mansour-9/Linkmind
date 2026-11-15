@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-15",
+  "status": "local_admin_lifecycle_and_mock_connector_foundation_validated",
+  "preview": "http://127.0.0.1:5194/admin/connections",
+  "project": "linkmind-rf4-validation",
+  "schema": "0017_connection_management",
+  "trust_policy": "grounded-v9-connected-source-access",
+  "source_types": ["jira", "confluence", "onedrive", "sharepoint", "custom_mcp"],
+  "validation": {
+    "full_api_passed": 292,
+    "connector_cases_in_full_suite": 28,
+    "full_api_warnings": 1,
+    "final_focused_connector_passed": 27,
+    "full_browser_passed": 37,
+    "frontend_build": "passed",
+    "browser_widths": [1440, 1024, 390, 1920],
+    "new_browser_workflows": 3,
+    "persistence": "configuration/authentication/test state survived API restart"
+  },
+  "lifecycle": ["create", "edit", "mock_authenticate", "test_before_enable", "live_only", "selected_sync", "disable", "remove", "reconnect"],
+  "security": {
+    "configuration_management": "authorized_admin_only",
+    "source_data_access": "private_owner_bound_local_slice",
+    "plaintext_secret_database_columns": false,
+    "tokens_returned_to_browser": false,
+    "native_credentials": "server_owned_references_only",
+    "default_external_network": "disabled",
+    "custom_mcp": "explicit_read_contract_and_audience_bound_credentials"
+  },
+  "protected": {"pre_existing_container_ids_unchanged": 104, "protected_builds_or_schemas_replaced": false},
+  "usage": {
+    "real_source_calls": 0,
+    "additional_paid_ai_calls": 0,
+    "new_budget_runs_in_rf4": 0,
+    "original_cap_usd": "10.0000000000",
+    "original_spend_usd": "4.1635021600",
+    "original_unknown_reservations_usd": "0.0566168200",
+    "original_budget_unchanged": true
+  },
+  "remaining": ["real_source_urls_and_scopes", "provider_owned_oauth_setup_and_consent", "real_source_lifecycle_acceptance", "production_delegated_employee_auth", "RF3_known_grounding_quality_gaps"],
+  "not_claimed": ["real_authentication_success", "universal_custom_mcp_compatibility", "enterprise_scale_acl_acceptance", "new_model_quality_acceptance", "production_readiness"]
+}

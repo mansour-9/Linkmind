@@ -5,6 +5,7 @@ from uuid import UUID
 
 from app.db import sql
 from app.retrieval import ACCESS
+from app.source_access import CATALOG_VERSION
 
 STOP_WORDS = set("a an the is are there any have has do does i me we you can could please find locate look looking for show list file files document documents pdf source sources called call named name mention mentions mentioning about contain contains what which where who tell this that it one use second first third and of in on to with عندك فيه في وين ابحث دور ملف ملفات مستند عن هذا هذه هو هي هل ممكن ابي ابغى وش ايش ما اسم اسمه يسمى الاول الثاني الثالث".split())
 
@@ -29,9 +30,6 @@ def title_score(query, filename):
 
 
 # A never-published upload is discoverable as a file even before parsing succeeds.
-CATALOG_VERSION="""v.source_version_id IS NULL AND (v.id=d.current_version_id OR (d.current_version_id IS NULL AND
-    v.id=(SELECT latest.id FROM document_versions latest WHERE latest.document_id=d.id
-          AND latest.source_version_id IS NULL ORDER BY latest.created_at DESC,latest.id DESC LIMIT 1)))"""
 
 
 def candidates(conn,viewer,query,document_ids=None,limit=6):

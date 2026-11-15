@@ -1,0 +1,16 @@
+{
+  "label": "Fictional RF3 grounding regression and new acceptance cases; no company data",
+  "answers": [
+    {"id":"new-policy-translation","question":"When should an employee send the equipment request?","text":"سياسة تجهيز المكتب: يرسل الموظف طلب المعدات قبل يوم الثلاثاء. يراجع فريق الخدمات الطلب خلال يومي عمل."},
+    {"id":"new-role-summary","question":"لخص الأدوار في هذا المشروع.","text":"Project Cedar roles: Noor Haddad is the Product Owner and maintains the backlog. Ravi Chen coordinates the data migration workstream. The steering committee approves changes to the project scope."},
+    {"id":"new-snapshot-freshness","question":"What is the latest launch date for Project Juniper?","text":"Saved decision note, 12 November 2026: Project Juniper launch is scheduled for 8 January 2027. This note does not contain live project status."}
+  ],
+  "verifications": [
+    {"id":"captured-temporal-addition","expected":false,"question":"When must employees submit a request?","source":"يرسل الموظف الطلب قبل يوم الخميس.","statement":"Employees must submit their request before Thursday (prior to the requested day)."},
+    {"id":"captured-authority-promotion","expected":false,"question":"Summarize the project roles.","source":"Maya Farouk is the Product Manager and owns scope and product goals.","statement":"The project is led by Maya Farouk as Product Manager, who owns scope and product goals."},
+    {"id":"valid-policy-translation","expected":true,"question":"When must employees submit a request?","source":"يرسل الموظف الطلب قبل يوم الخميس.","statement":"Employees submit the request before Thursday."},
+    {"id":"explicit-leader-control","expected":true,"question":"Who leads the project?","source":"Ravi Chen is the overall project lead. Noor Haddad owns the product backlog.","statement":"Ravi Chen leads the project."},
+    {"id":"unqualified-saved-latest","expected":false,"question":"What is the latest delivery date?","source":"Saved delivery note, 10 November 2026: delivery is planned for 5 February 2027.","statement":"The latest delivery date is 5 February 2027."},
+    {"id":"qualified-saved-latest","expected":true,"question":"What is the latest delivery date?","source":"Saved delivery note, 10 November 2026: delivery is planned for 5 February 2027.","statement":"The latest date recorded in the saved delivery note is 5 February 2027."}
+  ]
+}

@@ -1,7 +1,8 @@
 from datetime import date
+import re
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
 class EvidenceValidationError(ValueError):
     """A local evidence failure with safe, bounded correction diagnostics."""
@@ -62,6 +63,8 @@ class AnswerStatement(Contract):
 class GroundedAnswer(Contract):
     statements: list[AnswerStatement]
     insufficient_evidence: bool
+    # Local classification, never a new model-generated field or source fact.
+    _failure_reason: str | None = PrivateAttr(default=None)
 
 class ConflictJudgment(Contract):
     pair_id: str
@@ -73,6 +76,57 @@ class ConflictJudgments(Contract):
 
 class AnswerVerdict(Contract):
     supported: list[bool]
+
+
+class StatementSupport(Contract):
+    statement: str
+    supported: bool
+    unsupported_fragments: list[str]
+    temporal_scope_supported: bool
+    authority_scope_supported: bool
+    freshness_supported: bool
+    reason: str = Field(min_length=1)
+
+
+class AnswerSupportVerdict(Contract):
+    reviews: list[StatementSupport]
+
+    def accepts(self, statements):
+        # A verdict for a shortened/reordered statement cannot certify the answer.
+        return len(self.reviews) == len(statements) and all(
+            review.statement == statement.text and review.supported
+            and not review.unsupported_fragments and review.temporal_scope_supported
+            and review.authority_scope_supported and review.freshness_supported
+            for review, statement in zip(self.reviews, statements))
+
+
+def recover_whitespace_quote(source: str, quote: str):
+    """Map one unique whitespace-only match back to exact original character bounds.
+
+    No punctuation, case, words, identifiers or source boundaries are changed. The
+    returned quotation is always a literal source substring, never normalized text.
+    """
+    needle=" ".join(quote.split())
+    if not needle:
+        return None
+    characters=[]
+    bounds=[]
+    previous_end=0
+    for token in re.finditer(r"\S+",source):
+        if characters:
+            characters.append(" ")
+            bounds.append((previous_end,token.start()))
+        characters.extend(token.group())
+        bounds.extend((i,i+1) for i in range(token.start(),token.end()))
+        previous_end=token.end()
+    normalized="".join(characters)
+    position=normalized.find(needle)
+    if position<0 or normalized.find(needle,position+1)>=0:
+        return None
+    start=bounds[position][0]
+    end=bounds[position+len(needle)-1][1]
+    return source[start:end],start,end
+
 
 def validate_extraction(result: Extraction, passages: list[dict]) -> Extraction:
     passage_map = {item["id"]: item["text"] for item in passages}

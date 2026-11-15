@@ -1,5 +1,14 @@
 # F1.3 — Staged enrichment and rollout preparation
 
+> **Historical evidence / compatibility note — 2026-11-14.**
+> The dated implementation, checks, budgets and environment observations below are
+> retained; they were not rerun or re-scored by this documentation update.
+> The [active roadmap](IMPLEMENTATION_PLAN.md) and [scope](PROJECT_SCOPE.md) now
+> prioritize source-only ingestion, a durable selected-source repository and bounded
+> retrieval. [RF1](RF1_RESULTS.md) subsequently implements default-off enrichment in
+> isolated current code; old next tasks/manual or paid commands are not authorization.
+> Historical evidence/security/history remains intact; existing environments are unchanged.
+
 Completed and locally verified 2026-11-13 on `m3.2/baseline-gemma`.
 The user authorized F1.3 plus main-data rollout preparation before F2, including
 bounded Bedrock checks under the existing persistent USD 10 run.

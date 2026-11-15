@@ -1,312 +1,398 @@
-# Linkmind — Current Architecture and Planned Evolution
+# Linkmind - Current Architecture and Retrieval-First Target
 
-Updated 2026-11-13. The filename is retained for existing links. Sections labelled
-current describe repository behavior through F1.3, validated in a separate local
-stack; the original running application/database remains at its earlier checkpoint.
-Target sections are unimplemented design unless explicitly identified below. See
-the [single roadmap](IMPLEMENTATION_PLAN.md), [agreed scope](PROJECT_SCOPE.md) and
-[F1.1 validation](F1_1_RESULTS.md).
+Latest architecture checkpoint, 2026-11-15: current source/new isolated 5195 preview
+requires **0018_connection_oauth** and `grounded-v10-qualified-statement-support`.
+The full-statement answer audit checks temporal, authority and operational freshness
+support. Known RF3 failures have bounded Sonnet repair evidence. RF4 now has encrypted
+server-owned delegated OAuth/refresh state, owner/generation/cookie-bound single-use
+callbacks, reserved credential bindings, native API gateway routing, bounded scope
+metadata discovery and explicit selection. Existing worker/access/evidence contracts
+are reused. **315 API / 39 browser / build** and final 8 OAuth checks passed.
+No real provider is configured or contacted; real-source and production delegated
+permission acceptance remain deferred. See [current results](RF34_RESULTS.md) and
+[runbook](RF4_OAUTH_RUNBOOK.md). Older checkpoints below are dated states, not current
+instructions to deploy onto protected schemas.
 
-2026-11-13 update: F1.3 is implemented and accepted in an isolated local stack.
-The read-only main inventory is already at migration 0010; the F1.3/0011 cutover
-is still pending. [F1.3 results](F1_3_RESULTS.md) and the
-[rollout procedure](MAIN_DATA_ROLLOUT.md) supersede older main-state assumptions.
+2026-11-15 RF4 delivery: source connections, checkpointed selected collection, retained
+external provenance and admin lifecycle are implemented in the isolated 5194 stack,
+with migrations 0016/0017 and `grounded-v9-connected-source-access`. Native adapters and
+bounded MCP interfaces exist, with five labelled demo connector types. Configuration,
+mock authentication, testing, modes, editing/removal and ordinary-worker collection are
+functional; **292 API / 37 browser / build** passed. Default external networking is off.
+Real OAuth/consent and provider/account acceptance remain pending. See [RF4 results](RF4_RESULTS.md)
+for the owner-bound local access model and actual limits. Prior RF1/RF2/RF3 preview
+builds/schemas stay untouched; RF3's two real-model grounding gaps remain open.
 
-## Current implementation
+2026-11-15 checkpoint: current source includes RF3 migration 0015, bilingual lexical
+retrieval, bounded context/coordinator/query limits, retained revision comparison and
+actual retrieval activity. The trust policy is `grounded-v8-bounded-source-context`.
+Mock RF3 5192 and separate Bedrock RF3 5193 passed 264 API / 34 browser / build checks;
+the eight-prompt real trial exposed two grounding/verifier sensitivity gaps, so model
+quality acceptance remains open. See [RF3 results](RF3_RESULTS.md). RF1 5189 stays at
+schema 0013, RF2 5191 stays at 0014, and protected builds/data remain unchanged.
+Live connector orchestration is still an offline adapter contract; RF4 is planning only.
+The dated RF1/RF2 architecture description below is superseded on those RF3 details.
 
-## Processing and publication
+Updated **2026-11-14** after the restructure and subsequent RF1/RF2 approvals.
+Current source includes RF2 in a new isolated mock stack at 5191: **231 API tests,
+32 browser workflows and frontend build passed**; final RF2 follow-up passed too.
+Existing main/previews are unchanged. Remaining target sections are planned unless
+identified as RF1/RF2 below. See [RF1 delivery](RF1_RESULTS.md) and [RF2 results](RF2_RESULTS.md).
+Use [scope](PROJECT_SCOPE.md) for requirements and [the roadmap](IMPLEMENTATION_PLAN.md)
+for implementation order. The filename remains stable for existing links.
 
-Original bytes are stored by organization and SHA-256 checksum. Every document revision has an immutable version ID and filename.
-The database queue leases one job at a time with SKIP LOCKED. Attempts, stages, errors and abandoned leases are persisted.
-Parsing creates stable passage IDs using the version ID and passage position. Locators retain source pages, lines, paragraphs or table rows.
-F1.1 prepares text indexes/optional embeddings, then atomically records search_ready_at
-and activates documents.current_version_id before extraction. Embedding failures are
-recorded without blocking text search. New content activation excludes the previous
-version's graph/claims from current views even while new enrichment is pending.
+## 1. Current implementation - facts to preserve
 
-The configured Bedrock provider requests JSON-schema output using boto3 Converse. Extraction is not a regex pipeline.
-Pydantic validates the schema and references. Every quoted span must occur verbatim in the referenced original passage.
-A separate model check evaluates entities, identifiers, claims, relationships and effective periods.
-One bounded extraction correction is shared by typed local citation/identifier failures
-and semantic rejection. Schema/provider failures still fail closed. Local evidence
-feedback includes bounded samples across entities, claims and relationships; exact
-quotes are never whitespace-normalized. Failed extraction prevents enrichment
-publication while valid source text remains searchable. See the
-[identifier repair and remaining real-model gate](LANTERN_IDENTIFIER_REPAIR_RESULTS.md).
-The deterministic provider only recognizes exact checked-in fixture bytes.
+### Storage and processing
 
-Strong identifiers resolve entity identities under an organization advisory lock. Same-name matches become review candidates.
-Human merges require a reviewer role, access to all affected sources, a rationale and audit history. Redirects preserve old canonical links.
-Claims retain attribution, typed JSON values, effective periods and multiple evidence spans. Relationships retain multiple spans and effective dates.
-Entity evidence is also retained.
+Original uploaded bytes are retained by organization and checksum. Documents select an
+immutable current content revision; stable passages retain page/line/paragraph/table
+locators. PostgreSQL leases background jobs with bounded attempts, expiry and publication
+guards. Parsing failures do not silently replace the last valid active content.
 
-Single-valued attribute conflicts compare the same canonical entity and attribute across overlapping effective periods.
-Bedrock assesses source-backed candidate pairs before publication, distinguishing incompatible statements from equivalent/complementary/historical statements.
-Both publication boundaries recheck lease ownership/expiry, tenant, deletion and
-latest revision under document/job locks. Enrichment additionally requires its own
-revision to remain current. Expired jobs are recovered under job locks before attempt
-updates. A concurrent new claim absent from semantic assessment remains a review candidate.
-Validated entities/claims/relationships/conflicts publish atomically with processed_at;
-that transaction never changes the active content pointer. Parser/index-preparation
-failure preserves previous content. Enrichment failure preserves the new searchable
-content without borrowing old relationships. Enrichment retries reuse published chunks
-and IDs without reparsing/re-embedding; completed enrichment remains immutable. Controlled
-F1.3 adds an explicit same-source enrichment refresh. A candidate row in
-document_versions references the immutable source revision and retains verified
-extraction JSON, verification time and activation state. processing_jobs tracks its
-staged_version_id. The source revision's active_enrichment_version_id switches
-atomically only under the current document/job/lease guards. Entities carry the
-candidate generation separately from source version IDs; existing evidence FKs and
-passage IDs remain unchanged. Shared live_entities/live_claims/live_relationships
-views select only the active generation, followed by existing source-current and ACL
-checks on every derived surface. Legacy generations require no ID/content backfill.
+RF1 `prepare_content()` parses/stores stable passages and publishes `search_ready_at`
+and the current revision before semantic indexing. `index_passages()` then attempts
+embeddings, reusing compatible exact-text vectors only inside the same tenant/document.
+It records ready/unavailable/failed status separately; interrupted pending indexing
+resumes from stored passages/vectors without parsing again. Lexical search remains usable.
 
-Failed candidates become rolled_back, with job status enrichment_staged_failed.
-Prior verified same-source facts remain live while raw search continues. New source
-revision activation still excludes old-source facts under F1.1. Exact source-local
-entity/evidence anchors can preserve reviewed identities during refresh; names alone
-never link identities across sources. Candidate history and old facts/evidence remain
-retained. Metadata downgrade refuses retained generations and requires the reviewed
-database/originals snapshot plus prior build for restoration.
+`processing_jobs.enrichment_requested` defaults false for new jobs. Ordinary upload,
+revision and internal `add_version()` calls therefore finish without `enrich()`, identity
+resolution or conflict assessment. Status `ready` means job completion, not inferred
+knowledge enrichment; the API reports `enrichment_status=not_requested` until optional work
+is requested. `processed_at` retains its original successful-enrichment meaning.
 
-## Retrieval and derived views
+An authorized explicit reprocess action atomically creates a staged candidate and sets
+`enrichment_requested=true`. Labelled graph/Northstar dataset loaders explicitly request
+fixture enrichment. Ordinary uploads of identical fixture bytes still default off, while
+idempotent reuploads preserve an existing job's intent/history. Migration 0013 retains
+all pre-existing job intents as true and sets the new-row default false; it does not
+reprocess, cancel or relabel old jobs. Existing queued work needs review at later rollout.
 
-Graph, Wiki, Search and Chat use the same current records.
-Permissions require matching organization and either source ownership or organization visibility; deletion always removes derived access.
-Entity labels are selected only from authorized occurrences. Relationships require their own source access.
-A conflict is visible only when both underlying claims remain authorized and current.
-Original evidence/history can be opened by authorized viewers even when a version is historical.
+Optional enrichment retains Sonnet batches, exact/schema/reference validation, semantic
+verification/correction, identity resolution, conflict assessment and guarded atomic
+publication. It is not required for source-only search or answers.
 
-Hybrid retrieval ranks bounded candidate lists from exact identifiers/entities, PostgreSQL full text, matching pgvector embeddings and related graph claims.
-Permissions and source/type/date filters are applied inside each candidate query before ranking.
-Reciprocal-rank fusion combines channels. Leading semantic evidence is retained so rare entity qualifiers are not buried by broad identifier matches. Current-version, embedding model and dimension checks exclude incompatible or outdated vectors.
-Graph neighborhoods are bounded and server-backed. The focused /graph explorer
-adds permission-filtered entity/identifier search, stable immediate-neighbor pages,
-one-to-three-hop traversal, type/predicate filters, and 80-node/120-edge budgets.
-React Flow preserves existing node positions during exploration. Truncation and
-loaded connection counts are explicit; it never claims to show the complete workspace.
-Workspace Search adds an optional connected-entity overview only for a relevant
-exact/near name or identifier match, while retaining ordinary document results.
+F1.3 supports same-source staged enrichment generations, verified activation and
+rollback. Shared live views expose only the active, current-source generation. New
+content revisions exclude superseded old-source facts. Retained passages/citations,
+review records and generation history survive failed refresh. These safeguards are
+valuable for existing data; they do not make enrichment mandatory in the target.
 
-Wiki pages are generated structured views with attributed claims, conflicts, uncertain matches, source citations and version history.
-They do not add unchecked factual prose.
+Latest local provider diagnostics include bounded extraction splitting, typed citation/
+identifier failures and actual stop-reason recording. Latest recorded Lantern real-model
+acceptance still failed verifier alignment; all four sources remained Search Ready.
+No graph/answer quality claim follows from source-readiness or synthetic test counts.
 
-## Grounded conversations
+### Retrieval and answers
 
-Conversations belong to one user and organization, with workspace or selected-file scope.
-Only current authorized passages are sent for answering. Follow-ups can reuse permission-checked prior evidence and context.
-Source entity metadata preserves canonical distinctions internally. Answers must not assume same-name entities match, expose internal IDs, or cite internal metadata as original source facts.
-Each factual statement must carry exact evidence quotes and passage IDs. A separate semantic check must approve every statement using the corresponding full source passages to resolve references. One bounded correction is permitted and must pass the same validation.
-Missing evidence produces an explicit response. Conflicting evidence must retain both source positions.
-No failed or unverified answer is saved.
+RF2 adds source instances and explicit project/team groups around the existing document
+store. Uploaded resource identity is tenant/source-instance/native-document ID; resource
+type is document. The shared adapter identity also carries resource type explicitly.
+One project/team per document can be assigned deliberately. A title/group update requires
+source management permission and an expected metadata revision; it records the actor,
+rejects stale edits and performs no extraction/indexing. Names alone never merge groups.
+The paginated resource catalog searches titles, content and explicit groups independently
+of the processing-job cap or extracted entities. Shared source/format/group/date predicates
+apply to all retrieval rankings and the final authorization check. Existing entity-kind
+filters are still optional filters for enriched data, not a source-only requirement.
 
-T1 adds deterministic greeting/generic-reference handling and selected-document
-overviews. Overview retrieval checks every selected document's current access, samples
-ordered/spread source passages under 24-passage/20,000-character bounds, and reports
-source/passage coverage. It does not need extracted entities or a matching keyword.
-Original passages and citation IDs are unchanged. All factual model statements still
-pass the existing grounded-v3 exact-source and semantic checks. Nonfactual system
-guidance is labelled separately and supplies no invented source facts.
+`retrieval.py` combines bounded lexical, exact/identifier, graph-assisted and compatible
+vector candidate rankings. Source/organization/current-version checks apply before
+ranking and again before passage delivery. Some entity-kind filters still depend on
+extracted entities: those must not become required source-type/project filters in the target.
 
-Stored turns record every supplied evidence dependency, not merely the displayed citations.
-History rechecks all dependencies and the answer-validation policy version. Any revoked, deleted or superseded evidence, or a superseded grounding policy, suppresses the answer while preserving the original record.
-F1.3 also records source/enrichment-generation dependencies from the retrieval
-snapshot. Activation invalidates saved answers using the superseded generation,
-including selected-source overviews. Grounding policy is now grounded-v4-staged;
-older experimental answers remain stored but are suppressed under this policy.
-Identity changes replace the entire frontend query client; deep links and original downloads reauthorize on the server.
+`conversation_routing.py` and `conversational.py` understand help, source discovery,
+selected-source overviews and factual follow-ups. They do not yet select live connectors.
+Overview context is sampled/bounded and reports coverage. Factual answers use original
+source passages with exact citations and a separate semantic check. No unsupported
+answer is saved as trusted by the runtime. Current source uses
+`grounded-v8-bounded-source-context`, retaining v7 whitespace anchors; older
+reports/previews use earlier policies and must not be described as identical builds.
+The answer path can map one unique whitespace-only match inside the cited passage
+back to an exact original substring, then reapply strict citation and semantic checks.
+Cross-passage, ambiguous or content-changing repairs are rejected. Correction feedback
+supplies the exact authorized failed passage; extraction validation is unchanged.
 
-## Operations
+Saved conversations recheck source/version, access, grounding-policy and relevant
+enrichment dependencies. RF1 records a generation dependency only when retrieved entity
+metadata exists; selected-source overviews use text alone and carry no new generation
+dependency. New source-only answers therefore survive optional enrichment activation,
+while source revision/access invalidation still applies. Stored legacy dependencies and
+trust policy are not rewritten. Metadata-only suggestions also require reauthorization.
+Conversation memory assists reference resolution; it is not source truth. Graph navigation
+is not completed multi-hop answer reasoning. Generated entity pages are not native authoring.
 
-Model usage is committed independently of knowledge publication and includes failed calls.
-Records retain provider, model, region, operation, processing attempt, token usage, latency, retries and configured cost information.
-Unknown token counts and unavailable cost estimates remain null.
-Pricing is explicitly supplied per exact model and region with currency and effective date.
+### Operations and deployment boundary
 
-PostgreSQL coordinates model request pacing across API and worker processes. SDK adaptive retries remain bounded.
-The historically observed local account quota was ten Sonnet requests per minute; the configured default scheduler uses nine. This is not a fresh quota reading or a production capacity result.
-No AWS resource, IAM policy, infrastructure stack or service quota is created or changed.
+The application is local React/TypeScript/React Flow + FastAPI/Python + PostgreSQL/pgvector,
+with local artifact storage and existing database-backed workers. Bedrock uses boto3.
+Usage persists independently of publication, including failed calls. Shared request
+pacing and the optional persistent test-spend guard are retained; they are not an AWS
+billing account hard cap. Historical local quota observations are not fresh capacity proof.
 
-T1's optional local inference budget (migration 0010) reserves verified USD cost
-estimates in PostgreSQL before each SDK dispatch. API and worker share one immutable
-run limit. Budgeted SDK calls use one attempt, settle known usage, and retain the
-reservation plus pause on unknown usage. Unbudgeted execution retains existing retry
-settings. This is a local test control, not an AWS billing account hard limit or a
-production budget administration feature. No credential data is stored in the ledger.
+Production sign-in, external source instances/connectors/sync, managed Spaces, native
+editing and adaptive live routing are not implemented. Main and previews have different
+schemas/builds. Last recorded main schema was 0010; current migrations include 0011–0015.
+RF1 initially used a new mock stack at port 5189. After confirmed login, its API/worker
+now use Sonnet with separate RF1 content and the original shared spend/pacing database.
+Main and older service containers remain unchanged; normal shared budget/pacing writes
+are the explicit exception to the original ledger protection. See [AI preview](RF1_AI_PREVIEW.md).
+RF2 runs separately at 5191 with schema 0014, no AWS mounts/provider and no paid usage.
+RF1 Sonnet remains on its earlier schema 0013/build. All 48 previous container IDs and
+RF1 source/budget fingerprints were unchanged at RF2 postflight.
 
-## Current release boundary
-
-The application is local-only with demo identities, local artifact volumes and a
-database-backed queue. Knowledge/Wiki pages are generated entity views, not native
-editable pages. Groups, managed Spaces, connectors, persistent external sync and
-adaptive live routing are not implemented. The UI is English; full bilingual quality
-and localization remain unverified. The current graph explorer's multi-hop navigation
-must not be described as completed multi-hop answer reasoning.
-
-Current key constraints: search uses only documents.current_version_id; enrichment
-still requires validated extraction/conflict assessment while source search does not;
-identifiers lack source-instance qualification;
-ACLs are owner or organization-visible; chat citations/dependencies are local passage
-IDs; the ask endpoint always performs stored search; semantic verification is broadly
-applied. No runtime change is implied by the target design below.
-
-## Target: production-quality platform with simple deployment boundaries
-
-Retain React/TypeScript/React Flow, FastAPI, PostgreSQL/pgvector, Bedrock and existing
-Python worker patterns. Organize content, permissions, retrieval and connectors as
-ordinary modules, not separate services. Durable jobs are for actual background work,
-not each lookup or routing decision. No default event bus, dedicated graph database,
-agent per connector, or replacement vector store. Adopt alternatives only with a
-demonstrated capability, quality, latency/cost or maintenance benefit.
+## 2. Target deployment - reuse the stack
 
 ```mermaid
 flowchart TB
-  UI["React: Hub, Spaces, Search, Chat, Graph"] --> API["FastAPI modules"]
-  API --> DB["PostgreSQL + pgvector"]
-  API --> AI["Bedrock"]
-  API --> LIVE["MCP / native source adapters"]
-  JOB["Existing worker pattern"] --> DB
-  JOB --> AI
-  JOB --> LIVE
+  UP["Uploads / ready text"] --> IN["Ingestion and source adapters"]
+  SRC["Selected connected sources"] --> IN
+  IN --> RAW["Original content / source records"]
+  IN --> IDX["PostgreSQL: metadata, versions, passages, lexical + pgvector"]
+  UI["Search and Assistant"] --> API["FastAPI retrieval coordinator"]
+  API --> IDX
+  API --> LIVE["Scoped MCP / native source tools"]
+  API --> AI["Sonnet: bounded understanding and evidence-based answers"]
+  WORK["Existing workers: incremental sync / indexing"] --> IN
+  IDX -. "reliable optional links" .-> GRAPH["Lightweight organization / Graph view"]
 ```
 
-Permissions apply before retrieval/model exposure and again at delivery/history boundaries.
+These are logical modules and responsibilities, not new microservices. Keep one API,
+the current worker pattern, PostgreSQL and original-file storage. Add deployment
+boundaries only when there is measured need. External OCR/conversion services are
+upstream concerns if later requested; they are not part of this architecture increment.
 
-## Target content and identity contracts
+## 3. Repository contract
 
-Use a stable resource identity and immutable source/content versions. For external
-resources the identity includes organization, source-system instance, resource type
-and original ID. Keep the source instance separate from replaceable credentials/
-connection records, so reconnecting does not duplicate resources. Existing documents,
-chunks, claims and evidence remain usable; evolve additively rather than replacing them.
+The company repository durably retains selected uploaded/synchronized knowledge. It
+is not only a vector index or transient tool cache. Source records remain attributable;
+search indexes and graph views are replaceable projections, not canonical source content.
 
-Native pages need structured editor content, searchable text, draft/published/archived
-state, one primary destination, author/editors, maintainer, provenance and references.
-Source records remain source records; a Confluence page is not automatically a new
-editable native page. Approval is optional and revision-specific, distinct from source
-authority and successful evidence checks. Contributor identity never proves who did work.
+Minimum conceptual records, evolving existing models only when a capability needs them:
 
-Add membership/grant, Space/link, native content and connector/checkpoint data only as
-the corresponding capability is implemented. Minimal change records are justified by
-Updates; no event-sourcing ledger or future-only conflict schema. Reuse existing review
-history and audit records. Derived relationships retain supporting source versions/spans.
+| Concept | Meaning / invariant |
+| --- | --- |
+| Resource | Stable identity: organization + source instance + type + native ID; uploads keep their existing document identity |
+| Source/content revision | Original content or structured source payload, checksum/version marker and lineage; immutable evidence identity |
+| Passage / field evidence | Source-local text locator or actual typed API field/value, tied to a revision or retained observation |
+| Metadata | Title, source type/link, timestamps, language if useful, reliable project/team references; optional values stay unknown |
+| Index projection | Lexical text and compatible embeddings; model/dimension/policy identifiers and index status |
+| Connector scope/checkpoint | Mode, selected source scope, health, cursor and last successful collection, only when sync is built |
+| Optional association | Explicit source link, stable identifier or deliberate human link, with provenance and source dependencies |
 
-## Current independent readiness and planned reprocessing
+Source instance identity must survive replaceable credentials/reconnection. Similar
+names, an author name, or model confidence alone cannot merge resources or establish
+project ownership. Do not create tables for future-only training, approval or conflict
+workflows. Existing claims/entities/relationships remain retained and usable under
+current-source/access rules; no destructive schema replacement is planned.
 
-F1.1 implements steps 1–4 below in the isolated validated stack. Step 5's stable
-citations are preserved, but controlled derived generations/reprocessing remain F1.3.
+## 4. Target ingestion - no routine Sonnet extraction
 
-1. Retain original content and permissions; parse bounded source text with stable locators.
-2. Build the searchable representation and publish the content revision independently
-   after parsing/index/access checks. Show semantic-index degradation if embeddings fail;
-   valid text search may still work, without pretending vector search is ready.
-3. Extract/enrich useful knowledge separately, validate and publish only supported results.
-4. Keep derived data tied to its source version/processing generation. When content moves
-   to a new revision, old relationships cannot be treated as current while new enrichment
-   is pending or failed. They remain attributable historical evidence under access rules.
-5. Preserve old citation IDs and evidence during reprocessing. Switch validated derived
-   generations atomically within their own boundary; do not require every layer to succeed
-   together. No conflict review requirement for ordinary searchability.
+1. Authorize and validate input, retain original content/source payload and identity.
+2. Parse extractable text or map structured fields using ordinary code. Preserve source
+   structure/locators; bound file size and processing. No OCR or model interpretation is
+   required for the core text contract.
+3. Carry source-provided metadata and reliable references; optional metadata assistance
+   must have a concrete use case. No default LLM summary, taxonomy or ontology pass.
+4. Build lexical search and bounded passage/index representations. Prepare semantic
+   embeddings with the existing separate embedding provider; measure its calls/cost.
+5. Publish valid authorized current text independently. Report embedding degradation
+   honestly; lexical readiness need not wait for semantic availability.
+6. Finish ordinary ingestion. **Entity/claim/relationship extraction, model-based identity
+   resolution and cross-document conflict assessment are default off.** Explicit optional
+   enrichment can later use the existing verified staging mechanism and its own scope.
 
-Use separate internal search/enrichment states and an understandable product display:
-Processing, Search Ready, Knowledge Enriched, Enrichment Partial/Failed. Partial means
-only independently validated items are usable; unsupported items never become facts.
-Do not interpret a permission failure as an enrichment-only error.
+Proposed product states are understandable availability/index states. Internally,
+not-requested enrichment must be distinguishable from unavailable/failed enrichment.
+RF1 implements this using one job-intent boolean and derived API state, not a new
+processing service or knowledge store. Migration 0013 refuses downgrade after source-only
+jobs exist; use the reviewed snapshot/prior build for restoration.
+Existing fixture graph demos may remain explicit fixtures; they must not silently
+opt ordinary production documents into enrichment or pretend arbitrary mock extraction.
 
-F1.1 exposes search_status, search_ready_at and enrichment_status alongside the
-existing job/embedding fields; processed_at still means successful enrichment.
-Source-only results have no invented entity metadata. Text/exact retrieval works
-without an entity row. Query-embedding failures return authorized lexical results
-with semantic_status diagnostics, also in the search response header for empty
-results. The Processing/Sources UI distinguishes Search Ready from Knowledge Enriched
-and shows enrichment retry only for eligible latest unfinished revisions.
+Only changed content needs new indexing. Compare source version/checksum first. Reuse
+unchanged embeddings only with a compatible model/dimension/index policy and valid
+source/tenant mapping. Preserve original citation passages even if a later index uses
+better heading-aware chunks/parent context. No full-corpus graph rebuild on each sync.
+Access/metadata-only changes still reconcile immediately without semantic interpretation.
+Unchanged-content deduplication must never bypass revocation, source identity or history.
 
-## Target authorization
+RF1 implements lexical availability before embeddings using the existing current-source
+publication guard. Each vector update/final index status rechecks revision, current source
+and lease. Losing the lease before publication cannot activate content; losing it during
+indexing cannot finish the job or promote facts, while valid already published text stays
+searchable. Pending indexing resumes without replacing citation passages.
 
-Organization isolation always applies. Multi-group grants combine eligible access.
-Native page access is Space access intersected with any explicit narrowing restriction.
-Additional Space links grant nothing. Moves preview the effective audience and confirm
-changes; restrictions cannot silently reset. General organization knowledge is a defined
-audience. Management rights do not implicitly bypass a restricted page's read boundary.
+## 5. Source catalog and bounded query coordination
 
-Create Space is delegated to users/groups separately from authority to grant audiences.
-Owners maintain content/membership within delegation. No per-chunk/edge ACL administration;
-derived results retain and check resource dependencies, including multi-source summaries.
+**RF2 implemented:** a permission-filtered catalog of retained uploaded sources reports
+actual indexed/history operations, visible counts, local health and received/indexed
+times. Live is false and sync time remains unknown. It contains no credentials or
+inactive connectors. The bounded multi-source coordinator below remains RF3/RF4 work.
 
-External access also requires source-system authorization and valid user-to-source
-identity mapping. Privileged sync credentials do not grant employees source rights.
-Unknown/revoked access fails safely, including title/count leakage, caches and saved
-answers. Reuse common backend checks; never rely on prompts to enforce permission.
+A lightweight catalog describes only configured source instances/scopes: supported
+resource types, projects/folders/channels, searchable metadata, available operations,
+live/index/history capabilities, freshness/health and applicable access constraints.
+It is not a second knowledge graph, a list of all company facts, or source instructions.
+The model cannot invent an adapter/tool that the server does not expose.
 
-## Target query and evidence flow
+Query flow:
 
-Classify requested meaning/time/scope, using deterministic identifiers/capabilities for
-clear cases and bounded model planning only when useful. Route stable documentation to
-indexed evidence, current operational questions to the relevant live source by default,
-historical questions to history, and compound questions to combined retrieval. Use
-stored identities to locate a live resource without treating stale status as current.
+1. Resolve explicit IDs, selected files/project scope, question meaning/time and recent
+   authorized references. Clear requests can route directly without a planner call.
+2. Pick likely sources from their capabilities/catalog and known resource links. Use a
+   bounded Sonnet plan only when useful; do not enumerate every source for every question.
+3. Retrieve bounded candidates. Stable document questions prefer indexed text/fields;
+   current operational questions prefer the relevant live source; historical questions
+   require history/dated evidence. Compound questions may combine both.
+4. Deduplicate and rank evidence for direct support, relevance, source meaning and time.
+   Add adjacent/parent context when it materially helps, under the same source/access
+   boundary. An optional graph link may locate evidence, but no graph join is mandatory.
+5. Check whether evidence covers each requested part. If incomplete, expand the query
+   or another relevant source within remaining scope/budget. Clarify consequential
+   identity/scope ambiguity; do not assume the first routing choice is correct.
+6. Produce a cited answer or clear partial/insufficient result. Preserve material
+   disagreements, actual values and distinctions such as Jira assignee versus owner.
 
-Space chat uses Space content and mapped connected scopes, including authorized resources
-not individually indexed. Broaden only when requested/enabled; no confirmation per tool.
-Do not enumerate every connector for every question. Run independent calls concurrently,
-bound dependent steps and stop on evidence sufficiency/budget with honest partial coverage.
+Independent tool calls can run concurrently under bounded concurrency. Dependent calls
+remain sequential. Enforce total tool calls, planner/retrieval rounds, evidence/input
+size, model output/calls, timeout and spend limits in code, not merely in prompts.
+Exact numeric limits are to be agreed/measured in RF3. Outage, denial, empty retrieval,
+provider rejection and budget exhaustion must not collapse into a false success state.
 
-A common evidence item carries source-instance/resource identity, original URL, retained
-supporting excerpt or structured field, revision marker when available, observed time,
-authorization dependencies and coverage limits. Structured API fields are not fabricated
-verbatim quotations. Live evidence can support an immediate answer before persistent sync.
-Saved answers/history must recheck external as well as local evidence; retention is not
-ongoing authorization. Conversation memory and tool state are not organizational facts.
+Ordinary answers read relevant retrieved evidence. Broad summaries need a separate
+coverage-aware bounded path; sampling must not be described as a full document review.
+On-demand cross-source inference is answer-scoped and attributable. It does not silently
+become a shared relationship or replace original records with generated prose.
 
-Prioritize evidence by relevance, direct support, meaning, authority and applicable time.
-Optional authority designations are scoped; neither recency nor model confidence alone
-resolves disagreement. Explain unresolved material differences with both authorized
-sources. Present source field semantics faithfully (assignee is not project owner).
+## 6. Common evidence for local and live sources
 
-## Target connector and refresh flow
+**RF2 implemented:** `SourceEvidence` / `ResourceIdentity` and the additive provenance
+envelope on existing local evidence responses. Retained passage IDs/locators/downloads
+are unchanged. Uploaded observed time is received time; source-updated/original remote
+URL stay unknown. Coverage explicitly identifies one passage rather than a full review.
+Transient live excerpt/structured-field contracts are validated using offline fixtures
+only, with same-tenant access dependencies and timezone-aware observation times. No
+actual live invocation or automatic shared persistence exists yet.
 
-Modes: Live Only, Live + Sync, Not Connected. Configure at connector/source-scope level.
-Live Only results stay within authorized temporary answer/citation/history retention,
-not shared search, graph enrichment, summaries or Updates. Live + Sync imports selected
-scopes and may request refresh from live observations. Disabling scope removes active
-availability; mode changes cannot leave cached fallback that bypasses the new policy.
+A common evidence envelope is a conceptual adapter contract, not a demand to remodel
+all existing passage IDs. It carries:
 
-Answer first; refresh separately. Compare meaningful source changes, deduplicate work,
-and re-fetch if a response is partial, user-filtered, lacks ACL metadata or cannot safely
-establish version ordering. Do not erase omitted fields or overwrite newer state. Use
-native API or MCP based on actual capabilities. Periodic reconciliation handles source
-updates/deletions/permissions even for resources nobody queried. A missing search hit
-alone is not evidence of deletion. Avoid unchanged embeddings and whole-graph rebuilding.
+- Source instance/resource identity, original URL and resource type.
+- Exact supporting excerpt plus locator, or actual structured field/value semantics.
+- Source revision/update marker when available, observed time and historical scope.
+- Access dependencies, completeness/pagination limits and retrieval coverage.
+- Stable citation reference for the retained observation/revision under retention policy.
 
-Updates use simple meaningful change records and last-success/last-checked indicators.
-No LLM per event or elaborate historical reasoning. Outages/rate limits permit dated
-last-known information only with reliably established access; cached status is not a new
-live confirmation. Authorization uncertainty forbids fallback for that resource.
+Do not invent verbatim quotations for structured JSON fields. Retain enough evidence to
+inspect what supported an answer even when the source later changes; retaining it does
+not grant ongoing access. Local passages preserve existing IDs and locators. An immutable
+observation can be saved when an API lacks revisions, without claiming it is source history.
 
-## Essential safeguards and future conflict compatibility
+Before model exposure and delivery, recheck the applicable source/tenant boundary.
+History/caches reauthorize all evidence dependencies, not merely visible citations.
+Optional enrichment generations are dependencies only when the answer actually used
+them; removing graph dependency must not suppress raw-source-only answers unnecessarily.
+Review this dependency change compatibly in implementation, not by rewriting old turns.
 
-Preserve original/source versions, attributed assertions, evidence references and dates.
-Do not flatten disagreeing sources into a mutable winner. Keep evidence validation,
-source authority and human approval separate. Keep useful existing reviews/history;
-remove their failure as a prerequisite for valid content publication, not their evidence.
-Existing tables already support later decisions attached to claims. No new conflict
-engine, delegated review queue, ownership routing or automatic resolution now.
+Current exact-source/reference validation and fail-safe answer behavior remain until
+an evaluated replacement is accepted. Proportionate additional semantic verification
+is an experiment, not automatic removal of the second call. Validate support, same-name
+identity, numbers/dates, disagreements and injection handling on held-out questions;
+bump the answer validation policy if trust rules change. A verifier boolean or an exact
+quote alone is not evidence of complete factual entailment.
 
-Deterministic structural/reference/type checks always apply. Safe formatting repair
-must map to original evidence. Deeper semantic verification is selective by uncertainty
-and consequence after regression evaluation; exact quotes alone do not prove entailment.
-Do not change model settings or validation policy merely because one model is cheaper.
+## 7. Live access and persistent synchronization
 
-## Performance and release boundaries
+MCP/native adapters expose actual capabilities for search/fetch/current fields/history
+and, where supported, collection/checkpoints/permission checks. Live access and bulk
+sync may use different transports. An available MCP integration is not by itself a
+complete source connector or application authentication arrangement.
 
-Measure representative search/answer quality, source and model calls, p50/p95 latency,
-concurrent load alongside sync/ingestion, and costs. Prioritize interactive work within
-real model/source limits; more workers cannot bypass quotas. Bound graph traversal and
-queries; tune indexes/ANN only when measured size/latency warrants it. Use appropriate
-source backoff and deadlines, safe caching and cancellation; expose actual failures.
+| Mode | Immediate answer | Persistent shared repository |
+| --- | --- | --- |
+| Live Only | Use authorized scoped observations | No automatic index/graph enrichment; temporary answer/citation retention only |
+| Live + Sync | Use live tools when freshness requires | Collect selected scopes, retain source revisions and update indexes incrementally |
+| Not Connected | Do not call the source | Exclude disallowed active/cache exposure; retained history is still policy-bound |
 
-Production authentication, tested backup/restore, secrets, deployment monitoring,
-security and capacity gates precede real hosted use. H1/H2 in the main roadmap retain
-the reviewed Python CDK/explicit deployment approval boundary. Bilingual evaluation is
-cross-cutting; full localization is L1. No application/infrastructure changes accompany
-this document. Advanced conflict and delegated verification are D1, later.
+Sync uses existing durable worker patterns with cursor/checkpoint, pagination, bounded
+retry/backoff, idempotent version identity, and safe failure recovery. Collect changed
+records, not every source on every question. Reconcile deletions and access changes,
+including rarely queried resources. Missing from a search page does not prove deletion.
+A partial/user-filtered live result must not replace a complete sync record or erase
+fields. Refetch under proper sync scope if version, completeness or access is uncertain.
+Older observations cannot overwrite newer state; source-updated/observed/effective time
+are distinct. Do not introduce an event platform or model call per source modification.
+
+A live observation may request a deduplicated background refresh inside an approved
+sync scope without delaying the answer. Mode/scope removal stops ongoing collection and
+excludes disallowed material from active retrieval; handle retained history explicitly.
+Source outage permits clearly dated last-known fallback only with reliably established
+access. Unknown/revoked authorization never permits fallback. Display health and last
+successful sync rather than claiming every stored record is live-current.
+
+Each source passes its own lifecycle gates. First connector/order/scopes are a pre-build
+decision; Jira is the previous candidate, document-source collection is a core capability,
+and no mandatory Confluence/GitLab/graph sequence blocks a OneDrive/SharePoint proof.
+
+## 8. Lightweight organization and optional graph
+
+RF2 delivers explicit, permission-checked project/team associations, source-qualified
+identity and grouping filters without adding graph records. These labels are repository
+organization, not verified source claims or automatic identity joins. Rich group/Space
+administration and inferred associations remain deferred.
+
+Use source-qualified project IDs, folder mappings, explicit repository/issue/document
+links and deliberate human associations. Resource-to-project grouping does not need
+managed Spaces or native authoring. Source metadata is often sufficient without an LLM.
+
+The existing graph remains an optional authorized view of supported links. Missing
+graph facts do not imply missing stored knowledge. Existing generation/current-source
+rules continue to prevent stale relationships. Unsupported new links never appear as
+facts. Persisted inference, if later requested, stays distinct from explicit association
+and needs evidence, scope and invalidation. Advanced graph paths are deferred until
+measured benefit over hybrid retrieval justifies them.
+
+## 9. Security, runtime cost and release boundaries
+
+Preserve current organization isolation, owner/org visibility, access checks on all
+metadata/content/derived surfaces, source restrictions, secret handling and prompt/data
+separation. Detailed groups/delegation/Space ACL design is later; adequate source access
+checks are necessary for each connector. Production authentication is still a prerequisite
+for real employee access. Local demos are not production auth. Links never expand access.
+
+Keep independently persisted model/embedding/tool usage, errors, latency and retries.
+Record unknown usage as unknown; avoid unsupported savings percentages. Prioritize
+interactive work relative to background indexing using existing scheduler patterns only
+as measured need justifies. More workers do not bypass model/source quotas.
+
+Initial RF1 acceptance used mock/stubs. The later confirmed AI preview uses the original
+`northstar-sonnet-2026-11-12` USD 10 cumulative ceiling; no cloning/reset/unpause.
+Its bounded real trial and 215 deterministic checks are recorded in [AI results](RF1_AI_PREVIEW.md).
+Any additional agent-run evaluation requires an explicit bounded scope/budget; old extraction
+repair proposals do not mandate another paid acceptance run for the retrieval core.
+
+Before rollout: inspect actual main/preview build and schema, compatible migrations,
+source/citation/history fingerprints, backup originals plus DB, restore into an isolated
+rehearsal, and prepare rollback including post-snapshot writes. The older
+[main-data procedure](MAIN_DATA_ROLLOUT.md) is a safety reference, not the current cutover
+candidate: its staged-enrichment-only gate must be reviewed for RF delivery and the
+current migration chain through 0015.
+The known main API/worker accounting mismatch must not become unguarded paid inference.
+No source-only change is authorized to delete existing evidence/generations or bypass
+schema guards. Deployment still needs its own security/cost review and approval.
+
+## 10. Acceptance evidence and historical compatibility
+
+Test source-only ingestion with extraction/conflict functions forbidden, ordinary queries
+with empty graph tables, revisions and revoked access, lexical fallback, unchanged sync,
+source-tool failures, bounded expansion and common citations. Separately measure held-out
+Arabic/English retrieval and answer support, operational freshness, p50/p95 latency,
+source/model calls and per-workload cost. Agree numeric targets before live acceptance.
+Preserve existing optional-enrichment/graph regression coverage rather than loosening it.
+
+F1.1/F1.2/F1.3, persona, discovery and Lantern reports remain dated evidence. Their old
+implementation instructions do not schedule new work. Full prior architecture detail is
+preserved in the [archived snapshot](reference/pre_restructure_2026_11_14/ARCHITECTURE_M2_M3.md).
+See the single roadmap for current sequencing and explicitly deferred capabilities.

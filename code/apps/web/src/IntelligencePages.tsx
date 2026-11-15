@@ -7,6 +7,7 @@ import { useJobs, useSession, useViewer } from "./session";
 import { Button, Feedback, PageHeading, SearchField, Sheet, ReadinessBadge } from "./ui";
 import type { Job, EntityOverview } from "./api";
 import { EntityOverviewCard } from "./GraphPanels";
+import { RepositoryFilters } from './Repository';
 
 import type { Conflict } from "./contracts";
 type Usage = { operation: string; provider: string; model: string; region: string; status: string; calls: number;
@@ -47,7 +48,7 @@ export function SearchPage() {
  useEffect(() => setInput(q), [q]);
  const results = useQuery({ queryKey: ["search", params.toString()], queryFn: () => service.search(resultQuery.toString()), enabled: !!q, refetchOnWindowFocus: true });
  const passages = results.data?.passages ?? [];
- const overview = useQuery({ queryKey: ["search-overview", q], queryFn: () => service.json<EntityOverview>("/graph/overview?q=" + encodeURIComponent(q)), enabled: !!q && !params.get("document_id") && !params.get("kind") && !params.get("after") && !params.get("before") && offset === 0 });
+ const overview = useQuery({ queryKey: ["search-overview", q], queryFn: () => service.json<EntityOverview>("/graph/overview?q=" + encodeURIComponent(q)), enabled: !!q && !['document_id','kind','after','before','source_instance_id','format','project_id','team_id'].some(key => params.get(key)) && offset === 0 });
  const entity = useQuery({ queryKey: ["entity", overview.data?.entity.id], queryFn: () => service.entity(overview.data!.entity.id), enabled: !!overview.data });
  return <div className="page reading-width"><PageHeading title="Search your workspace" description="Find evidence across the sources you can access." />
  <form className="intelligence-search" onSubmit={(e) => { e.preventDefault(); if (input.trim()) { const next = new URLSearchParams(params); next.set("q", input.trim()); next.delete("offset"); setParams(next); } }}>
@@ -56,8 +57,7 @@ export function SearchPage() {
  <div className="search-filters"><label>Source<select aria-label="Source" value={params.get("document_id") ?? ""} onChange={(e) => filter("document_id", e.target.value)}><option value="">All sources</option>
  {jobs.data?.filter((j) => j.current_version_id === j.version_id).map((j) => <option key={j.document_id} value={j.document_id}>{j.filename}</option>)}</select></label>
  <label>Entity type<select aria-label="Entity type" value={params.get("kind") ?? ""} onChange={(e) => filter("kind", e.target.value)}><option value="">All types</option>{["project", "person", "team", "task", "decision", "system", "technology", "event"].map((kind) => <option key={kind}>{kind}</option>)}</select></label>
- <label>Uploaded after<input type="date" value={params.get("after") ?? ""} onChange={(e) => filter("after", e.target.value)} /></label>
- <label>Uploaded before<input type="date" value={params.get("before") ?? ""} onChange={(e) => filter("before", e.target.value)} /></label></div>
+ </div><RepositoryFilters params={params} onChange={filter} />
  {!q && <Feedback>Enter a project name, identifier, or question to search your workspace.</Feedback>}
  {q && <><QueryState query={results} />
  {overview.isSuccess && overview.data && entity.isSuccess && <EntityOverviewCard entity={overview.data.entity} graph={overview.data.graph} claims={entity.data.claims} />}
@@ -85,7 +85,7 @@ export function Processing() {
  onSuccess: () => { void cache.invalidateQueries({ queryKey: ["jobs"] }); void cache.invalidateQueries({ queryKey: ["processing"] }); } });
  const conflicts = useQuery({ queryKey: ["conflicts"], queryFn: () => service.json<Conflict[]>("/conflicts") });
  const counts = jobs.data?.reduce((a, j) => ({ entities: a.entities + j.entity_count, claims: a.claims + j.claim_count, relationships: a.relationships + j.relationship_count }), { entities: 0, claims: 0, relationships: 0 });
- return <div className="page"><PageHeading title="Processing" description="Follow each document from upload to validated knowledge."
+ return <div className="page"><PageHeading title="Processing" description="Track source indexing and any optional knowledge enrichment."
  action={<Button asChild><Link to="/admin/sources"><Plus size={16} />Upload a source</Link></Button>} />
  {counts && <div className="metric-grid">{[["Entities", counts.entities], ["Claims", counts.claims], ["Relationships", counts.relationships], ["Open conflicts", conflicts.data?.filter((c) => c.status === "open").length ?? "…"]].map(([label, value]) =>
  <div className="panel metric" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>}
@@ -95,11 +95,11 @@ export function Processing() {
  <div className="process-heading"><div><h2>{j.filename}</h2><small className="muted">{j.visibility === "team" ? "Organization" : "Owner only"} · Version {j.version_id.slice(0, 8)}
  {j.current_version_id === j.version_id ? " · Current" : j.search_ready_at ? " · Historical" : ""}</small></div><div className="source-state"><ReadinessBadge job={j} /></div></div>
  <div className="process-stages"><span><Activity size={14} />{pretty(j.stage)}</span><span>{j.entity_count} entities</span><span>{j.claim_count} claims</span><span>{j.relationship_count} relationships</span><span>Semantic index: {j.embedding_status}</span></div>
- <p className="muted">Search ready: {date(j.search_ready_at)} · Knowledge enriched: {date(j.processed_at)} · {j.attempts} attempts</p>
+ <p className="muted">Search ready: {date(j.search_ready_at)} · {j.enrichment_status === "not_requested" ? "Optional enrichment: Not requested" : "Knowledge enriched: " + date(j.processed_at)} · {j.attempts} attempts</p>
  {j.error && <Feedback error>{processingError(j.error)}</Feedback>}
  {j.preserved_enrichment && <Feedback>{j.status === "enrichment_staged_failed" ? "The replacement did not pass. Previous verified knowledge is still available." : "A replacement is being prepared. Search and previous verified knowledge remain available."}</Feedback>}
  <div className="action-row"><Button variant="outline" onClick={() => setSelected(j.id)}>Processing details</Button>
- {j.can_manage && j.can_retry && <Button variant="outline" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}><RefreshCw size={14} />{j.search_status === "ready" ? "Retry enrichment" : "Retry processing"}</Button>}</div>
+ {j.can_manage && j.can_retry && <Button variant="outline" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}><RefreshCw size={14} />{j.search_status === "ready" && j.enrichment_requested ? "Retry enrichment" : "Retry processing"}</Button>}</div>
  </article>)}</div>
  <Sheet title="Processing details" description="Version metadata, attempts and errors." open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null); }}>
  <QueryState query={details} />{details.isSuccess && <div className="space-y-4"><h2>{details.data.filename}</h2><p className="muted">Provider: {details.data.extraction_provider ?? "Not extracted"}</p>

@@ -1,5 +1,16 @@
 # M3.2A — Baseline and Gemma pilot results
 
+> **Historical evidence / compatibility note — 2026-11-14.**
+> The dated implementation, checks, budgets and environment observations below are
+> retained; they were not rerun or re-scored by this documentation update.
+> The [active roadmap](IMPLEMENTATION_PLAN.md) and [scope](PROJECT_SCOPE.md) now
+> prioritize source-only ingestion, a durable selected-source repository and bounded
+> retrieval. [RF1](RF1_RESULTS.md) subsequently implements default-off enrichment in
+> isolated current code; old next tasks/manual or paid commands are not authorization.
+> Historical evidence/security/history remains intact; existing environments are unchanged.
+> The old Gemma follow-up suggestion is inactive: ongoing model work is Sonnet-only
+> and the historical comparison must not be repeated under this restructure.
+
 Verified on 2026-11-12. **M3.2A diagnostics are complete; M3.2B is proposed, not implemented.**
 
 ## Recommendation

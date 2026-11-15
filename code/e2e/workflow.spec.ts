@@ -12,6 +12,12 @@ async function upload(request: APIRequestContext, name: string, visibility = "te
 }
 async function ready(request: APIRequestContext, id: string) {
  await expect.poll(async () => (await (await request.get("/api/v1/jobs/" + id, { headers: auth() })).json()).status, { timeout: 90000 }).toBe("ready");
+ const job = await (await request.get("/api/v1/jobs/" + id, { headers: auth() })).json();
+ // This legacy graph/review suite explicitly requests fixture enrichment.
+ if (!job.processed_at) {
+  expect((await request.post(`/api/v1/jobs/${id}/reprocess`, { headers: auth() })).status()).toBe(202);
+  await expect.poll(async () => (await (await request.get("/api/v1/jobs/" + id, { headers: auth() })).json()).enrichment_status, { timeout: 90000 }).toBe("ready");
+ }
 }
 async function identity(page: Page, token: string) {
  await page.getByRole("button", { name: "Profile and workspace", exact: true }).filter({ visible: true }).first().click();
@@ -180,7 +186,7 @@ test("workspace search shows connected knowledge and graph expands a focused nei
 
 
 test("upload, revision, source management, and processing remain usable", async ({ page, request }) => {
- await page.goto("/content/documents"); await page.getByRole("button", { name: "Add data source" }).click();
+ await page.goto("/content/documents"); await page.getByRole("link", { name: "Add documents", exact: true }).click(); await page.getByRole("button", { name: "Add data source" }).click();
  await page.getByLabel("Choose file").setInputFiles({ name: "m31-ui-disposable.txt", mimeType: "text/plain", buffer: Buffer.from("UI disposable source for upload and revision validation.") });
  await page.getByRole("combobox", { name: "Access", exact: true }).selectOption("private"); await page.getByRole("button", { name: "Upload file", exact: true }).click(); await expect(page.getByRole("dialog")).toHaveCount(0);
  const row = page.locator(".upload-list li").filter({ has: page.getByText("m31-ui-disposable.txt", { exact: true }) }); await expect(row).toBeVisible(); await row.locator("summary").filter({ hasText: "Manage source" }).click();

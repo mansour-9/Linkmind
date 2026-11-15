@@ -1,245 +1,287 @@
-# Linkmind — Product Scope and Decisions
+# Linkmind - Product Scope and Decisions
 
-Updated 2026-11-12: **Production-Quality Core Platform with Phased Feature Delivery**.
-The roadmap revision originally authorized documentation only. The user subsequently
-requested F1.1 implementation and isolated local validation on 2026-11-12. The product
-direction below is agreed; other slices remain planned. No paid evaluation, model
-change or AWS deployment is authorized by that focused implementation request.
+Latest implementation checkpoint, 2026-11-15: the user authorized RF3 repairs and
+local RF4 completion. The new isolated 5195 preview passed **315 API / 39 browser / build**,
+final 8 OAuth checks and 16/16 mock retrieval. RF3's known grounding failures now have
+bounded real-Sonnet repair evidence; RF4's encrypted server-owned OAuth lifecycle and
+scope discovery/selection are implemented and validated offline. Real account/server
+trials remain explicitly deferred; independent company acceptance and production
+employee authentication/access remain open. See [current results](RF34_RESULTS.md)
+and [OAuth runbook](RF4_OAUTH_RUNBOOK.md). Protected previews remain unchanged.
 
-The user later authorized T1 fictional-company testing: 24 fictional documents,
-example questions, additions/revisions, selected-document overviews and separate
-mock/Sonnet previews. An explicit **US$10 maximum** covers the new Sonnet extraction,
-embeddings and chat run only. No model comparison or AWS infrastructure deployment.
-See [testing guide and actual acceptance](COMPANY_TESTING.md).
+2026-11-15 latest follow-up: the user approved RF4 implementation and specified a
+functional **Sources & MCP Connections** admin feature for Jira, Confluence, OneDrive,
+SharePoint and Custom MCP. Real source URLs will come later; explicit mock connectors
+are authorized now. Local management/persistence and connector interfaces are delivered
+at port 5194: **292 API / 37 browser / build**, final 27 connector checks. See
+[RF4 results](RF4_RESULTS.md). Real OAuth/consent and source lifecycle acceptance remain
+pending; this supersedes the earlier RF4 planning-only state below. No account, paid
+model trial, protected environment rollout or AWS hosting was activated.
 
-On 2026-11-13 the user additionally authorized F1.3 implementation and main-data
-rollout preparation, before F2. Bounded Sonnet checks reuse the existing USD 10
-run and ledger; there is no new allowance or AWS infrastructure authorization.
+2026-11-15 follow-up: RF3 testing with AWS Bedrock was explicitly requested and
+completed in isolated local stacks (mock 5192, Sonnet 5193). **264 API / 34 browser /
+build passed**, but two of eight real-model cases failed source review despite passing
+semantic verification; RF3 quality acceptance remains open. See [RF3 results](RF3_RESULTS.md).
+The trial spent USD 0.1341612200 against the original cumulative USD 10 ledger;
+no new allowance or protected-environment rollout occurred. RF4 **planning** is now
+requested for **Jira, Confluence, OneDrive and SharePoint**, with convenient MCP options
+to be evaluated. Exact account/resource scopes are unselected and connector execution
+is not authorized. See [RF4 plan](RF4_PLAN.md); transport choices and delivery order
+are proposals, not agreed commitments.
+The dated direction below remains history where superseded by this checkpoint.
 
-## Document authority and actual state
+Updated **2026-11-14** after the user's architecture discussion and request for a
+complete documentation restructure. The user subsequently authorized **RF1 implementation
+and isolated local validation**. RF1 is implemented and validated locally: 191 API tests,
+29 browser workflows and frontend build passed. RF2 was later approved and completed
+in a separate mock stack: 231 API / 32 browser / build passed; see [RF2 results](RF2_RESULTS.md).
+Those RF1/RF2 implementation slices excluded paid inference, external connector access,
+main/existing-preview rollout and AWS deployment. RF3's later bounded test authorization
+and measured checkpoint are recorded above. See [RF1 results](RF1_RESULTS.md).
 
-- This file owns product requirements and agreed decisions.
+## Product purpose - agreed
+
+Linkmind is a company's unified knowledge repository with intelligent search and an
+AI assistant. It collects and retains selected organizational information from uploads
+and connected systems, organizes it lightly, and helps employees find, understand and
+connect evidence. It is more than a live search proxy: selected synchronized knowledge
+must remain durably stored, versioned and discoverable under its access/retention rules.
+
+The primary journey is: ask a question, identify relevant sources, retrieve supporting
+information, reason over that evidence, and deliver a useful cited answer. Evaluate
+success by answer usefulness, retrieval coverage, freshness, citation support, latency,
+reliability and cost. Entity/relationship counts are not product success metrics.
+
+Linkmind is the central reference point for discovering company knowledge. Original
+systems retain their field semantics and provenance: Jira task status is a Jira record,
+a policy is supported by its document, and a Slack discussion is attributed discussion.
+Retention does not make a source authoritative, current, approved or accessible forever.
+Conflicting sources remain distinguishable; no silent global winner is invented.
+
+## Document authority and authorization
+
+- This file owns agreed requirements, proposed defaults and open decisions.
 - [Implementation plan](IMPLEMENTATION_PLAN.md) is the single active roadmap and
-  contains the Capability Acceptance Matrix, milestones, dependencies and gates.
-- [Architecture](ARCHITECTURE_M2_M3.md) separates current behavior from target design.
-- M3.2 documents elaborate only the processing work; the Jira note elaborates only
-  connector behavior. They do not establish competing delivery orders.
-- Validation reports, original specification and original engineering instructions
-  remain historical evidence. Explicit latest user instructions take precedence.
+  capability/status matrix; its RF milestones are planned unless explicitly complete.
+- [Architecture](ARCHITECTURE_M2_M3.md) distinguishes inspected current code from target
+  behavior. Filenames are retained for existing references.
+- [Restructure decision and document review](RESTRUCTURE_REVIEW_2026_11_14.md) records
+  rationale, superseded assumptions, review coverage and unresolved choices, not a
+  second implementation backlog.
+- The [previous planning snapshots](reference/pre_restructure_2026_11_14/IMPLEMENTATION_PLAN.md),
+  original master specification and dated validation reports are historical evidence.
+  Their imperative language does not authorize work or override this scope.
+- User-facing discussion may be Arabic. Product copy and repository documentation
+  remain English until explicitly changed. Arabic/English evidence quality is core.
 
-Current runtime: local React/FastAPI/PostgreSQL/pgvector/Bedrock application with
-uploads, retained revisions, source evidence, hybrid search, grounded chat, graph,
-generated entity pages, conflict/identity review and usage. Native authoring,
-managed Spaces, organization groups, live connectors and synchronization are not
-implemented. M3.1 is completed and user-approved; M3.2A diagnostics are complete;
-F1.1/M3.2B search-readiness separation is implemented and validated in an isolated
-local stack. F1.2 and conversational discovery are implemented locally; F1.3 staged
-enrichment is locally validated. The read-only main inventory is already at schema
-0010, while its F1.3/0011 cutover remains pending the prepared rollout review.
-See [F1.1 evidence](F1_1_RESULTS.md) and [F1.3 results](F1_3_RESULTS.md). Existing functionality is not
-reset by the new scope.
+Current completed implementation authorization covers RF1 and the later approved RF2
+local slice. Existing Sonnet test accounting remains
+`northstar-sonnet-2026-11-12`, with a cumulative USD 10 ceiling. Do not reset, clone,
+increase, unpause or dispatch against it under this RF1 request. Historical probe
+permissions and remaining headroom do not authorize a new run. No Gemma work is active.
 
-## Product direction
+Subsequent agreed testing preference (2026-11-14): prefer bounded real Sonnet trials
+when assessing actual assistant usefulness, retrieval and answer quality. Keep simple
+deterministic/safety/UI checks on mock/stubs when inference adds no evidence. AI answer
+testing can follow RF1 immediately; it is not blocked on RF2 or optional graph enrichment.
+The user requested self-service AWS login and this durable policy. No new allowance,
+ledger reset/clone/unpause, paid dispatch or protected-environment change is implied.
+See [AI testing policy and login](AI_TESTING_POLICY.md).
 
-Linkmind is an enterprise knowledge, search, intelligence and AI workspace,
-complementing Jira, Confluence and GitLab rather than replacing them. Deliver
-complete, polished capabilities incrementally. Simple architecture must not mean
-reduced feature depth, an intentionally limited editor, weak GraphRAG, or prototype UX.
+After the user renewed login and confirmed proceeding, the RF1 preview at port 5189
+was switched to Sonnet with direct shared accounting against the original USD 10 run.
+The bounded follow-up and final supported Lantern summary are recorded in
+[RF1 AI preview](RF1_AI_PREVIEW.md). This subsequent authorization supersedes the
+RF1-only no-paid-dispatch boundary above for that preview; no new allowance, main
+rollout, connector deployment or RF2 work is implied. Ordinary ingestion remains source-only.
 
-Store broadly, structure selectively, verify proportionally, and reason on demand.
-Measure useful answers, discovery, evidence, access correctness, latency and cost;
-do not optimize for entity counts. Preserve useful existing features and data.
+The user then explicitly approved **RF2**, deferring Arabic/answer-style enhancements
+to RF3. RF2 is implemented/validated in a new mock preview at port 5191, using no paid
+inference and preserving RF1 Sonnet at 5189. Delivered: stable uploaded-source identity,
+explicit project/team organization, metadata/content catalog and search filters, retained
+revision inspection and typed common evidence. Live field evidence is tested offline;
+actual connector auth/live/sync remains RF4. See [RF2 results](RF2_RESULTS.md).
 
-## Knowledge Hub and contribution
+## Current state - retained, not target acceptance
 
-- Provide practical rich authoring: headings, lists, tables, links, code blocks,
-  media/attachments as appropriate, reliable draft saving, preview and edit-conflict
-  protection. Evaluate an established editor before building one. Simultaneous
-  real-time collaboration was not required initially; do not silently treat basic
-  draft reliability or revision management as optional.
-- Support publishing, discovery, categories/tags, related resources, revision
-  comparison/restoration, archiving, maintainers and deliberate duplicate merging.
-- Drafts need no destination. Every published native page has one primary Space
-  or authorized general organization knowledge area. Preselect the current Space;
-  otherwise suggest a relevant destination and show its audience before publishing.
-- Authorized editors publish ordinary knowledge directly. Categories, tags and
-  related-resource/duplicate suggestions are optional and never block publishing.
-- Official approval is separate, permission-controlled and tied to a revision.
-  Ordinary publication does not imply approval. Editing must not silently carry
-  approval to changed content. No new review queue or delegated verification workflow.
-- Track creator, revision editors, maintainer and timestamps. An author is not
-  automatically the person who performed the work described in the page.
-- Human-authored, AI-assisted and AI-generated content retain clear provenance.
-  AI-generated additions remain distinguishable; publication requires an authorized
-  user's explicit action. Preserve supporting sources and their access restrictions.
-- Suggest related or duplicate pages using authorized retrieval; suggestions must
-  not disclose restricted titles. Merge deliberately, preserve revisions/citation
-  targets and redirects, and never broaden permissions by unioning source audiences.
-- Native pages complement imported records; do not duplicate Confluence resources
-  as independently maintained native pages without an explicit user decision.
+The repository implements a local React/FastAPI/PostgreSQL/pgvector application with
+uploads, immutable revisions, passage locators, text/vector search, cited chat,
+conversational source discovery, selected-source overviews, generated entity pages,
+a bounded graph explorer, conflict/identity review, usage and test-spend controls.
 
-## Spaces and organization
+F1.1 separates search publication from enrichment. F1.2 repairs and F1.3 staged
+refresh exist locally; later Lantern work adds bounded extraction/citation diagnostics.
+RF1 current code/new isolated preview defaults ordinary uploads and revisions to source-only
+indexing. Explicit optional enrichment and labelled dataset loaders retain the existing
+verified path. Lexical content publishes before embeddings, unchanged compatible text in
+the same document can reuse vectors, and source-only answers avoid unused graph dependencies.
+Query understanding exists but does not route across live connectors. Existing main and
+preview builds/schemas remain untouched. Last recorded main inventory was schema 0010;
+current-source migrations include 0011–0015. RF1 Sonnet retains 0013; RF2 uses 0014;
+the separate RF3 stacks use 0015.
+Reinspect before later rollout.
 
-- Spaces are first-class project, team and department workspaces. Start delivery
-  with the full project journey; reuse the model for teams/departments rather than
-  inventing separate products. Provide overview, objectives, maintained status and
-  owner information, knowledge, resources, people, decisions, relationships, updates
-  and contextual chat as their data becomes available. Show attribution/freshness.
-- Link shared resources; do not copy them. Strong source-qualified identity or
-  explicit links allow automatic enrichment inside approved sync scopes. Similar
-  names or uncertain associations remain suggestions. Never overwrite approved
-  descriptions with inferred content or automatically expand their audience.
-- Organization Admins grant Create Space to selected users/groups. Authorized
-  creators act without per-Space approval and become initial owners. Creation and
-  authority to grant access remain distinct permissions. Owners manage membership,
-  content and maintainers within delegated limits; this is not fact-review routing.
-- Other employees may suggest a Space. Suggest accessible similar Spaces before
-  creation, but do not block similar names or expose inaccessible Spaces.
+Native authoring, managed Spaces, production sign-in, application connectors, persistent
+external sync and adaptive live routing are not delivered. Historical Northstar results
+do not establish new-architecture acceptance. Latest recorded Lantern extraction
+acceptance failed semantic-verdict alignment; source text remained searchable. Use
+[the latest evidence](LANTERN_IDENTIFIER_REPAIR_RESULTS.md), not older next-task text.
 
-## Users, groups and resource access
+## Input boundary - agreed
 
-- Isolate organizations. Users may join multiple groups and receive the union of
-  their eligible group grants. Keep resource and source restrictions enforceable.
-- Native pages inherit their primary Space's audience by default. Authorized owners
-  can restrict to a smaller permitted audience; restrictions never broaden access.
-  Linking into another Space grants nothing. Preview moves and require explicit
-  confirmation when the effective audience changes; never silently reset restrictions.
-- The general knowledge area is an explicit publishing audience, not an access bypass.
-- External access requires both Linkmind authorization and source-system authorization.
-  Privileged sync credentials do not authorize all employees. Unknown or revoked
-  source access fails safely, including for cached and historical evidence.
-- Enforce access before content reaches the model and on search, titles, counts,
-  suggestions, graph paths, summaries, updates, citations, history and caches.
-  Derived evidence inherits resource dependencies; no per-chunk/claim/edge ACL UI.
-- Use production authentication before real employee access, with a path to enterprise
-  identity providers. Cognito remains the proposed hosted option; retain application
-  authorization separately. Demo identity switching is local-only.
+- Core inputs are readable text: selectable-text PDFs, TXT/Markdown, existing DOCX
+  support, and source text/structured records provided through MCP or native APIs.
+- The user guarantees extractable text for this core journey. OCR, scanned/image-only
+  document interpretation and upstream text-conversion services are outside this
+  restructure's core scope. Do not build Linkmind OCR services or a microservice
+  platform to anticipate them. Future upstream adapters can supply text if requested.
+- Basic format, size, integrity and readable-content checks remain. Unsupported input
+  receives an honest result, not fabricated text or a promise that OCR is available.
+- Source content, names and metadata are untrusted data, never executable instructions.
 
-## Search, chat, research and GraphRAG
+## Core repository and ingestion - agreed
 
-- Provide direct search as well as AI answers: exact identifiers, keywords, semantic
-  and hybrid ranking, source/type/project/team/date filters, previews and references.
-- Evaluate Arabic, English and mixed-language retrieval/answers from early milestones.
-  Deliver localized RTL UI as a tracked capability, not an automatic final afterthought.
-  Current UI remains English; bilingual readiness is not yet established.
-- Use evidence-backed relationships and useful multi-hop retrieval, not indiscriminate
-  extraction. Preserve predicate direction, identity, dates and supporting passages.
-  Graph remains a valuable exploration surface; employees need not use it to get answers.
-- Stable documentation normally uses indexed evidence. Current operational questions
-  normally query the relevant live source even if indexed information exists. Historical
-  questions require historical evidence, not simply today's response.
-- Route by meaning, source capabilities, permission, time and conversation context.
-  Clear requests use deterministic tools; complex questions may use bounded planning,
-  progressive retrieval, graph paths and multiple sources. No agent per connector.
-- Hybrid Smart Scoping: Space chat searches the Space and relevant connected scopes,
-  including authorized resources not individually indexed. Broaden when explicitly
-  requested or enabled. No approval for every retrieval step or complex scope UI.
-- Preserve conversation context without treating conversational memory as source truth.
-  Provide citations, evidence inspection, actual progress, cancellation where supported,
-  uncertainty, and honest coverage limits. Enforce tool/token/time budgets in code.
+1. Save the original upload or source record, stable source identity, content version,
+   provenance and existing access boundary. Preserve source URLs/locators when available.
+2. Extract readable text or map structured source fields using ordinary parser/adapter
+   code. This step does not require Sonnet to interpret the complete document.
+3. Keep useful metadata: title, type, source instance/native ID, source-updated time,
+   observed/synchronized time and reliable project/team references. Unknown stays unknown.
+4. Create searchable passages and lexical/semantic indexes. Embeddings are a separate
+   model operation with measurable cost; they are not Sonnet claim/relationship extraction.
+5. Publish authorized valid text independently of optional enrichment. Lexical search
+   remains usable during embedding degradation, with semantic readiness shown honestly.
 
-## Connected sources and freshness
+**Default-off structured enrichment is a hard target requirement.** Ordinary uploads,
+revisions and sync do not automatically run Sonnet entity/claim/relationship extraction,
+identity resolution or cross-document conflict assessment. A new skipped/not-requested
+state must not masquerade as a failure. No automatic per-document summaries are required.
+Useful metadata and explicit source links do not depend on model extraction.
 
-Deliver Jira first, then Confluence, then GitLab. Each must be robust for real
-organizational use; one successful API call is not connector completion. Codex
-connections are not application credentials. Use MCP or native APIs according to
-verified capability; bulk synchronization need not use MCP.
+Only changed content requires new indexing work. Avoid re-embedding unchanged passages
+where safely reusable within the tenant/source/version and model/dimension contract.
+Metadata/access-only updates still reconcile visibility without unnecessary paid work.
+Do not silently reuse stale embeddings or erase source history to save processing.
 
-| Mode | Live retrieval | Persistent index and enrichment |
+## Core search and answer experience - agreed
+
+- Provide direct document/record search, not only chat: exact IDs, lexical and semantic
+  retrieval, source/type/project/date filters where supported, previews and source links.
+- Search source text/fields even with zero extracted entities, claims or relationships.
+  Broad discovery must not depend on knowing filenames or internal canonical IDs.
+- Interpret question, time, user-selected scope and conversation references. Route using
+  source capabilities and lightweight metadata; do not search every connector by default.
+- Use direct deterministic routes for clear requests. Use bounded model planning for
+  ambiguous/compound requests only where it adds value, then retrieve progressively.
+- Stable knowledge normally uses the index; current operational fields use the relevant
+  live source when available; historical questions require dated/historical evidence.
+- Analyze relevant evidence on demand. Cross-source reasoning does not require a
+  precomputed graph edge and does not automatically create a shared persistent fact.
+- Return supported answers with inspectable citations, unresolved material disagreements,
+  freshness and honest coverage limits. Ask focused clarification when ambiguity matters.
+- Bound passages, context size, source calls, planning rounds, model calls, output and
+  wall time in code. Expand only within authorized scope; disclose partial coverage.
+- Whole-document or many-document summaries are a distinct bounded workload. Do not
+  claim complete coverage from passage samples or promise every question is cheap.
+- Preserve existing answer grounding and fail-safe behavior. Essential reference/access
+  checks stay mandatory. Evaluate proportionate additional semantic checks before changing
+  runtime acceptance or validation policy; this planning does not disable verification.
+
+## Connected sources and persistent collection - agreed direction
+
+Uploaded documents and connected document sources are first-class inputs. Jira, Slack,
+OneDrive, SharePoint, GitLab, Confluence and other approved sources fit the same conceptual
+repository; each still needs a real capability and lifecycle implementation.
+
+| Mode | Live use | Shared repository behavior |
 | --- | --- | --- |
-| Live Only | Authorized scoped requests | No automatic organizational indexing or enrichment; temporary citation/history evidence only under retention/access rules |
-| Live + Sync | Authorized scoped requests | Selected approved scopes synchronize and enrich Spaces |
-| Not Connected | Unavailable through Linkmind | No sync or cached fallback exposure |
+| Live Only | Authorized scoped retrieval | No automatic shared indexing; retained answer evidence remains subject to access/retention |
+| Live + Sync | Authorized scoped retrieval | Persist selected scopes, maintain revisions and incremental indexes |
+| Not Connected | No live retrieval | Exclude connector-dependent material from active use under the mode/access policy; retained history is not a bypass |
 
-Configure at connector-instance/project/repository scope with clear inheritance,
-not per record. Disabling a connector stops its scopes. Moving to Live Only removes
-previously synchronized resources from active organizational retrieval/enrichment;
-retained history follows access and retention policy, not implicit public availability.
+Connection does not mean import everything. Select practical scopes such as project,
+repository, folder or channel. Store structured tasks/records as appropriate rather than
+turning every response into a fake PDF or running a universal extraction schema.
 
-Live answers do not wait for sync. Changed observations within approved sync scopes
-may request a deduplicated refresh. A partial or user-filtered response must not
-replace a complete shared record. Re-fetch when version, completeness or ACLs are
-insufficient; older observations cannot overwrite newer state. Preserve previous
-evidence and distinguish source-updated, observed and explicit effective times.
+Use MCP or native APIs based on verified source capabilities. MCP is transport/tool access,
+not a database or synchronization guarantee. A live-only response is not a complete sync
+record. Sync requires cursors/pagination, resumability, deduplication and permission/deletion
+reconciliation. Partial or user-filtered results cannot overwrite complete shared records;
+older updates cannot replace newer content. A missing search hit does not prove deletion.
 
-Use incremental sync, checkpoints, pagination, bounded retries, source limits and
-permission/deletion reconciliation. Begin with appropriate polling; add webhooks
-where justified. A missing search result does not prove deletion. Query-triggered
-refresh does not replace reconciliation of rarely queried resources or permissions.
+Live answers need not wait for background sync. Refresh configured scopes separately when
+safe. Prefer dated fallback only if retained access remains reliably valid; authorization
+uncertainty forbids fallback. Show source-updated, observed and last-successful-sync times
+separately. Querying rarely used resources is not a substitute for reconciliation.
 
-On temporary outage/rate limit, provide clearly dated last-known information only
-when access remains reliably established. Never call cached status currently confirmed.
-Permission uncertainty does not permit fallback. Updates begin with meaningful recorded
-changes and freshness indicators, not a separate event engine or LLM per modification.
+Earlier Jira-first discussions remain context. **Proposed default:** prove one read-only
+connector end to end, with Jira as the existing candidate, then a document-source connector
+(OneDrive or SharePoint) and the next useful source. Exact first source, scopes and order
+remain choices before implementation; the former Jira -> Confluence -> GitLab order is no
+longer a mandatory prerequisite for document-source value. Do not promise all connectors
+or connect accounts under this documentation request.
 
-## Authority, verification and conflict safety
+## Lightweight organization and graph - agreed
 
-Prioritize evidence by relevance, semantic meaning, direct support, appropriate source
-authority, freshness and explicit effective dates. Optional scoped authority settings
-are available to admins/authorized owners, not mandatory per fact. Jira assignee is
-not project owner; newer text is not automatically authoritative. Model confidence
-alone is not a reason to resolve a contradiction.
+Projects, teams and resources may be grouped using known source metadata, explicit IDs,
+original links or deliberate human association. Similar names alone do not prove identity.
+Keep source-qualified identifiers; do not create a universal ontology before storing text.
 
-Always validate structure, source references, permissions and supporting evidence.
-Recover safe formatting errors without inventing facts. Use deeper semantic checks
-for ambiguous, contradictory or consequential information; evaluate any relaxation
-against the current safeguards before rollout. **Model decision, 2026-11-12: use
-Sonnet only for ongoing model-backed work.** Gemma is unavailable per the user;
-repairing, re-evaluating or adopting it is not an active task. Retain the existing
-Sonnet configuration and essential verification. The completed six-case Gemma/Sonnet
-pilot remains historical evidence, not an outstanding comparison or proof of
-equivalence. This documentation decision does not change runtime configuration or
-authorize new paid evaluation.
+The graph is an optional projection/navigation aid over reliable links. It is not the
+repository, its completeness is not a gate, and its absence must not degrade source
+availability. Retain useful existing graph/People/entity views and evidence; do not delete
+legacy facts, reviews or URLs. Source changes must still prevent old relationships from
+appearing current. Selective model-backed enrichment requires a concrete use case and
+bounded scope; advanced multi-hop GraphRAG is deferred until measured retrieval benefit.
 
-Keep original sources, document versions, relevant dates and relationship evidence.
-New ingestion must not silently destroy conflicting evidence. Explain material
-unresolved disagreements in retrieved evidence with citations; no claim of exhaustive
-organization-wide conflict discovery. Keep useful existing conflict/identity review
-features and records, but their failures must not block document searchability.
+## Security boundary and deferred enterprise design
 
-Advanced Conflict Resolution and Delegated Verification are later-phase features:
-automatic resolution, review queues, escalation and ownership routing are not new
-core requirements. Do not add tables/events/services solely to anticipate them.
+Preserve organization isolation, owner/organization visibility, source restrictions,
+server-side access checks before model exposure and delivery, and history/cache revocation.
+Links do not expand access; privileged sync credentials do not grant all employees rights.
+Do not infer that deferring enterprise design authorizes weakening current boundaries.
 
-## Architecture, delivery and retained requirements
+Detailed groups, delegated Space management, narrowing-page controls and enterprise access
+UX are deferred. Implement only the source-access contract necessary for each accepted
+connector. Production authentication and adequate release security are still required
+before real employee access; local demo impersonation must not become hosted behavior.
 
-Retain React/TypeScript/React Flow, FastAPI/Python, PostgreSQL/pgvector, Bedrock via
-boto3, and existing worker patterns. Use ordinary modules and compatible migrations.
-Use AWS CDK v2 in Python for any approved infrastructure, superseding original Terraform.
-Require a concrete security/cost/deployment review before billable provisioning.
-Do not adopt a new graph database, event platform or agent framework without benefit.
+## Keep, simplify and defer
 
-Earlier AWS candidates remain proposals: ECS Fargate/ECR, RDS PostgreSQL, private S3,
-Cognito, Secrets Manager and CloudWatch. SQS/DLQ and EventBridge Scheduler are options
-when justified, not mandatory replacements for the existing queue/scheduler approach.
-Frontend delivery, HTTPS, backups/restore, availability, region and cost need review.
-No service has been provisioned by this planning update.
+| Keep and reuse | Simplify for the core | Defer as separate capabilities |
+| --- | --- | --- |
+| Source originals, immutable revisions, passages, citations, evidence access | Ingestion: retain -> parse/map -> index -> available | Native rich authoring and managed Spaces |
+| PostgreSQL/pgvector, React/TypeScript/React Flow, FastAPI and workers | Optional default-off structured enrichment | Advanced graph reasoning and exhaustive conflict discovery |
+| Useful graph/review/history behavior and usage controls | Source catalog and bounded retrieval coordinator | Detailed enterprise access-control design |
+| Existing basic safety and unresolved-source attribution | Only changed-content indexing and practical sync scopes | Delegated review/resolution, writes and autonomous workflows |
 
-Earlier scope items are retained: selected public Slack channels/readable replies,
-named saved graph views, OneDrive/SharePoint, OCR/images/spreadsheets, private Slack/DMs
-and customer onboarding. They remain tracked extensions with their prior authorization
-constraints, not silently deleted or treated as replacements for Confluence/GitLab.
+Native Hub and Spaces remain later product ambitions with their previous detailed
+requirements preserved in the [prior scope](reference/pre_restructure_2026_11_14/PROJECT_SCOPE.md).
+They do not block the current retrieval core. OCR is upstream/outside the core. Full archival
+export, legal retention and model training are examples of possible future uses, not newly
+requested deliverables. Durable originals, versions and provenance support later decisions.
 
-## Open sizing and release decisions
+## Engineering and release constraints
 
-The previous 20-user / 50–200-document pilot assumption is not a new capacity limit.
-The user discussed 100–200 employees; actual concurrency, corpus size and source scope
-remain to be measured. Earlier internal-team/Jira Cloud assumptions are starting
-context, not permission to connect arbitrary live data.
+Retain the current local Docker stack and ordinary Python modules/workers. Bedrock runtime
+calls use boto3; future approved AWS infrastructure uses Python CDK v2. No new graph database,
+vector store, event bus, agent-per-source architecture or microservice fleet is justified
+by this restructure. Model-backed reasoning stays Sonnet-only; keep separately configured
+embeddings. Do not replace providers, remove migrations or discard useful existing work.
 
-Before capacity/release acceptance, agree representative documents and source access;
-held-out quality criteria; p50/p95 latency, concurrent load and cost targets; freshness
-and ACL verification windows; retention/purge/backup behavior; deployment budget/region;
-and localization release coverage. Keep unknowns explicit, not invented commitments.
+Use isolated deterministic checks first, then separately authorized representative live
+acceptance. No paid evaluation, source credentials, data cutover or infrastructure changes
+are included. Main/preview inventory, inference accounting, compatible migration, backup,
+actual-data rehearsal and rollback need explicit review before any later rollout.
 
-## Changes from the prior scope
+## Open decisions - not assumed commitments
 
-- Replaced a minimal-MVP ceiling with production-quality phased delivery.
-- Promoted native Knowledge Hub, intelligent Spaces, Confluence and GitLab to committed
-  product scope; did not reset implemented upload/wiki/search/graph/chat capabilities.
-- Moved bilingual evaluation and security work earlier; English-only current state is
-  preserved as fact, not a permanent product constraint.
-- Replaced mandatory extraction-before-search and extensive new conflict workflows
-  with independent search readiness and essential conflict safety.
-- Preserved advanced conflict functionality as a later phase and existing useful
-  reviews as implemented work. No destructive removal is authorized.
+- First connector and approved source scopes; identity/permission feasibility.
+- Representative corpus, employee questions, source size and actual concurrency.
+- Held-out retrieval/answer quality, freshness, p50/p95 latency and cost targets.
+- Source history coverage, retention/deletion/export requirements and embedding reuse rules.
+- Routing budgets, fallback policy and any change to extra semantic verification.
+- Hosted region/budget, production identity and Arabic/RTL release coverage.
+
+No time, cost-saving percentage, zero-failure promise or enterprise-scale acceptance is
+inferred. See the active roadmap for the phased plan and measurable acceptance gates.

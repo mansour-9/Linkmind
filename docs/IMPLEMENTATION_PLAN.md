@@ -1,580 +1,376 @@
 # Linkmind — Main Implementation Roadmap
 
-## Production-Quality Core Platform with Phased Feature Delivery
+## Unified Company Repository, Retrieval First
 
-Updated 2026-11-13. This is the **single active roadmap**, restructuring the existing
-M0–M7 plan. Product decisions are in [scope](PROJECT_SCOPE.md); current/target behavior
-is in [architecture](ARCHITECTURE_M2_M3.md). The user subsequently requested F1.1
-implementation on 2026-11-12. That slice is locally validated; all other unchecked
-tasks remain planned and require their own implementation request.
+Updated **2026-11-15**. This is the **single active roadmap**. RF1/RF2 are locally
+implemented and validated. The user subsequently authorized finishing RF3 repairs and
+continuing RF4 locally. The new isolated **5195** follow-up passed **315 API / 39 browser /
+frontend build**, final **8 OAuth checks**, and **16/16 mock retrieval**. RF3's known
+unsupported temporal/authority additions now have bounded Sonnet repair evidence;
+three new answers passed source review. This does not establish independent company
+quality acceptance. RF4's encrypted server-owned OAuth lifecycle and native scope
+picker are implemented and tested offline; real consent/source trials remain explicitly
+**deferred by the user**. See [current results](RF34_RESULTS.md),
+[validation](RF34_VALIDATION.json) and [authentication runbook](RF4_OAUTH_RUNBOOK.md).
 
-Subsequent T1 authorization: the user requested the complete fictional-company test
-experience and approved a US$10 cap for its Sonnet extraction/embedding/chat run.
-This is a focused test/retrieval increment, not authorization to implement every
-remaining roadmap milestone. See [T1 testing and evidence](COMPANY_TESTING.md).
+Current source requires schema **0018_connection_oauth** and policy v10. All older
+previews remain unchanged. RF5/RF6 remain planned. No main/existing-preview cutover,
+real source account, push/merge or AWS infrastructure deployment is included.
 
-2026-11-13 follow-up authorization: improve conversational help, approximate/topic
-source discovery, clarification of similar matches, and contextual follow-ups for
-user-uploaded data. This focused usability increment precedes F1.3; it does not
-authorize F1.3 implementation or main-data rollout. Validation is isolated and mock;
-manual Sonnet use retains the existing persistent USD 10 test allowance.
+2026-11-14 testing preference: use real Sonnet for representative AI-quality/user trials
+and mock/stubs for small deterministic checks that do not require inference. Real AI
+answer testing can follow RF1 before RF2, preserving source-only ingestion. The user
+will perform AWS login. Follow the [AI testing policy](AI_TESTING_POLICY.md); configure
+the existing shared spend guard correctly before any separately scoped paid trial.
+This preference does not start RF2, enable a provider or create another budget.
 
-Subsequent 2026-11-13 authorization: implement **F1.3 and main-data rollout
-preparation first**; the user explicitly selected this batch over continuing into F2.
-Bounded Bedrock-backed checks are authorized within the existing persistent USD 10
-run, without resetting/increasing it. Main cutover remains a separately reviewed step.
+The user later explicitly approved RF2, with Arabic/answer-style enhancements deferred
+to RF3. RF2's deterministic acceptance uses a new mock stack at 5191, zero paid calls,
+and leaves RF1 Sonnet at 5189/main intact. Live evidence uses offline fixtures only.
 
-- [x] Implement bounded query understanding, catalog discovery, and source choices.
-- [x] Recheck source metadata permissions/revisions in history and follow-ups.
-- [x] Verify arbitrary uploads, typo/topic search, clarification, and frontend behavior.
-- [x] Update the Sonnet preview without migrating the main app or spending on evaluation.
+Subsequent confirmed follow-up: **RF1 Sonnet preview enabled at port 5189**, directly
+sharing the original USD 10 ledger/pacing. Full isolated API suite now **215 passed**;
+the final selected-source Lantern summary passed real answer/semantic verification.
+See [AI follow-up evidence](RF1_AI_PREVIEW.md), including two earlier safely rejected
+probes. RF2 was subsequently approved and delivered as recorded above; RF3 later
+entered the measured checkpoint at the top of this roadmap. RF4–RF6 implementation
+remains planned. No new allowance or main-data rollout follows from these deliveries.
 
-See [conversation tests and current operational limits](CONVERSATIONAL_TESTING.md).
+[Scope](PROJECT_SCOPE.md) owns requirements and open choices.
+[Architecture](ARCHITECTURE_M2_M3.md) separates current code from target behavior.
+[Decision/document review](RESTRUCTURE_REVIEW_2026_11_14.md) records rationale and review
+coverage, not another backlog. The [prior roadmap](reference/pre_restructure_2026_11_14/IMPLEMENTATION_PLAN.md)
+is preserved. Its next tasks and automatic-implementation wording are superseded.
 
-2026-11-13 persona follow-up: the user requested a natural Linkmind identity, concise
-friendly interaction, light emoji use and a detailed system prompt. This is locally
-implemented and backported to the user's schema-0010 Sonnet preview without a
-database migration or paid evaluation. See [persona behavior and checks](ASSISTANT_PERSONA.md).
-It does not start F2 or authorize the pending main cutover.
+## 1. Agreed outcome and hard boundaries
 
-2026-11-13/14 focused Lantern repair: identifier/citation diagnostics, bounded complete
-correction and extraction-call accounting are locally verified. The separately approved
-Sonnet check spent USD 0.62187180 on the existing ledger and stopped on a semantic
-verdict-count mismatch. Real four-document activation/chat acceptance and Main rollout
-remain pending; no F2 work started. See
-[repair evidence](LANTERN_IDENTIFIER_REPAIR_RESULTS.md).
+Linkmind durably collects selected company knowledge, organizes it lightly, and provides
+intelligent search and evidence-based answers across stored and live sources. Original
+provenance and field meaning stay intact. It is not only a transient search proxy.
 
-## Status and evidence rules
+- Core inputs already provide text: extractable PDFs, text/Markdown, existing DOCX,
+  and MCP/native source text/structured records. OCR/conversion is upstream, outside
+  the core. No Linkmind OCR or new microservice platform is part of this restructure.
+- Default ingestion: retain → parse/map → index → available. **No automatic Sonnet
+  entity/claim/relationship extraction, identity resolution or conflict assessment.**
+- Embeddings are a separate measurable indexing cost. No default LLM summary or
+  taxonomy pass, full-corpus extraction, or graph rebuilding is required.
+- Relevant evidence is analyzed on demand. Missing graph facts must never block
+  ingestion, search, metadata organization or cited answers.
+- Persist selected synchronized scopes. Use live tools for relevant current fields;
+  Live Only results do not automatically enter shared organizational knowledge.
+- Preserve originals, revisions, citation IDs, current security boundaries, useful
+  graph/review/history behavior, usage controls and the existing local Docker stack.
+- Defer detailed enterprise groups/Space access design, native authoring, managed
+  Spaces and advanced graph/conflict workflows. Adequate connector access and production
+  authentication remain required before actual source/employee exposure.
+- Ongoing model-backed reasoning is Sonnet-only; embeddings remain separately configured.
+  Preserve `northstar-sonnet-2026-11-12` and its cumulative USD 10 ceiling/unknown
+  reservations. No reset/clone/increase/unpause, Gemma rerun or new paid dispatch.
 
-- **Completed:** a bounded delivered feature/checkpoint with recorded evidence.
-- **Partial:** useful implemented behavior exists, but target acceptance is not met.
-- **Planned:** no verified implementation of that capability in the current application.
-- **Deferred:** intentionally sequenced later, not deleted from product scope.
+## 2. Current checkpoint — completed work is not reset
 
-Completed local features do not imply production readiness. A synthetic test pass
-does not establish real-model quality; a live lookup does not complete a connector.
-Keep user visual acceptance, automated checks and representative quality review separate.
-
-## Preserved checkpoint
-
-M0/M1/M1.1 and M3.1 are completed. M2/M3 core local workflows are implemented, with
-independent quality acceptance outstanding. The M3.1 UI/Graph/canvas checkpoint was
-user-approved on 2026-11-12. M3.2A diagnostics and the bounded Gemma/Sonnet pilot are
-complete. F1.1, the first M3.2B slice, is implemented and validated in an isolated
-local stack; main-data rollout is pending. F1.2 implemented 2026-11-12; F1.3 locally
-validated 2026-11-13. See
-[F1.1 results](F1_1_RESULTS.md) and the unchanged historical checklists below.
-
-Model decision (2026-11-12): use Sonnet only for ongoing model-backed work. Gemma is
-unavailable per the user. The completed comparison remains historical evidence;
-there is no active Gemma repair, comparison rerun or adoption task. Future processing
-and quality work targets Sonnet. F1.1 preserves model settings and includes no paid
-evaluation or model replacement.
-
-Historical pre-F1.1 checks: 48 API tests, 20 browser workflows and frontend build passed
-in M3.2A; 17 paid diagnostic attempts, with no production model/schema/data changes.
-The older 12-document/30-question live benchmark predates final grounded-v3 tightening;
-targeted checks are not a full rerun. Original private-PDF failed response bodies are
-unavailable. These are historical results, not new tests run for this planning update.
-Sources: [M3.2A](M3_2A_RESULTS.md), [M2/M3](M2_M3_VALIDATION.md),
-[M3.1](M3_1_UI_REDESIGN.md), [Graph](GRAPH_EXPLORER_UPDATE.md).
-
-## Phase map and dependencies
-
-| Phase | Milestones | Status / dependency |
+| Existing capability | Recorded state | Disposition |
 | --- | --- | --- |
-| P1 — Reliable production foundations | F1 (M3.2B), F2 identity/access | Partial: F1.1–F1.3 locally implemented/validated, main-data cutover pending; F2 planned |
-| P2 — Knowledge Hub and Spaces | K1 authoring, S1 Space experience | Planned; use F2 Space/access foundation and F1 content readiness |
-| P3 — Retrieval intelligence | R1 (M3.3), R2 (M3.4), R3 bounded routing | Partial baseline; R1 uses F1; R2 builds on R1; R3 can be tested with adapters before live connector access |
-| P4 — Enterprise connectors | C1 Jira live (M4.1), C2 Jira sync (M4.2), C3 Confluence, C4 GitLab | Planned; early identity/ACL feasibility in F2; C1 uses R3; C2 uses C1; C3 then C4 reuse proven contracts |
-| P5 — Research and assisted work | W1 research/drafts, W2 approved actions | Planned; W1 builds on relevant P3/P4 sources; W2 follows explicit action authorization design |
-| Cross-cutting production release | H1 hosted readiness (M5), H2 deployment/pilot (M6), L1 localization (M7) | Planned; security, quality and bilingual evaluation start early; H1 required before H2 |
-| P6 — Advanced Conflict Resolution and Delegated Verification | D1 advanced review/resolution | Deferred; preserve essential safety and useful existing reviews throughout |
-
-Phases describe delivery order, not reduced product quality. No requirement to finish
-every graph improvement before investigating connector authorization. Native pages
-use F2's minimal Space identity/authorization foundation; S1 delivers the full Space
-experience after K1, avoiding a circular page/destination dependency. R3 supplies
-the coordinator contract before C1; real cross-source acceptance follows C3/C4.
-
-## Capability Acceptance Matrix
-
-| Capability | Current state and evidence | Missing / improvement | Complete when | Owner milestone |
-| --- | --- | --- | --- | --- |
-| Uploads and evidence | Local ingestion, revisions, locators and retained originals; F1.1 independent search publication validated in an isolated stack | Main-data rollout; quote repair gaps; controlled reprocessing | Valid authorized text remains searchable despite failed enrichment; stable citations and safe revision transitions | F1 |
-| Search | Partial target: implemented exact/text/vector/graph-assisted RRF in retrieval.py | Ranking, larger corpora, bilingual evaluation, new source filters | Relevant authorized resources found on held-out tasks within agreed load/latency targets | R1, L1, C2–C4 |
-| Chat/RAG | Partial target: implemented cited answers, follow-ups, evidence dependencies and grounded-v3 | Space scope, live evidence, adaptive routing, improved interaction | Correct supported answers/abstention, scoped follow-ups, dated failures and end-to-end revocation | R1, R3, S1, C1 |
-| Knowledge Graph | Completed bounded explorer and evidence display; partial target retrieval | Verified multi-hop answers, cross-source identity, measured path relevance | Useful paths support actual questions with evidence for every required connection; bounded and permission-safe | R2, C2–C4 |
-| Native Knowledge Hub | Planned; current Knowledge.tsx is generated entity/claim display, not an editor | Rich authoring, publishing, organization, maintenance and revision UX | Full ordinary author/publisher/maintainer journeys work without approval bottlenecks; sources and attribution preserved | K1 |
-| Spaces | Planned; current file scope and graph roots are not managed Spaces | Ownership, memberships, primary destinations, resource linking, contextual overview/chat | Project journey integrates curated and discovered knowledge without duplication or access expansion | F2, S1 |
-| Identity and permissions | Partial target: org + owner/org-visible documents, demo tokens; review roles | Production sign-in, multi-group grants, delegated creation, narrowing page restrictions, source identity mapping | Full access matrix enforced before LLM and on all derived/history/cache surfaces; no demo impersonation hosted | F2, H1, C1–C4 |
-| Contribution assistance | Planned | Destination/category/tag/related/duplicate suggestions | Useful authorized suggestions are optional; author is never inferred to be the actor described | K1, S1 |
-| Connectors | Planned; no live Jira/Confluence/GitLab application integration | Authentication, live tools, modes, sync, ACLs, error lifecycle | Each source passes live and sync lifecycle gates; fixtures alone do not mark it complete | C1–C4 |
-| Freshness and Updates | Partial foundation: revisions/timestamps exist; no connector change feed | Incremental sync, meaningful changes, live checks, simple indicators | Current requests use live source; dated fallback only if authorized; changed records refresh without full graph rebuild | R3, C2–C4 |
-| Conflict safety | Basic local conflict storage/review; F1.1 search independence validated in isolation; partial target behavior | Main-data rollout; context-aware answer prioritization | Conflicting evidence retained, retrieved disagreements explained, existing useful review/history preserved | F1, R1 |
-| Advanced conflict/delegated verification | Deferred; basic existing reviews are not this future capability | Detection/resolution policies, routing, queues, delegated fact review | Later approved scope and evaluation; no future-only machinery now | D1 |
-| UI/UX | Completed M3.1 shell, source picker, evidence, graph/canvas, responsive checks | Complete authoring/Spaces/connectors UX, real progress/cancellation, RTL | Working end-to-end, accessible keyboard/mobile/error journeys; no empty navigation or simulated work | All, L1 |
-| Operations/performance | Partial: leased jobs, bounded retries, independent usage, configured pacing | Load targets, interactive priority, backups, production monitoring/auth/deployment | Measured concurrent workloads, recovery, restore, security and cost acceptance; real infrastructure review | F1, F2, H1, H2 |
-| Research/actions | Planned | Multi-source research/reports, assisted drafts, separately approved writes | Traceable useful outputs within budgets; authorized preview/approval and safe execution for writes | W1, W2 |
-
-## Milestone execution contracts
-
-### T1 — Fictional-company testing and selected-source overviews
-
-- [x] Prepare 24 clearly fictional source documents, five projects, shared people/
-  teams, an owner-only budget, an unresolved ownership disagreement and a sample revision.
-- [x] Provide 15 example questions with source mappings and hand-authored expected
-  outcomes; preserve exact-byte fixture recognition and honest arbitrary-upload behavior.
-- [x] Add working source loading/downloads, questions and addition/revision guidance
-  to the existing Sources sample area; no new empty navigation.
-- [x] Add bounded permission-checked selected-document context for vague overviews,
-  partial-coverage disclosure, low-cost greeting/clarification and clear provider labels.
-- [x] Implement persistent API/worker-shared conservative test-cost reservations and
-  pause on unknown usage; do not change existing unbudgeted provider behavior.
-- [x] Complete the capped Sonnet journeys after refreshing the expired AWS session.
-  Run completed 2026-11-12. 14 of 15 questions answered (Q14 is revision-mode,
-  handled in the revision stage). Revision stage passed (old answer suppressed,
-  new deadline found). User addition: enrichment failed, text search-ready (expected
-  F1.1 behavior). 9 questions fully pass; 2 content-pass (Q7 conflict, Q12 overview);
-  5 original failures (Q4/Q5/Q9/Q10/Q11) confirmed as temporary empty-retrieval
-  caused by vocabulary mismatch when semantic embeddings weren't yet indexed — all 5
-  pass on retest. Budget: $1.587/$10 spent. See docs/company_demo/validation_summary.json.
-
-Mock workflow implementation is validated. Full Sonnet run completed. 17 of 24
-documents had enrichment failures (12 unsupported assertions, 5 identifier namespace
-errors) — text remains search-ready for all; enrichment fix is F1.2 scope.
-F1.2 implemented (contracts.py + providers.py, 2026-11-12). F1.3 locally validated
-2026-11-13. The current F1.3 work leaves the main app and existing F1.1 preview untouched.
-
-All milestones require focused implementation changes when separately requested,
-compatible migrations where needed, preservation of existing behavior/data, and
-recorded acceptance evidence. Paths below are existing reuse points, not mandates
-for a new service per responsibility. Complexity is relative, not a time estimate.
-
-### F1 — Search readiness and processing reliability (continues M3.2B)
-
-Dependencies: completed M3.2A. Complexity: high due to publication/citation invariants.
-
-- [x] **F1.1 first slice (isolated local validation; main-data rollout pending):** separate searchable-content readiness from enrichment;
-  conflict/extraction failures cannot block valid authorized indexed content.
-- [x] Keep current-content and enrichment-version selection explicit. Superseded
-  relationships remain historical, not current facts while new enrichment is pending.
-- [x] **F1.2:** implement bounded safe quote/schema repair and relationship-direction
-  guards from the diagnosed cases; preserve exact original evidence.
-  Implemented 2026-11-12. Two targeted fixes applied:
-  (1) contracts.py: allow `project_key` namespace for `decision` entities — decisions
-  legitimately reference project keys; previously all 5 decision documents failed.
-  (2) providers.py: after one bounded repair attempt, prune unsupported assertions
-  (entities/claims/relationships) instead of rejecting the entire extraction — supported
-  knowledge is retained, unsupported claims are discarded. Cascading entity-key cleanup
-  applied so claims/relationships referencing pruned entities are also removed.
-  Regression: grounding, resolution, model_limits tests all pass. Pre-existing preview-auth
-  403 failures in company-sonnet container are unchanged (not caused by these fixes).
-- [x] **F1.3 (isolated local acceptance):** add versioned enrichment staging,
-  verified atomic activation and failure rollback; preserve source search/evidence.
-  Migration 0011 and the refresh journey are implemented. Main cutover remains pending.
-- [ ] Improve structure-aware context and parent passages against held-out retrieval
-  tests; do not treat a byte estimator as measured token usage or adopt fixed tuning blindly.
-- [ ] Preserve useful conflict/identity functionality and history. Isolate cross-document
-  conflict assessment from search publication rather than deleting the subsystem.
-
-Backend: processing.py, parsers.py, contracts.py, providers.py, retrieval.py,
-conflict_detection.py, worker/main.py. Frontend: IntelligencePages.tsx Processing,
-Sources/SourceControls and actual readiness/error displays. Data: F1.1 adds
-search_ready_at; derived-generation changes remain F1.3 work as justified, existing
-revision/chunk IDs unchanged.
-Test: partial/failing extraction, parser failures, stale leases, concurrent revisions,
-rollback/retry, mapped quotations, reversed edges, deletion/revocation and saved answers.
-Exit: original citations still resolve, previous evidence is retained, supported new
-text is searchable independently, and no stale/unsupported graph facts are promoted.
-Detailed sequence: [M3.2B](M3_2B_PLAN.md).
-
-#### F1 remaining delivery order — plan only, 2026-11-13
-
-The user requested this plan after reporting that the conversational improvements
-work, then authorized F1.3 implementation and rollout preparation. The reviewed
-main-data cutover and F2 execution remain outside this batch.
-
-1. **Checkpoint the current application.** Preserve the tested conversation/upload
-   increment and its fixtures; prepare a scoped commit without sweeping unrelated
-   changes into it. Retain the three reproduced baseline regression failures as
-   explicit outstanding checks, not a fully passing-suite claim.
-2. **F1.3 additive metadata.** Add `processing_jobs.staged_version_id` and
-   `document_versions.activation_state` (`live`, `staged`, `rolled_back`) through
-   an additive Alembic migration. Backfill existing records conservatively, retain
-   source/revision lineage and original citation IDs, and extend job-status constraints
-   for `enrichment_staged_failed` without destructive schema replacement. Confirm
-   the distinction between immutable source revisions and derived enrichment
-   generations before changing publication queries; add only metadata needed by
-   the implemented staging boundary.
-3. **F1.3 staging and verification.** Build candidate enrichment outside the live
-   graph. Verify exact evidence, accepted assertions, relationship references and
-   direction, and tenant/source dependencies before it becomes visible. Preserve
-   current authorized text retrieval throughout reprocessing. The work uses the
-   existing worker/modules; no new agent platform or infrastructure.
-4. **F1.3 activation and failure.** Activate a verified candidate atomically, only
-   when the expected source revision and job ownership/lease still match. A stale
-   worker or older revision cannot replace a newer publication. If candidate
-   verification fails, retain valid existing live enrichment, mark the candidate
-   rolled back and the job `enrichment_staged_failed`, with an actionable reason.
-   Same-revision reprocessing retains prior live facts; a newer source revision
-   must still keep superseded old-revision facts historical under F1.1. Rollback
-   must not label facts from obsolete text as current.
-5. **F1.3 acceptance.** Test successful staged activation, failed verification and
-   rollback, interrupted/stale workers, competing revisions, retry idempotency,
-   uninterrupted search, historical citations, revoked access and saved-answer
-   invalidation. Reflect the actual states in Processing/source controls and
-   verify keyboard/mobile behavior. Validate migration/backfill and recovery in
-   an isolated stack; record remaining quality limits. No new paid model evaluation
-   or main-app migration is implied by these deterministic checks.
-6. **F1.1 main-data rollout, separately authorized.** Freeze mutations/workers;
-   preserve the old build; back up PostgreSQL and original artifacts; restore both
-   into an isolated rehearsal stack. Preview actual readiness counts and pointers,
-   apply the compatible migration chain in rehearsal, then verify permissions,
-   search, graph freshness, citations/history and downloads. Prepare restore-based
-   rollback and handling of post-backup writes before touching the original stack.
-   Execute the reviewed rollout only after its own green light.
-
-The remaining F1 context/ranking checks must use held-out questions and measured
-results. They are not silently counted as completed by staging, and broad relevance
-work retains its R1 gate. Historical M3.2A/F1.1 implementation is not repeated.
-
-F1.3 acceptance and Bedrock evidence are in [F1.3 results](F1_3_RESULTS.md).
-The [main-data rollout review](MAIN_DATA_ROLLOUT.md) includes the successful
-synthetic backup/restore rehearsal and the observed main-stack inference-guard
-configuration mismatch. Read-only inspection found the main database already at
-0010; its next migration is 0011, rather than a repeat of readiness migration 0009.
-
-### F2 — Organization identity, groups and access foundation
-
-Dependencies: existing org/document permissions; can design/test alongside F1.
-Complexity: high. Includes early source authorization feasibility, not a connector build.
-
-- [ ] Replace demo-only auth for hosted operation; preserve local fixtures and plan
-  enterprise IdP integration using the existing proposed Cognito boundary.
-- [ ] Add multi-group membership and simple resource grants; centralize shared
-  permission checks without per-claim/edge ACL administration.
-- [ ] Establish Space identity, primary destination, owner and delegated Create Space;
-  page restrictions narrow Space access, never broaden it. Define the general area.
-- [ ] Cover owner delegation limits, link/move semantics and effective audience previews.
-- [ ] Validate Jira Cloud user/source ACL and source-instance identity assumptions
-  early using synthetic contracts, then an approved application connection when available.
-
-Backend: main.py authentication/authorization boundary, retrieval.py, resolution.py,
-graph_explorer.py; small reusable permission module as needed. Frontend: session.tsx,
-admin/user/group screens and audience controls. Data: memberships/grants and Space
-foundation with conservative backfill preserving existing owner/org audiences.
-Test: multiple groups, narrowed pages, cross-org access, revoked membership, moves,
-restricted names/counts, owner limits and source denial. Exit: permission matrix
-works across API, search, graph, citations, history and caches; hosted demo auth disabled.
-
-Suggested F2 delivery sequence, still planned:
-
-1. Establish production sign-in/session contracts and an enterprise IdP path; keep
-   the local demo explicitly isolated. Cognito remains the proposed hosted option,
-   with configuration/cost review before any AWS resource provisioning.
-2. Implement organization identity, multiple group memberships, resource grants
-   and shared server-side permission checks with a conservative data backfill.
-3. Deliver the Space/destination access foundation: delegated Create Space, owners,
-   primary destination/general area, narrowing page restrictions, and safe links/moves.
-   The complete Space UX remains S1; native authoring remains K1.
-4. Verify the full access matrix across direct APIs, retrieval, graph, metadata,
-   suggestions, citations, history and caches, including immediate revocation.
-5. Validate Jira/source identity and ACL assumptions with synthetic contracts;
-   use a real application connection only when separately authorized. This is
-   feasibility for C1, not delivery of a live connector or synchronization.
-
-### K1 — Production-quality native Knowledge Hub
-
-Dependencies: F1 searchable content and F2 destination/access foundation. Complexity: high.
-
-- [ ] Evaluate/reuse a maintained rich editor; deliver headings, lists, tables,
-  links, code, appropriate attachments/media, autosave, preview and concurrent-edit protection.
-- [ ] Deliver drafts without destination; direct authorized publication with suggested
-  destination and visible audience; keep category/tag suggestions optional.
-- [ ] Add revision browsing/comparison/restoration, archive and deliberate merge/redirect
-  workflows preserving evidence and permission boundaries.
-- [ ] Track author/editors, maintainer, described actors, AI provenance and references
-  distinctly. Official designation is a separate authorized revision action, not a queue.
-- [ ] Provide polished discovery, organization and authorized related/duplicate suggestions.
-
-Backend: existing versions/artifacts/contracts and search publication; native content
-module where needed. Frontend: Knowledge.tsx, shared ui.tsx/Evidence, editor and library
-views. Data: native content/revisions, minimal lifecycle/maintainer/provenance fields;
-reuse resource/evidence contracts, do not copy external pages into native records.
-Test: save/reload, simultaneous edits, publication/access changes, restoration, duplicate
-merge citations, safe rendering and keyboard/responsive UX. Exit: complete author,
-reader and maintainer journeys; no compulsory ordinary approval; actor attribution correct.
-
-### S1 — Complete Project Space experience
-
-Dependencies: F2 Space foundation, K1 native content; integrate new sources as delivered.
-Complexity: high across product UX and derived permissions.
-
-- [ ] Deliver overview/objectives/owner/team, knowledge, connected resources, decisions,
-  relationships, updates and contextual chat with honest empty/unavailable states.
-- [ ] Support delegated self-service creation, accessible similar-Space suggestions,
-  owner maintenance and a lightweight suggestion path for non-creators.
-- [ ] Link a resource to multiple Spaces without copying or expanding access; suggestions
-  and reliable auto-enrichment cannot overwrite approved content.
-- [ ] Implement Hybrid Smart Scoping and clear audience/move controls; support teams
-  and departments through the same model as their experiences are delivered.
-
-Backend: Space queries/links using F2 permissions and existing entity/evidence/search
-APIs. Frontend: Space navigation/overview/resources/chat; preserve People/Graph routes.
-Data: Space-resource links and scoped conversation metadata; no separate knowledge store.
-Test: private linked content, summaries with mixed permissions, duplicate names, moves,
-revocation and context follow-ups. Exit: a useful cohesive project journey, not just a folder.
-
-### R1 — Search relevance and grounded contextual answers (M3.3)
-
-Dependencies: existing baseline; F1 enables index/context changes. Complexity: high.
-
-- [ ] Improve identifier/entity linking, candidate ordering, hybrid ranking, context
-  diversity and filters; compare reranking with baseline before adoption.
-- [ ] Evaluate Arabic/English/mixed-language retrieval and answers from the beginning;
-  expand independently reviewed real-company questions, not only synthetic fixtures.
-- [ ] Implement flexible authority/relevance/time prioritization, optional scoped
-  designations and semantic role distinctions; cite unresolved material disagreement.
-- [ ] Evaluate proportionate semantic verification without weakening source checks;
-  retain fail-safe abstention and Sonnet-only model use. No Gemma comparison or
-  replacement work is required.
-- [ ] Improve contextual follow-ups, source inspection, actual progress and supported
-  cancellation; keep direct search independent of answer generation.
-
-Backend: retrieval.py, providers.py, contracts.py, main.py conversations and tests.
-Frontend: Assistant.tsx, IntelligencePages.tsx, FocusSources.tsx, Evidence.tsx.
-Data: additive ranking/context/evidence metadata only if needed; version answer policy
-when grounding rules change. Test: relevance, qualifiers, same-name entities, disagreements,
-unsupported answers, bilingual queries and permission-safe history. Exit: held-out
-quality/latency/cost targets met and regressions preserved; no invented target results.
-
-### R2 — Evidence-backed multi-hop GraphRAG (M3.4)
-
-Dependencies: R1, F1 source/version integrity. Complexity: high.
-
-- [ ] Implement bounded path retrieval with cycle prevention and direction-aware traversal;
-  the former three-hop default is a tuning starting point, not an intelligence ceiling.
-- [ ] Retrieve evidence for every required edge; validate identity, dates and access;
-  preserve explicit, inferred and uncertain distinctions.
-- [ ] Measure path/ranking benefit against hybrid retrieval alone; retain useful graph
-  exploration and do not extract every sentence or every possible relationship.
-- [ ] Present supporting paths where useful and invalidate affected results on source changes.
-
-Backend: graph_explorer.py, retrieval.py, contracts/evidence/resolution. Frontend:
-GraphWorkspace/GraphPanels/ExplorerCanvas and evidence paths in chat. Data: reuse
-relationships/evidence; source-qualified identity and additive metadata as needed.
-Test: two/three-hop questions, reversed edges, missing evidence, ambiguous identity,
-periods, cycles and revocation. Exit: useful cross-document answers with traceable
-connections; failed paths produce partial/insufficient evidence, not fabricated links.
-
-### R3 — Lightweight query routing and common evidence (continues M4.3)
-
-Dependencies: R1; adapter contract can precede live C1; R2 enables graph routes.
-Complexity: medium–high. No mandatory agent framework.
-
-- [ ] Route stable, operational, historical and compound requests before retrieval;
-  use relevant live source by default for current operational fields.
-- [ ] Normalize local/live evidence identity, source/version, observed time, field/text
-  support, authorization dependencies and coverage limitations.
-- [ ] Bound tools, rounds, tokens, time and concurrency outside prompts; parallelize
-  independent calls; broaden Space scope only when requested/enabled.
-- [ ] Reauthorize retained live evidence/history and distinguish outage from source denial.
-
-Backend: main.py ask path, contracts.py, providers.py, retrieval.py plus small coordinator/
-adapter modules. Frontend: actual source activity, freshness, cancellation and partial
-coverage in Assistant/Evidence. Data: minimal live evidence/dependency persistence under
-retention; never automatically index Live Only history. Test routing with fixtures,
-then real source gates in C1; simple questions incur no unnecessary planner call.
-
-### C1 — Robust read-only Jira live integration (M4.1)
-
-Dependencies: F2 source access/identity contract, R3 evidence/routing; approved app
-credentials/project for live acceptance. Complexity: high.
-
-- [ ] Implement approved MCP/native tools, user/source authorization, known endpoints,
-  input validation, pagination, timeouts, bounded retries and source rate pacing.
-- [ ] Expose connector/project modes and health; route current issue status/assignee/
-  blockers live without equating assignee with project owner.
-- [ ] Cite retained supporting response/excerpt and original Jira link with timestamps;
-  do not use partial or user-filtered views as complete shared index records.
-- [ ] Handle credential expiry, source denial, schema change, injection, outage and
-  authorized dated fallback. No external writes.
-
-Backend: connector adapter, coordinator, authorization/evidence. Frontend: Sources
-connection/policy/health and source-labelled evidence throughout Chat/Search/Spaces.
-Data: source instance, connection/scope policy, external identity and retained live evidence.
-Test real approved access with two distinct source permissions plus mock fault cases.
-Exit: complete live lifecycle, not one lookup. Jira integration is fully accepted
-only with C2 synchronization lifecycle for Live + Sync scopes.
-
-### C2 — Jira incremental sync, enrichment and Updates (M4.2)
-
-Dependencies: C1, F1, F2; S1 for visible Space enrichment. Complexity: high.
-
-- [ ] Synchronize approved scopes with checkpoints, recovery, deduplication, deletion
-  and ACL reconciliation. Pick polling/webhooks from actual needs and source support.
-- [ ] Refresh affected records from live observations without delaying answers;
-  reject stale overwrites and incomplete replacement payloads; avoid unchanged embeddings.
-- [ ] Auto-link reliable identities within sync scopes, preserve official content,
-  and present basic meaningful change/freshness indicators without an event platform.
-- [ ] Enforce Live Only/no-index and mode-transition removal from active retrieval;
-  retained history still respects source access and retention.
-
-Backend: existing worker/job patterns with appropriately scoped refresh jobs,
-connector/search/Space queries. Frontend: sync status, recovery/errors and Space Updates.
-Data: source revision/checkpoint and minimal change records justified by Updates.
-Test duplicated/out-of-order/partial updates, source deletion vs not-found ambiguity,
-permission revocation, missed polling cycles, mode changes and nonblocking refresh.
-Exit: source changes appear once, old evidence remains attributable, active results
-are permission-current, and only affected content/relationships are reprocessed.
-
-### C3 / C4 — Confluence, then GitLab (expands M4.4)
-
-Dependencies: proven C1/C2 contract; each needs its own approved connection and ACL tests.
-Complexity: high per connector; no completion inherited from Jira.
-
-- [ ] C3: Confluence live search/page retrieval, original identity/links, versions,
-  restrictions, sync and revocation; complement native content without independent copies.
-- [ ] C4: GitLab repositories/issues/merge requests/pipelines as approved, with live
-  operational routing, membership/visibility, incremental sync and source limits.
-- [ ] Reuse modes, evidence, connector UI and worker logic; implement source-specific
-  permissions and error behavior explicitly rather than assuming identical APIs.
-- [ ] Prove cross-source identities using explicit references; an issue mention is
-  not proof that a merge request fixes it.
-
-Data: reuse connector/resource models with only source-required metadata. Frontend:
-complete source-specific configuration and unified results, not empty placeholders.
-Test each full connector lifecycle and authorized cross-source questions, including
-denial/expiry/rate limits/partial results. Exit: equivalent quality to Jira for supported
-capabilities; unsupported source features are documented, not simulated.
-
-### W1 / W2 — Research, assisted knowledge and authorized actions
-
-Dependencies: R3 and relevant accepted connectors; W2 follows W1 and concrete action
-design. Complexity: high; external writes require separate authorization.
-
-- [ ] W1: complete multi-source research, project reports and handovers with source
-  comparison, actual progress, cancellation, bounded cost and disclosed coverage.
-- [ ] Prepare native-page additions as distinguishable drafts; a user explicitly
-  publishes them. Keep tool results, conversation memory and organizational facts separate.
-- [ ] W2: show exact target/payload preview, obtain explicit approval, reauthorize at
-  execution, prevent duplicate writes, handle partial outcomes and retain audit evidence.
-- [ ] Adopt specialist agents/frameworks only if measured task success or maintainability
-  improves; do not add one agent per source.
-
-Reuse coordinator, native editor, evidence and audit. Add execution/approval persistence
-only when W2 is actually implemented; no future-only tables now. Test budget exhaustion,
-prompt injection, evidence revocation, cancelled runs, retries and changed approval payloads.
-Exit: useful reviewable outputs and safe approved actions, not unbounded autonomous work.
-
-### H1 / H2 — Hosted readiness and approved deployment (M5 / M6)
-
-Dependencies: F2 for real user access; each released capability's own gates. Complexity:
-high. This is a cross-cutting release track, not deferred security cleanup.
-
-- [ ] H1: production authentication, upload protection, least-privilege secrets,
-  redacted diagnostics, monitoring, interactive/background scheduling, recovery and
-  measured concurrency/latency/cost. Recheck actual model/source quotas; workers alone
-  do not create throughput. Current nine-RPM pacing is configuration, not fresh quota proof.
-- [ ] Establish backup/restore and retention/purge behavior; test tenant isolation and
-  every derived surface under permission changes. Resolve critical findings.
-- [ ] Prepare Python CDK deployment, HTTPS/frontend delivery/networking, state protections,
-  current region-specific costs, synth/diff, restore/rollback and operator runbook.
-- [ ] H2: only after explicit approval deploy the concrete reviewed AWS scope, validate
-  hosted journeys/alerts/restore and run the measured pilot; no infrastructure in this task.
-
-Reuse local Compose/runtime; target infrastructure is a proposal until reviewed. Tests
-include load during ingestion/sync, failures/restarts, backup restoration and hosted auth.
-No calendar commitment until representative volume, concurrency, budget and targets agree.
-
-### L1 — Bilingual capability and localization (repositions M7)
-
-Dependencies: evaluate content/query quality during F1/R1; localized UI follows each
-working surface. Complexity: medium–high across authoring, evidence and navigation.
-
-- [ ] Evaluate Arabic, English and mixed-language source/query combinations throughout.
-- [ ] Deliver language selection and RTL layouts across Hub, Spaces, Search, Chat,
-  Graph, source management and evidence; preserve original source identifiers/text.
-- [ ] Test desktop/mobile, keyboard, mixed-direction editor content and English regression.
-
-Data: language/locale metadata only where useful; no separate knowledge stores. Exit:
-an Arabic-speaking employee can complete the same accepted knowledge journeys; current
-English UI does not count as localization completion. Release coverage must be explicit.
-
-### D1 — Advanced Conflict Resolution and Delegated Verification
-
-Status: deferred. Do not add new conflict engines, queues, ownership routing, resolution
-automation, verification services or speculative tables now. Preserve existing basic
-conflict/identity review and history; do not remove useful working features merely
-because this phase is later. Future design can attach decisions to stable attributed
-claims/evidence. Reassess scope and acceptance with real usage before implementation.
-
-## Cross-cutting acceptance and rollout
-
-Before each capability is called complete: test ordinary workflows, permissions and
-revocation, concurrency/version races, degraded/error recovery, responsive/keyboard UX,
-and measured quality/latency/cost appropriate to the change. Preserve original data and
-citations with additive migrations and tested rollback/backfill; destructive replacement
-is not authorized. Run relevant API/build/browser regressions in disposable environments.
-
-Build a held-out employee-question set covering policies, ownership, same-name projects,
-history, source disagreement, graph paths, operational status and Jira/GitLab research.
-Review gold answers independently. Compare hybrid baseline vs graph/reranking/planning
-increments; report retrieval, semantic support, abstention, latency, source/model calls
-and costs separately. Never infer factual truth from exact-quote matching alone.
-
-Numeric targets and workload are open decisions: previous 20 users/50–200 documents
-were pilot assumptions, not capacity requirements; 100–200 employees is not measured
-concurrency. Agree corpus, simultaneous queries, source quotas, freshness/ACL windows,
-retention and budget before claiming enterprise-scale readiness. Paid evaluation needs
-a new explicit budget; historical M3.2A approval is not a standing allowance.
-
-## Legacy milestone mapping and retained scope
-
-| Earlier plan | Current location / reason |
+| M0/M1/M1.1 and M3.1 UI/Graph/canvas | Completed local checkpoints; M3.1 user-approved | Reuse; no repeated handoff/redesign |
+| M2/M3 source/search/chat | Locally implemented; independent representative quality acceptance incomplete | Core foundation for RF1–RF3 |
+| M3.2A pilot | Completed historical diagnostics | Preserve frozen evidence; no comparison rerun |
+| F1.1 search-readiness separation | Locally validated | Reuse; default-off enrichment is new RF1 work |
+| F1.2 and F1.3 staged enrichment | Implemented locally; isolated F1.3 acceptance; main cutover pending | Retain as optional safety/compatibility; not a core extraction gate |
+| T1 Northstar previews/budget | Delivered test journeys with dated model outcomes | Reuse corpus/guard; no renewed paid allowance |
+| Conversation discovery/persona | Implemented locally; compatible preview backport recorded | Preserve, extend to source routing |
+| Lantern repair/diagnostics | Offline repairs exist; latest real extraction verifier failed alignment | Keep evidence/fixes; no mandatory extraction-repair rerun |
+| Main/previews | Main last recorded 0010; RF1 Sonnet 0013; RF2 0014; RF3 0015; RF4 0017; new 5195/current source 0018 | Protected container IDs and RF1/RF2 source data preserved; main rollout excluded |
+| Connectors/sync/adaptive live routing | Not implemented in application | RF2–RF5; Codex connections are not app credentials |
+| Production sign-in/native authoring/managed Spaces | Not delivered | Release security in RF6; detailed F2/K1/S1 later |
+
+RF1 changes ordinary processing to source-only by default in current code/new isolated
+preview. Existing main/preview environments remain unchanged. Chat retains its current
+answer verification; RF1 does not relax grounding rules.
+No stronger answer accuracy, latency or savings claim follows from this plan. Latest
+recorded real-model outcome: [Lantern identifier report](LANTERN_IDENTIFIER_REPAIR_RESULTS.md).
+Historical reports/ledger figures are not observations of current runtime state.
+
+## 3. Stages, dependencies and actual status
+
+| Stage | Outcome | Dependency/status |
+| --- | --- | --- |
+| RF0 — Direction/documentation | Consistent scope, architecture, roadmap and history | Completed documentation alignment/checks |
+| RF1 — Lightweight ingestion | Source-only indexing default; explicit optional enrichment | Completed isolated acceptance: 191 API / 29 browser / build; main rollout excluded |
+| RF2 — Repository/catalog/evidence | Reliable resource identity, non-graph metadata and common evidence | Completed isolated acceptance: 231 API / 32 browser / build; live contract tested offline |
+| RF3 — Retrieval and routing | Useful bilingual source-only answers; bounded index/live planning | Implemented; 264 API / 34 browser / build pass; real quality gate open after two reviewed failures |
+| RF4 — Sources & MCP Connections | Admin lifecycle and local connector foundation for Jira, Confluence, OneDrive, SharePoint and Custom MCP | Implemented/validated locally at 5194; real auth, scopes and source acceptance pending |
+| RF5 — Cross-source journey | Combined answers and light organization over accepted sources | Accepted RF4 lifecycles; graph optional |
+| RF6 — Core release/rollout | Held-out quality, measured load/cost, production auth, tested recovery | Cross-cutting preparation; security before real employee use; separate rollout approval |
+| Later capabilities | Rich authoring/Spaces, detailed enterprise design, advanced graph/research/actions | Separately requested; no implicit RF1–RF5 dependency |
+
+No calendar commitments or guaranteed savings. RF6 measurement/safety preparation starts
+early; full group/Space design does not move into RF1. First source/order/scopes remain
+open. Jira is the prior candidate, while OneDrive/SharePoint collection is a core source
+class. A fixed Jira → Confluence → GitLab sequence no longer blocks document-source value.
+
+## 4. Capability acceptance matrix
+
+| Capability | Current gap | Accepted target | Owner |
+| --- | --- | --- | --- |
+| Upload/revision | RF1 source-only default implemented locally | Arbitrary readable source searchable when extraction/conflict functions are forbidden | RF1 |
+| Indexing | RF1 lexical-first publication and compatible same-document reuse implemented locally | Honest lexical/semantic readiness, stable citations and compatible changed-content reuse | RF1/RF3 |
+| Repository | Selected owner-bound collection implemented locally; real-source acceptance pending | Source-qualified durable records, versions/provenance and selected scopes | RF2/RF4 |
+| Discovery/metadata | RF2 metadata/content catalog and source/format/project/team/date filters delivered locally; entity-kind remains optional | Topic/source/type/project/date discovery without graph or exact filename knowledge | RF2/RF3 |
+| Chat | Local evidence only; broad verification | Useful no-graph cited answers, identity/support safety, coverage and graceful abstention | RF3 |
+| Routing | Intent routing only | Relevant sources, freshness/history routes, bounded expansion, no search-all default | RF3/RF5 |
+| Live access | Native/MCP bounded reads implemented and validated offline; networking off by default | Actual authorized read-only evidence, links/times and fault handling | RF4 |
+| Sync | Local ordinary-worker collection/checkpoints/revisions/access recovery implemented; real-source acceptance pending | Incremental checkpoints, restart recovery, idempotency, partial/version/access/deletion safety | RF4 |
+| Cross-source reasoning | Uploaded local evidence only | Stored + live + historical evidence, without prebuilt edges | RF5 |
+| Graph/links | Existing bounded explorer/legacy facts | Optional reliable links; zero-link resources fully usable; history preserved | RF2/RF5 |
+| Security | Local tenant/owner/org boundaries and demo auth | Existing boundaries preserved, source checks per connector, production auth before employee exposure | All/RF6 |
+| Cost/operations | Usage/pacing/test guard exist; representative limits open | Separate indexing/query/tool measurement, hard budgets, recovery and held-out acceptance | All/RF6 |
+| Native Hub/Spaces | Planned | Prior complete journeys revisited when scheduled | Later K1/S1 |
+| Advanced graph/conflict/delegation | Basic reviews retained; advanced behavior absent | Demonstrated benefit and separately agreed scope | Later R2/D1 |
+
+## 5. RF1 — Default lightweight ingestion
+
+Status: **implemented and validated in the isolated local stack**. Authorized by the user
+on 2026-11-14. Reused `processing.py`, parsers, providers, existing jobs/version guards
+and Processing/Sources UI. Delivery evidence: [RF1 results](RF1_RESULTS.md).
+
+- [x] Audit upload/revision/retry/refresh/fixture/worker paths. Define one explicit
+  default-off enrichment policy so alternate paths cannot silently invoke extraction.
+- [x] Finish ordinary ingestion after source/index publication without extraction,
+  extraction verification, model-based identity resolution or conflict assessment.
+- [x] Keep deliberate optional enrichment with existing staging/lease/revision/access
+  checks, compatible legacy jobs, supported retry semantics and retained attempt history.
+- [x] Distinguish not-requested enrichment from failed/unavailable. Source-only content
+  is successfully usable and must not appear broken or awaiting required graph repair.
+- [x] Preserve lexical fallback; explicitly design/test lexical availability while
+  embeddings are pending if adopted. Do not report semantic readiness prematurely.
+- [x] Avoid reindexing/re-embedding unchanged content under compatible identity/model/
+  policy rules. Metadata/access-only updates must still invalidate access correctly.
+- [x] Preserve source/citation IDs and historical evidence. Source-only answer dependencies
+  must not require unused graph generations; old turns are retained, not rewritten.
+- [x] Keep explicit exact-byte graph fixtures working. Never fabricate extraction for
+  arbitrary mock uploads. Retain optional-enrichment safety tests and useful legacy views.
+
+Acceptance: ordinary readable uploads/revisions work with extraction/conflict functions
+set to fail on invocation and with zero graph records. Verify lexical degradation,
+citations/downloads/history, optional refresh, supersession/revocation/deletion, stale
+workers/concurrent revisions, retry/UI states and policy invalidation in isolation.
+Record zero extraction calls for default ingestion; embeddings remain separately measured.
+Output: focused compatible implementation and documented isolated acceptance, not rollout.
+
+## 6. RF2 — Repository metadata, source catalog and common evidence
+
+Status: **implemented and validated locally**, in an isolated mock stack at 5191.
+Full 231 API / 32 browser / build passed; final RF2 16 API / 3 browser follow-up passed.
+See [RF2 results](RF2_RESULTS.md). RF1 Sonnet/main remain unchanged; no paid inference.
+
+- [x] Define minimal stable external identity: organization/source instance/type/native
+  ID; keep source instance distinct from replaceable connection credentials.
+- [x] Add metadata/filtering independent of entity extraction: source/type/times and
+  reliable project/team references. Unknown remains unknown; names alone do not merge.
+- [x] Describe configured scopes and actual source operations/live/index/history/health
+  in a small catalog, without building an exhaustive company ontology.
+- [x] Define local/live evidence with original link, excerpt/locator or typed field/value,
+  revision/observation times, access dependencies and coverage. Keep existing passage IDs.
+- [x] Support reliable project/resource association without managed Spaces/native pages.
+  Distinguish explicit source/human links from uncertain suggestions.
+- [x] Add persistence only for delivered capabilities; no universal fact-store rewrite,
+  new event platform, future-only permissions schema or mandatory generation overhaul.
+
+Acceptance: non-graph metadata/topic discovery, safe reconnect and native-ID collisions,
+source-qualified identity, permission-safe titles/counts/history, inspectable local/live
+fixture citations, and no fabricated verbatim quotes for structured fields.
+Output: minimal compatible catalog/evidence contracts and working supported filters.
+Local acceptance passed. Native identity/reconnection and live structured-field checks
+are offline contract fixtures, not actual connector authentication or synchronization.
+Only uploads are active; projects/teams are deliberate associations, not inferred facts.
+
+## 7. RF3 — Retrieval quality and bounded routing
+
+Status: **local implementation and bounded grounding repair validated**. The original
+RF3 5192/5193 stacks and eight-prompt failed outputs remain preserved. The new 5195
+follow-up uses policy v10 and passed 315 API / 39 browser / build, with deterministic
+retrieval 16/16. Three new Sonnet answers passed source review; six distinct verifier
+controls have expected outcomes after a preserved false rejection and targeted fix.
+See [repair evidence and limits](RF34_RESULTS.md). Broader independent representative
+company acceptance remains a release gate, not a claim from synthetic cases.
+
+- [x] Establish reviewed source-only questions: policies, project facts, same-name
+  ambiguity, history, disagreement, missing evidence and Arabic/English/mixed wording.
+  Measure baseline; improve structure-aware context/diversity/ranking only with evidence.
+- [x] Route clear selected-source/ID requests directly. Use bounded Sonnet planning for
+  ambiguity/composition only where useful; preserve question qualifiers and scope.
+- [x] Select indexed/live/historical/combined sources from actual capabilities (offline
+  registered-adapter contract; real live access remains RF4). Expand
+  a failed initial route to another relevant source within budget; no search-all fan-out.
+- [x] Enforce tool/round/context/model/output/time limits and bounded concurrency in
+  code. Numeric defaults are proposed until tested against workloads/provider limits.
+- [x] Provide bounded question/partial-context coverage and evidence-gap behavior.
+  Clarify ambiguity, retain actual values/source disagreements and distinguish missing
+  evidence from tool/provider failure. Each requested part still needs representative acceptance.
+- [x] Treat broad summaries as a separate coverage-aware workload; do not imply complete
+  review from top passages or promise all long-document questions are cheap.
+- [x] Keep mandatory grounding/access checks and existing semantic answer verification
+  initially. Any selective-verification change needs measured held-out regression and
+  a policy bump when trust rules change; do not weaken checks to pass expected answers.
+- [x] Show actual activity/citations/limits and genuine cancellation where supported.
+  Preserve persona; no fake tools, integrations, reasoning traces or empty navigation.
+
+Acceptance: useful no-graph factual answers and cross-document synthesis; no irrelevant
+source calls on clear routes; bounded expansion; unsupported identity/content/injection
+fails safely. Denial, outage, empty search and exhausted budget remain distinguishable.
+Output: retrieval/routing implementation, measured isolated baseline/comparison, UI/source
+inspection and separately reviewable live-evaluation scope. Mock tests are not AI quality.
+
+The measured temporal/authority/freshness repairs are implemented and have bounded
+real-model regression evidence. Preserve both the original failures and the later
+false rejection. The authored corpus is not independent held-out acceptance. No paid
+corpus rerun is authorized automatically. Representative company question/summary
+coverage and long-document workloads still require independent release acceptance.
+
+## 8. RF4 — Read-only connectors, live and persistent
+
+User steering, 2026-11-15: real-server MCP/connector tests are deferred until later.
+Keep real consent, discovery/permission and source acceptance open; local OAuth/scope implementation is now validated offline.
+
+Status: **local management, connector, delegated OAuth and scope-selection foundation
+implemented/validated; real-source acceptance deferred**. Five labelled demos are at
+5195. Server-owned encrypted consent/token/refresh state and bounded metadata discovery
+are functional, tested with offline native provider transports. Default networking stays
+off. Actual provider registration, consent, scope permissions and live/sync lifecycle
+acceptance remain outstanding. See [current results](RF34_RESULTS.md),
+[runbook](RF4_OAUTH_RUNBOOK.md) and [prior RF4 plan](RF4_PLAN.md).
+
+- [x] Deliver Admin Settings → Sources & MCP Connections for all five types, persisted
+  configuration, labelled Demo/Real environments, authentication status, test-before-enable,
+  explicit scopes, editing/removal, three modes, health/errors and collection status.
+- [x] Validate the local lifecycle, native/MCP transport contracts and source-only
+  collection/recovery/access invariants with offline fixtures and real browser/API checks.
+
+- [x] Implement and offline-test owner/cookie/generation-bound single-use consent,
+  encrypted tokens/refresh rotation, audience binding and native scope selection.
+  Keep Custom MCP's explicit server-managed authentication contract distinct.
+
+The gates below remain real-source acceptance requirements; local mocks do not complete them.
+
+- [ ] Select bounded scopes per source; verify real MCP/native capabilities, app credentials,
+  identity and permission semantics before broad implementation. Codex access is not app auth.
+- [ ] Implement bounded search/fetch/current fields and supported history, with original
+  URLs, actual field semantics, retained evidence and source/observed times. No writes.
+- [ ] Provide practical Live Only / Live + Sync / Not Connected policies, health,
+  last-successful-sync and actionable source errors.
+- [ ] Persist selected scopes with versions/checksums, cursor/checkpoint, resumability,
+  pagination, deduplication and bounded retries/backoff. No routine extraction/graph pass.
+- [ ] Reconcile changes/deletion/access for rarely queried resources too. Reject stale
+  overwrites and partial/user-filtered replacements; missing search hits do not prove deletion.
+- [ ] Answer live without waiting for safe background refresh. Avoid unchanged embeddings;
+  access-only changes must still revoke derived/history/cache visibility.
+- [ ] Prove mode/scope removal, expiry/denial, outages/rate limits, malformed/partial
+  payloads, duplicate/out-of-order updates, missed cycles and dependency reauthorization.
+
+Acceptance has separate live and sync gates; a single API call is insufficient. Live Only
+creates no shared index records. Live + Sync persists selected records through restart
+and safe update recovery. Dated fallback requires valid access; cached status is never
+presented as newly live-confirmed. Deliver necessary source checks without full F2 design.
+Output: staged accepted source lifecycles for the four planned systems. Real connector/model acceptance needs its separately
+authorized access/budget; this plan does not connect accounts or run imports.
+
+## 9. RF5 — Cross-source company journey and light organization
+
+Status: **planned**. Use complementary accepted sources by employee value/access,
+for example Jira + OneDrive/SharePoint, after their RF4 lifecycle gates. Additional
+systems beyond RF4's four planned sources remain separately selected.
+
+- [ ] Reuse accepted evidence/live/sync contracts, proving each participating source's own
+  permission, pagination, history and failure lifecycle.
+- [ ] Demonstrate a project with stored documents/records, current live state, original
+  references and reliable optional project/repository/document associations.
+- [ ] Answer why a date changed and where work stands now using retained reasons plus
+  live fields, without prebuilt relationships or automatic persistence of AI conclusions.
+- [ ] Support dated/historical questions without substituting today's result for missing
+  history. Explain partial coverage and unresolved material disagreements.
+- [ ] Keep graph exploration optional and existing graph/review/history behavior usable.
+
+Acceptance: independently reviewed coverage/citations for each question part, no guessed
+identity joins, no all-source default, and honest partial results during a source outage.
+Output: complete company-repository/assistant journey with measured cost/latency. Advanced
+GraphRAG is a later experiment only if it adds value over the accepted hybrid baseline.
+
+## 10. RF6 — Core release and separately reviewed rollout
+
+Status: **planned; cross-cutting preparation, no deployment authorization**.
+
+- [ ] Agree corpus/questions, source scopes, concurrency, quality/freshness thresholds,
+  p50/p95 latency and indexing/query cost targets. Employee count is not concurrency.
+- [ ] Measure embeddings, planning, answers/verification and source tools separately;
+  test interactive workload during sync and actual quotas. More workers do not create quota.
+- [ ] Deliver adequate production sign-in/session and source access before real employee
+  use; preserve isolation/revocation on all surfaces. Detailed groups/Space delegation is later.
+- [ ] Prepare backup/restore, retention/deletion decisions, secrets, redacted diagnostics,
+  health/recovery and actual build/schema inventory. Resolve known main inference-accounting
+  mismatch explicitly; never create a cloned USD 10 ledger to enable main paid calls.
+- [ ] Prepare the RF cutover candidate with compatible migrations including 0012 if
+  required. Reuse safety procedures in MAIN_DATA_ROLLOUT.md, not its obsolete 0011-only
+  enrichment acceptance sequence. No destructive rewrite of retained data/migrations.
+- [ ] Freeze actual-data writers; back up DB and originals together; restore/rehearse
+  separately; compare citation/history/review fingerprints and test backfill/rollback.
+  Decide how post-snapshot writes are preserved before any restoration is authorized.
+- [ ] Present concrete local/main rollout separately. AWS hosting also needs Python CDK,
+  current regional costs, HTTPS/network/security review and explicit deployment approval.
+
+Completion requires relevant deterministic and separately authorized held-out/live evidence,
+actual recovery checks and release security. User visual/localization acceptance remains
+separate. English UI exists; Arabic/English retrieval quality is cross-cutting and full
+Arabic/RTL release coverage remains explicit. No production readiness is claimed now.
+
+## 11. Deferred capabilities and retained requirements
+
+| Previous capability / ID | Treatment |
 | --- | --- |
-| M0–M3.1 completed checklists | Preserved verbatim below; new requirements do not reset progress |
-| M3.2A | Completed findings retained; no repeated pilot implied |
-| M3.2B | F1, split into reviewable readiness/repair/reprocessing slices |
-| M3.3 / M3.4 | R1 / R2; graph capability preserved and measured |
-| M4.1 / M4.2 / M4.3 | C1 / C2 / R3 and W1; live-first routing is not only an empty-KB fallback |
-| M4.4 | C3 Confluence then C4 GitLab committed; Slack retained below |
-| M5 / M6 | H1 / H2; production auth/security start early, deployment still requires approval |
-| M7 last | L1 cross-cutting evaluation/localization; no false claim of existing Arabic support |
-| New native Hub and Spaces | F2, K1 and S1; full capabilities, not merely renamed generated Wiki |
-| Extensive new conflict workflows | D1 deferred; essential safety and existing useful functionality retained |
+| F2 detailed groups/delegation/Space grants | Deferred design; current boundaries and minimum RF4/RF6 security remain mandatory |
+| K1 rich native Knowledge Hub | Later complete author/editor/maintainer journeys; ingestion does not wait for it |
+| S1 managed Spaces | Later workspace; metadata grouping can exist independently |
+| R2 advanced multi-hop GraphRAG | Optional later measured benefit; keep current explorer |
+| D1 conflict/delegated verification | Deferred; useful reviews/evidence and answer disagreement safety retained |
+| W1 research/reports, W2 actions/agents | Later requested scope; no writes/agent-per-source infrastructure now |
+| L1 full Arabic/RTL | Retained; bilingual retrieval/answers evaluated in RF3 |
+| Saved graph layouts, private Slack/DMs, onboarding | Retained extension backlog, not current authorization |
+| OCR/image interpretation/conversion services | Upstream/outside core text contract |
+| Archival export/legal retention and model training | Illustrative future uses, not newly requested features |
 
-Retained extension backlog (not implicitly authorized or deleted): selected public
-Slack channels/readable replies with verified membership; named saved graph views/layouts
-that store view state without copying knowledge; SharePoint/OneDrive; OCR/images/Excel;
-private Slack/DMs; customer onboarding. Existing explicit source/data authorizations
-remain valid within their scope; additional access needs its own authorization. No new
-dates or feature removal are inferred from this order.
+The [prior scope](reference/pre_restructure_2026_11_14/PROJECT_SCOPE.md) and
+[prior roadmap](reference/pre_restructure_2026_11_14/IMPLEMENTATION_PLAN.md) retain detailed
+later requirements. Do not implement their future editor/permissions/conflict schema now.
 
-## Recommended next development task — when explicitly requested
+## 12. Legacy mapping and next task
 
-**Review the prepared main-data rollout.** F1.1/F1.2, the conversational increment
-and F1.3 are implemented locally; F1.3 has isolated acceptance and a bounded Sonnet
-probe. The original main stack has not been changed by this work. Resolve the
-observed main API/worker budget mismatch in the concrete rollout review; the proposed
-first cutover keeps inference disabled instead of creating another test allowance.
-F2 remains the next implementation milestone after the separately approved rollout.
+| Earlier work/sequence | Active disposition |
+| --- | --- |
+| M0–M3.1 | Completed record below; no repeated implementation |
+| M3.2A/T1 | Historical evidence and corpus/guard; no renewed paid allowance |
+| F1.1/F1.2/F1.3/Lantern | Existing foundation/optional safety; RF1 changes the default |
+| R1/M3.3 | RF2/RF3 evidence and source-only relevance |
+| R3/M4.3 | RF2/RF3 catalog/coordinator; RF5 real combined proof |
+| C1/C2/M4.1/M4.2 | RF4 live + sync lifecycle; source choice reopened |
+| C3/C4/M4.4 and other sources | RF5 and later accepted adapters; no mandatory Confluence-before-document-source order |
+| F2 → K1 → S1 before retrieval | Superseded ordering; detailed capabilities deferred |
+| Mandatory GraphRAG before connectors | Superseded; graph optional and measured |
+| H1/H2/M5/M6 | RF6 release gates plus separately approved hosting |
 
-F1 main-data rollout remains a separate tracked step. The main database is observed
-at migration 0010; rehearse its actual snapshot and migration 0011, with reviewed
-backups and rollback, before cutover. Historical isolated F1.1 evidence remains in
-[F1.1 results](F1_1_RESULTS.md); current procedures are in
-[main-data rollout review](MAIN_DATA_ROLLOUT.md).
-
-Do not rerun completed M3.1 handoff, M3.2A or F1.1 implementation merely because an old
-paragraph said to do so. Later slices require a new implementation request.
+**RF1/RF2 are complete locally. RF3 deterministic checks pass, but two real-model
+grounding failures remain open. Next: bounded RF3 quality repair/regression; RF4 planning
+was requested on 2026-11-15 for Jira, Confluence, OneDrive and SharePoint, with exact
+account/resource scopes still to choose.** See the
+[RF4 planning draft](RF4_PLAN.md). Main rollout and connector implementation remain
+separately scoped.
+Do not resume old extraction repair, repeat completed work, execute the old main cutover,
+run a paid comparison or start F2 because an archived handoff says so. Documentation
+verification does not authorize implementation automatically.
 
 ## Historical completed milestones and validation
 
-The following original M0–M3.1 record is retained verbatim. Its dated wording and
-old delivery assumptions describe past work; active order and requirements are above.
-Outstanding M2/M3 quality acceptance is carried into R1 and cross-cutting acceptance.
+Original M0–M3.1 records follow. Their old assumptions/checkmarks describe past work,
+not active requirements or RF completion. Independent quality gaps carry into RF3/RF6.
 
 ## M0 — Prepare the project
 - [x] Read both original specification files completely.

@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-14",
+  "scope": "RF1 confirmed AI preview follow-up; RF2/main rollout excluded",
+  "provider": "bedrock",
+  "answer_model": "us.anthropic.claude-sonnet-4-6",
+  "policy": "grounded-v7-whitespace-anchors",
+  "api_tests": {
+    "passed": 215,
+    "failed": 0
+  },
+  "initial_rf1_browser_baseline": 29,
+  "browser_read_only": {
+    "url": "http://127.0.0.1:5189/chat/2c85e2b4-cef1-4793-8192-4bbf67e884a8",
+    "statements": 3,
+    "provider": "bedrock",
+    "citation_opened": true,
+    "mobile_overflow": false,
+    "mutationRequests": 0,
+    "pageErrors": []
+  },
+  "source_fingerprints_unchanged": true,
+  "other_previous_container_ids_unchanged": 42,
+  "local_ledger_copies": 0,
+  "budget_after": {
+    "id": "northstar-sonnet-2026-11-12",
+    "limit_usd": "10.0000000000",
+    "spent_usd": "3.9013607600",
+    "reserved_usd": "0.0566168200",
+    "paused": false
+  },
+  "additional_spend_usd": "0.1808961000",
+  "probes": [
+    {
+      "status": "insufficient_evidence",
+      "latency_seconds": 29.436,
+      "call_operations": [
+        "answer",
+        "answer"
+      ],
+      "actual_usd": "0.0882915000"
+    },
+    {
+      "status": "insufficient_evidence",
+      "latency_seconds": 13.733,
+      "call_operations": [
+        "answer",
+        "answer"
+      ],
+      "actual_usd": "0.0549780000"
+    },
+    {
+      "status": "supported_answer",
+      "latency_seconds": 9.058,
+      "call_operations": [
+        "answer",
+        "answer_verification"
+      ],
+      "actual_usd": "0.0376266000"
+    }
+  ],
+  "final_answer": {
+    "supported_statements": 3,
+    "exact_citations": 4,
+    "cited_passages": 3,
+    "source_entities": 0,
+    "source_only": true
+  },
+  "running_source_hashes": {
+    "apps/api/app/contracts.py": "49c1707d45d214ffb4ebee8de0cd5b2455443ebb0fa056e8b30fc0057cd54b0d",
+    "apps/api/app/providers.py": "7cb85d48768aa0aa16adcc6875686bb069964160a59a041d0b490d92360e5362",
+    "apps/api/app/inference_budget.py": "1c2c06572e77ef68b3a4a4bc747ddbb7ee3a5d9139e0e7fcd5833eb460077b6b",
+    "apps/api/app/model_limits.py": "521199b3d33a9a859d91e6fc29ba227a0c2aed09e9462d3a5b48f30e407f825f",
+    "apps/api/app/main.py": "2667186de0d8d81a67dd662840d7ec7bc7471337bae46f218ae5009358c48949",
+    "scripts/rf1_ai_smoke.py": "1faa7bd5bb42c6494de9beff281b67a0c208c3de9765af89c967a5d4e0e129f1"
+  },
+  "private_evidence": ".local/rf1-ai/ (ignored; raw outputs and source text excluded)"
+}

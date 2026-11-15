@@ -2,7 +2,7 @@ name: Validate Linkmind
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'checkpoint/**', 'rf5/**']
   pull_request:
   workflow_dispatch:
 
