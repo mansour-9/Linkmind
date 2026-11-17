@@ -47,6 +47,27 @@ export function api(token: string) {
     return response;
   }
   return {
+    async streamAnswer<T>(id:string,body:unknown,onActivity:(phase:string)=>void):Promise<T> {
+      const response=await request('/conversations/'+id+'/answers/stream',{method:'POST',body:JSON.stringify(body)});
+      if(!response.body)throw new Error('Streaming is unavailable. Check the conversation before retrying.');
+      const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='',answer:T|undefined;
+      try {
+        while(true){const {done,value}=await reader.read();buffer+=decoder.decode(value,{stream:!done});
+          let boundary:number;
+          while((boundary=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);
+            const kind=block.split('\n').find(line=>line.startsWith('event: '))?.slice(7);
+            const raw=block.split('\n').find(line=>line.startsWith('data: '))?.slice(6);
+            if(!raw)continue;const data=JSON.parse(raw);
+            if(kind==='activity')onActivity(data.phase);
+            if(kind==='error')throw new Error(data.message);
+            if(kind==='answer')answer=data;
+          }
+          if(done)break;
+        }
+      } finally {reader.releaseLock();}
+      if(!answer)throw new Error('The connection ended before an answer arrived. Check the conversation before retrying.');
+      return answer;
+    },
     json: <T,>(path: string, init?: RequestInit): Promise<T> => request(path, init).then((r) => r.json()),
     async search(params: string): Promise<{ passages: Passage[]; semantic_status: string }> {
       const response = await request("/search?" + params);

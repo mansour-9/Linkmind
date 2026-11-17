@@ -6,6 +6,7 @@ from uuid import UUID
 from app.db import sql
 from app.retrieval import ACCESS
 from app.source_access import CATALOG_VERSION
+from app.source_policy import knowledge_clause
 
 STOP_WORDS = set("a an the is are there any have has do does i me we you can could please find locate look looking for show list file files document documents pdf source sources called call named name mention mentions mentioning about contain contains what which where who tell this that it one use second first third and of in on to with عندك فيه في وين ابحث دور ملف ملفات مستند عن هذا هذه هو هي هل ممكن ابي ابغى وش ايش ما اسم اسمه يسمى الاول الثاني الثالث".split())
 
@@ -40,7 +41,7 @@ def candidates(conn,viewer,query,document_ids=None,limit=6):
     patterns=list(dict.fromkeys("%"+token[i:i+2]+"%" for token in needles
         for i in range(len(token)-1)))[:100]
     params={**viewer.access(),"patterns":patterns,"query":"%"+" ".join(needles)+"%"}
-    where=ACCESS+" AND "+CATALOG_VERSION
+    where=ACCESS+" AND "+CATALOG_VERSION+knowledge_clause()
     if document_ids:
         where+=" AND d.id=ANY(:scope)"
         params["scope"]=[UUID(str(id)) for id in document_ids]
@@ -73,7 +74,7 @@ def identity_choices(conn,viewer,query):
             AND i.value<>'' AND position(lower(i.value) in lower(:query))>0) AS identified
         FROM live_entities e JOIN document_versions v ON v.id=e.version_id
         JOIN documents d ON d.id=v.document_id
-        WHERE {ACCESS} AND d.current_version_id=v.id AND e.kind IN ('person','project','team','system')
+        WHERE {ACCESS}{knowledge_clause()} AND d.current_version_id=v.id AND e.kind IN ('person','project','team','system')
         AND lower(e.name) LIKE ANY(:names) ORDER BY e.name,v.filename,e.canonical_id LIMIT 100""",
         **viewer.access(),query=query,names=["%"+word+"%" for word in needles]).mappings().all()
     if any(row.identified for row in rows):

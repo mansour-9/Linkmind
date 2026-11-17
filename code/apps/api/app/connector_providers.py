@@ -1,6 +1,7 @@
 """Source-specific, read-only native adapters and optional Atlassian MCP reads."""
 import json
 import re
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html.parser import HTMLParser
@@ -21,6 +22,7 @@ class ConnectionSpec(BaseModel):
     scope_id: str = Field(min_length=1, max_length=150, pattern=r'^[A-Za-z0-9!_,.-]+$')
     drive_id: str = Field(default='', max_length=200, pattern=r'^[A-Za-z0-9!_,.-]*$')
     cloud_id: str = Field(default='', max_length=100, pattern=r'^[A-Za-z0-9-]*$')
+    space_key: str = Field(default='',max_length=150,pattern=r'^[A-Za-z0-9_-]*$')
     transport: Literal['native', 'atlassian_mcp'] = 'native'
     auth_method: Literal['server','oauth'] = 'server'
     credential_ref: str = Field(default='RF4_UNCONFIGURED',pattern=r'^RF4_[A-Z0-9_]{1,100}$')
@@ -80,6 +82,7 @@ class Record:
     content: bytes
     payload: dict
     fields: list
+    display_title: str = ''
 
 
 def timestamp(value):
@@ -125,7 +128,7 @@ class Provider:
 
     def authorize(self, native_id):
         if self.spec.kind in {'jira', 'confluence'}:
-            return self.get(native_id)
+            return self.get(native_id, mcp=self.spec.transport == 'atlassian_mcp')
         else:
             if not re.fullmatch(r'[A-Za-z0-9!_,.-]{1,200}', native_id): raise SourceFailure('invalid_resource_id')
             data = self.client.get(self.base + f'/drives/{quote(self.spec.drive_id)}/items/{quote(native_id)}')
@@ -134,21 +137,142 @@ class Provider:
             self.in_folder(data)
             return data
 
+    def mcp_client(self):
+        # Reuse only protocol negotiation inside this bounded request. Every resource
+        # access and reauthorization still performs a fresh source read.
+        key = ('atlassian', self.spec.mcp_credential_ref,threading.get_ident())
+        client = self.limits.mcp_sessions.get(key)
+        if client is None:
+            client = AtlassianMCP(self.spec.mcp_credential_ref, self.limits)
+            self.limits.mcp_sessions[key] = client
+        return client
+
+    def search(self,query,limit=4):
+        """Bounded, server-scoped discovery. Search snippets are never answer evidence."""
+        tokens=re.findall(r'[^\W_]+',query,re.UNICODE)[:8]
+        if not tokens:return []
+        term=' '.join(tokens)[:150]
+        s=self.spec;limit=max(1,min(limit,6))
+        if s.kind=='jira':
+            # A project-qualified question should search its issues, not require its
+            # project name to occur inside every issue's prose.
+            words=[t for t in tokens if t.upper()!=s.scope_id]
+            jql=f'project = "{s.scope_id}"'
+            exact=re.search(r'\b'+re.escape(s.scope_id)+r'-\d+\b',query,re.I)
+            if exact:jql+=' AND key = '+json.dumps(exact[0].upper())
+            elif words:jql+=' AND text ~ '+json.dumps(' '.join(words))
+            jql+=' ORDER BY updated DESC'
+            if s.transport=='atlassian_mcp':
+                data=self.mcp_record(self.mcp_client().call('searchJiraIssuesUsingJql',dict(cloudId=s.cloud_id,jql=jql,maxResults=limit,view='compact')))
+            else:data=self.client.get(self.base+'/rest/api/3/search/jql',dict(jql=jql,maxResults=limit,fields='summary,project'))
+            items=data.get('issues')
+            if not isinstance(items,list):raise SourceFailure('malformed_source')
+            hits=[]
+            for item in items[:limit]:
+                key=item.get('key','')
+                if not re.fullmatch(re.escape(s.scope_id)+r'-\d+',key):raise SourceFailure('outside_scope')
+                hits.append(dict(native_id=key,title=item.get('fields',{}).get('summary',key)))
+            return hits
+        if s.kind=='confluence':
+            # CQL space is a key, whereas v2 content authorization verifies its ID.
+            key=s.space_key or (s.scope_id if not s.scope_id.isdigit() else '')
+            if not key:raise SourceFailure('search_setup_required')
+            from app.chat_retrieval import purpose,rank_hits
+            kind=purpose(query)
+            anchors=re.findall(r'\b[A-Z][A-Z0-9_]{1,30}\b',query)
+            hints={'overview':['scope','overview','purpose'], 'ownership':['ownership','scope'],
+                   'directory':['company and teams','directory','operating departments'],
+                   'policy':['retention','policy','standard'], 'release':['release','readiness']}[kind]
+            topic=' AND title ~ '+json.dumps(anchors[0]) if anchors and kind not in {'directory','policy'} else ''
+            specific='('+ ' OR '.join('title ~ '+json.dumps(h) for h in hints)+')'+topic
+            if kind=='policy':
+                topical=[t for t in tokens if t.casefold() not in {'approved','policy','the','current','what','is','for','should','be','days','or','30','90'}]
+                if topical:
+                    specific='('+ ' OR '.join('title ~ '+json.dumps(t) for t in topical[:4])+')'
+            def find(expression):
+                cql='space = '+json.dumps(key)+' AND type = page AND '+expression
+                if s.transport=='atlassian_mcp':
+                    client=self.mcp_client()
+                    name='searchConfluence' if 'searchConfluence' in client.tools else 'searchConfluenceUsingCql'
+                    return self.mcp_record(client.call(name,dict(cloudId=s.cloud_id,cql=cql,limit=limit)))
+                return self.client.get(self.base+'/wiki/rest/api/search',dict(cql=cql,limit=limit))
+            hits={}
+            # Title intent is only a ranking hint; source bodies must establish facts.
+            for expression in [specific,'title ~ '+json.dumps(term),'text ~ '+json.dumps(term)]:
+                data=find(expression);items=data.get('results')
+                if not isinstance(items,list):raise SourceFailure('malformed_source')
+                for item in items[:limit]:
+                    content=item.get('content',item);native=str(content.get('id',''))
+                    if not native.isdigit():raise SourceFailure('malformed_source')
+                    hits[native]=dict(native_id=native,title=content.get('title','Page'))
+                if len(hits)>=2:break
+            return rank_hits(query,list(hits.values()))[:limit]
+        if s.kind in {'onedrive','sharepoint'}:
+            # https://learn.microsoft.com/graph/api/driveitem-search?view=graph-rest-1.0
+            # Discover only within the configured folder, then verify every hit.
+            literal=quote(term.replace("'", "''"),safe='')
+            url=self.base+f"/drives/{quote(s.drive_id,safe='')}/items/{quote(s.scope_id,safe='')}/search(q='{literal}')"
+            data=self.client.get(url,{'$top':limit})
+            if not isinstance(data.get('value'),list):raise SourceFailure('malformed_source')
+            hits=[]
+            for item in data['value'][:limit]:
+                if 'remoteItem' in item or 'file' not in item:continue
+                if PurePosixPath(item.get('name','')).suffix.lower() not in {'.pdf','.docx','.md','.txt'}:continue
+                self.in_folder(item)
+                native=str(item.get('id',''))
+                if not re.fullmatch(r'[A-Za-z0-9!_,.-]{1,200}',native):raise SourceFailure('malformed_source')
+                hits.append(dict(native_id=native,title=item.get('name','Document')))
+            return hits
+        # Microsoft/custom search must have an explicit scoped implementation;
+        # never fall back to an unscoped drive or generic MCP execution tool.
+        raise SourceFailure('search_not_supported')
+
+    def project_snapshot(self):
+        """Verify one configured project via a visible native issue, without a model.
+
+        Slim Rovo exposes issue search but no dedicated project-list tool. Never
+        replace it with generic execution or expose unconfigured account projects.
+        """
+        if self.spec.kind!='jira':raise SourceFailure('search_not_supported')
+        args=dict(cloudId=self.spec.cloud_id,jql=f'project = "{self.spec.scope_id}" ORDER BY updated DESC',maxResults=1,
+            fields=['project','summary','status','updated'],view='full')
+        if self.spec.transport=='atlassian_mcp':data=self.mcp_record(self.mcp_client().call('searchJiraIssuesUsingJql',args))
+        else:data=self.client.get(self.base+'/rest/api/3/search/jql',dict(jql=args['jql'],maxResults=1,fields='project,summary,status,updated'))
+        items=data.get('issues')
+        if not isinstance(items,list):raise SourceFailure('malformed_source')
+        if not items:return None
+        return self.jira(items[0])
+
+    @staticmethod
+    def mcp_record(value):
+        # Current Rovo tools wrap originals in data; older tools returned them flat.
+        data = value.get('data', value)
+        if not isinstance(data, dict): raise SourceFailure('malformed_source')
+        return data
+
     def get(self, native_id, *, mcp=False):
         if not re.fullmatch(r'[A-Za-z0-9!_,.-]{1,200}', native_id): raise SourceFailure('invalid_resource_id')
         s = self.spec
         if s.kind == 'jira':
-            data = (AtlassianMCP(s.mcp_credential_ref, self.limits).call('getJiraIssue',
-                {'cloudId': s.cloud_id, 'issueIdOrKey': native_id}) if mcp and s.transport == 'atlassian_mcp'
+            raw = (self.mcp_client().call('getJiraIssue',
+                {'cloudId': s.cloud_id, 'issueIdOrKey': native_id, 'view': 'full'}) if mcp and s.transport == 'atlassian_mcp'
                 else self.client.get(self.base + '/rest/api/3/issue/' + quote(native_id), {'fields': 'summary,description,status,assignee,updated,project'}))
+            data = self.mcp_record(raw) if mcp and s.transport == 'atlassian_mcp' else raw
             record=self.jira(data)
+            record.payload=raw
             if native_id not in {record.native_id,data.get('key')}:raise SourceFailure('outside_scope')
             return record
         if s.kind == 'confluence':
-            data = (AtlassianMCP(s.mcp_credential_ref, self.limits).call('getConfluencePage',
-                {'cloudId': s.cloud_id, 'pageId': native_id, 'contentFormat': 'storage'}) if mcp and s.transport == 'atlassian_mcp'
-                else self.client.get(self.base + '/wiki/api/v2/pages/' + quote(native_id), {'body-format': 'storage'}))
+            if mcp and s.transport == 'atlassian_mcp':
+                client = self.mcp_client()
+                raw = (client.call('getConfluenceContent', {'cloudId': s.cloud_id, 'content_id': native_id,
+                    'detail': 'full', 'content_format': 'html'}) if 'getConfluenceContent' in client.tools else
+                    client.call('getConfluencePage', {'cloudId': s.cloud_id, 'pageId': native_id, 'contentFormat': 'html'}))
+                data = self.mcp_record(raw)
+            else:
+                raw = data = self.client.get(self.base + '/wiki/api/v2/pages/' + quote(native_id), {'body-format': 'storage'})
             record=self.confluence(data)
+            record.payload=raw
             if record.native_id!=native_id:raise SourceFailure('outside_scope')
             return record
         data = self.client.get(self.base + f'/drives/{quote(s.drive_id)}/items/{quote(native_id)}')
@@ -175,23 +299,27 @@ class Provider:
             dict(field='status', value=fields.get('status', {}).get('name')),
             dict(field='assignee', value=(fields.get('assignee') or {}).get('displayName')),
             dict(field='description', value=adf_text(fields.get('description')))]
+        if fields.get('project',{}).get('name'):
+            values.append(dict(field='project',value={k:fields['project'][k] for k in ('id','key','name') if k in fields['project']}))
         text = '\n'.join(v['field'] + ': ' + json.dumps(v['value'], ensure_ascii=False) for v in values)
         updated = timestamp(fields.get('updated'))
         return Record(str(data['id']), fields['updated'], updated, self.spec.site_url + '/browse/' + key,
-            key + '.md', text.encode(), data, values)
+            key + '.md', text.encode(), data, values,fields.get('summary') or key)
 
     def confluence(self, data):
         if str(data.get('spaceId')) != self.spec.scope_id: raise SourceFailure('outside_scope')
         html = data.get('body', {}).get('storage', {}).get('value')
+        if html is None and data.get('body', {}).get('format') == 'html':
+            html = data['body'].get('value')
         if not isinstance(html, str): raise SourceFailure('incomplete_record')
         parser = TextHTML(); parser.feed(html)
         text = ''.join(parser.parts).strip()
         if not text: raise SourceFailure('no_readable_text')
-        version = data.get('version', {})
+        version = data.get('version') or data.get('metadata', {}).get('version', {})
         updated = timestamp(version.get('createdAt'))
         id = str(data['id'])
         return Record(id, str(version['number']), updated, self.spec.site_url + '/wiki/pages/viewpage.action?pageId=' + quote(id),
-            id + '.md', text.encode(), data, [])
+            id + '.md', text.encode(), data, [],data.get('title') or '')
 
     def graph(self, data):
         if 'file' not in data: raise SourceFailure('unsupported_resource')

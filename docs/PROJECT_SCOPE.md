@@ -1,5 +1,11 @@
 # Linkmind - Product Scope and Decisions
 
+2026-11-17 latest delivery: New ordinary chat uses automatic permitted MCP and Documents retrieval; source-mode selection is removed. Current workspace old content is reset with verified backup and archived chats. AsterBridge Confluence company/customer/department/partner context is expanded. Graph/Knowledge building jobs remain deferred. See [automatic chat results](AUTO_CHAT_RESULTS.md). Earlier dated requirements below are historical where superseded.
+
+2026-11-17 clarified target: organization admins configure persistent upstream connections; employees authenticate only to Linkmind and use explicitly granted company sources. Connection credentials must outlive employee sessions through provider-supported service identities/automatic token acquisition. This replaces the proposed per-employee upstream sign-in interpretation. Current owner-bound demo implementation is not production group authorization. See [organization-managed connections](ORG_MANAGED_CONNECTIONS.md).
+
+2026-11-17 user-approved source behavior: Live Only answers must use authorized live MCP evidence and never silently fall back to local/demo/uploaded knowledge. Stored knowledge and explicit Combined remain legitimate supported modes. Preserve existing files and evidence. The confirmed old fixture ingestion and project-count routing problems are addressed by [the source-policy repair](SOURCE_POLICY_REPAIR.md).
+
 Latest scope, 2026-11-15: the user authorized publishing the completed source checkpoint
 and starting new RF work on a separate branch. RF5's explicit cross-source local
 question foundation is implemented at 5196, with 349 API / 43 browser / build and final

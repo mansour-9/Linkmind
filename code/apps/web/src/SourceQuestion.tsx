@@ -50,7 +50,7 @@ export default function SourceQuestion(){
  {result&&access.isPending&&<Feedback>Checking source access…</Feedback>}
  {result&&(access.isError||(access.isSuccess&&!access.data.allowed))&&<Feedback error>This result is hidden because source access, revisions or connection settings could not be confirmed. Ask again for current evidence.</Feedback>}
  {visible&&<section className="source-question-result" aria-label="Cross-source result"><h2 dir="auto">{asked}</h2>
- <p className="answer-provider">{result.provider==='bedrock'?'Sonnet · verified source answer':'Demo · verbatim excerpts and actual source fields'}</p>
+ <p className="answer-provider">{result.provider==='bedrock'?(result.statements.length?'Sonnet · cited source answer':'Sonnet · answer not verified'):'Demo · verbatim excerpts and actual source fields'}</p>
  {result.provider!=='bedrock'&&<Feedback>Demo mode shows retrieved evidence. AI synthesis quality has not been evaluated by this result.</Feedback>}
  {result.message&&<Feedback>{result.message}</Feedback>}
  {(result.partial||result.insufficient_evidence)&&<Feedback>The selected evidence does not establish a complete answer to every part. Source failures and partial context are shown below.</Feedback>}

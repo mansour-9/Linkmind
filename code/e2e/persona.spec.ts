@@ -30,5 +30,5 @@ test("Linkmind introduces itself naturally and gives only the help requested", a
     await page.screenshot({ path: `results/screens/linkmind-persona-${width}.png`, fullPage: true });
   }
   const upload = await send("how do I upload a file?");
-  await expect(upload).toContainText("Add documents");
+  await expect(upload).toContainText("Open Documents and choose Add document");
 });

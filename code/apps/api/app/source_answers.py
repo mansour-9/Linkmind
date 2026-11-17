@@ -15,7 +15,7 @@ from app.query_language import historical_question,operational_question,normaliz
 from app.retrieval_coordinator import QuestionRetriever
 from app.inference_budget import BudgetStopped
 
-POLICY='source-answer-v1-exact-passages-and-typed-fields'
+POLICY='source-answer-v2-resolved-fields-partial-support'
 
 
 class LiveResource(BaseModel):
@@ -95,7 +95,7 @@ def stored_sources(passages):
     result=[];seen=set()
     with engine.connect() as conn:
         revisions={str(r.version_id):r for r in sql(conn,'''SELECT DISTINCT ON(v.id) v.id AS version_id,v.created_at AS received_at,
-            r.source_revision,r.original_url,r.source_updated_at,r.observed_at,r.fields,r.payload
+            v.dataset_id,r.source_revision,r.original_url,r.source_updated_at,r.observed_at,r.fields,r.payload
             FROM document_versions v LEFT JOIN connected_revisions r ON r.version_id=v.id
             WHERE v.id=ANY(:ids) ORDER BY v.id,r.observed_at DESC NULLS LAST''',ids=[UUID(str(p['version_id'])) for p in passages]).mappings()} if passages else {}
     for p in passages:
@@ -110,7 +110,7 @@ def stored_sources(passages):
         item.update(origin='stored',name=p['filename'],document_id=str(p['document_id']),
             revision_role=p.get('revision_role','current'),source_revision=external.source_revision if external else str(p['version_id']),
             original_url=external.original_url if external else None,source_updated_at=external.source_updated_at.isoformat() if external else None,
-            observed_at=(external.observed_at if external else version.received_at).isoformat(),synthetic=bool(external and external.payload.get('synthetic')),locator=p.get('locator',{}))
+            observed_at=(external.observed_at if external else version.received_at).isoformat(),synthetic=bool(version.dataset_id or (external and external.payload.get('synthetic'))),dataset_id=version.dataset_id,locator=p.get('locator',{}))
         result.append(item)
     return result
 

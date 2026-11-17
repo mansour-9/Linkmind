@@ -1,5 +1,20 @@
 # RF5 — Local cross-source question journey
 
+2026-11-16 ordinary main-chat follow-up: [main-chat delivery](MAIN_CHAT_RESULTS.md)
+supersedes the earlier manual source-selection journey as the primary UX. Automatic
+stored + Jira/Confluence routing, company/onboarding sources, context follow-ups and
+partial per-statement support are delivered locally at 5197. 365 API passed/2 skipped,
+frontend build, four real chat questions and live/responsive checks completed. Broader
+Arabic/held-out acceptance and production auth remain open. Preserve the previous
+citation-failed trials as history, not the current source-answer outcome.
+
+2026-11-16 real-source follow-up: [the clean 5197 trial](REAL_MCP_TRIAL_RESULTS.md)
+retrieved actual Jira/Confluence evidence successfully, but all four Sonnet questions
+were rejected at citation validation before semantic verification. This document's
+349 API / 43 browser results describe the earlier mock foundation only. The new
+connector changes passed 355 API (2 skipped) and frontend build; real AI acceptance
+remains open. No paid case is authorized for automatic repetition.
+
 Implemented on `rf5/cross-source-journey`, based on the published
 `checkpoint/rf1-rf4-local` source checkpoint. The isolated preview is
 [Ask across sources](http://127.0.0.1:5196/ask/sources), Compose project

@@ -7,6 +7,10 @@ def intent(question):
     text = " ".join(text.split())
     if text in {"hi", "hello", "hey", "good morning", "good evening", "مرحبا", "مرحباً", "اهلا", "السلام عليكم"}:
         return "greeting"
+    if text in {"who are you", "what is your name", "what's your name", "are you chatgpt", "مين انت", "من انت", "من أنت", "مين أنت", "وش اسمك", "انت مين", "كيف ارفع ملف", "كيف أرفع ملف"}:
+        return "help"
+    if text in {"how are you", "كيفك", "كيفيك", "كيف حالك", "ارحب", "أرحب", "هلا", "هلا والله"}:
+        return "greeting"
     if text in {"thanks","thank you","thank u","thx","شكرا","شكرًا","شكراً","يعطيك العافية"}:
         return "social"
     if (text in {"who are you","what is your name","what's your name","are you chatgpt","can you help me","can you help","help me",

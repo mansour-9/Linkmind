@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from io import BytesIO
 from pathlib import Path
@@ -13,9 +14,19 @@ from app.parsers import parse_document
 from app.processing import mock_extract,overlap
 from app.db import engine,sql
 
-BASE="http://api:8000/api/v1"
+BASE=os.environ.get("LINKMIND_TEST_API_URL","http://api:8000/api/v1")
+_checked_target=None
+
+def verify_target():
+    global _checked_target
+    if _checked_target==BASE:return
+    if os.getenv("LINKMIND_TEST_ENVIRONMENT")!="1":raise RuntimeError("Mutating integration tests require an explicitly isolated test environment.")
+    with urlopen(Request(BASE+"/test-environment",headers={"Authorization":"Bearer demo-amal"}),timeout=5) as response:state=json.load(response)
+    if state!={"isolated":True,"provider":"mock","connector_network":False}:raise RuntimeError("Refusing to mutate a non-isolated API target.")
+    _checked_target=BASE
 ROOT=Path("/app/fixtures/benchmark")
 def call(path,token="demo-amal",body=None,method=None):
+    verify_target()
     headers={"Authorization":"Bearer "+token}
     if isinstance(body,dict):
         headers["Content-Type"]="application/json"
@@ -26,6 +37,7 @@ def call(path,token="demo-amal",body=None,method=None):
     except HTTPError as r:
         return r.code,json.loads(r.read())
 def upload(name,token="demo-amal",visibility="team",revision=None,*,enrich=True):
+    verify_target()
     boundary=uuid4().hex
     content=(ROOT/(name+".md")).read_bytes()
     data=(f'--{boundary}\r\nContent-Disposition: form-data; name="visibility"\r\n\r\n{visibility}\r\n'

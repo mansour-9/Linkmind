@@ -3,6 +3,7 @@ import hashlib
 from contextlib import contextmanager
 from types import SimpleNamespace
 from uuid import UUID, uuid4
+from threading import RLock
 
 import pytest
 from fastapi import HTTPException
@@ -23,14 +24,16 @@ def workspace(monkeypatch):
         transaction = conn.begin()
 
         class TestEngine:
+            lock=RLock()
             @contextmanager
             def begin(self):
-                with conn.begin_nested():
-                    yield conn
+                with self.lock:
+                    with conn.begin_nested():
+                        yield conn
 
             @contextmanager
             def connect(self):
-                yield conn
+                with self.lock:yield conn
 
         for module in (main, processing, retrieval, conflict_detection):
             monkeypatch.setattr(module, "engine", TestEngine())

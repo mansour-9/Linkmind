@@ -1,7 +1,7 @@
 """Citations distinguish original passages from typed source fields."""
 from typing import Literal
 import json
-from pydantic import Field,JsonValue,model_validator
+from pydantic import Field,JsonValue,model_validator,PrivateAttr
 from app.contracts import Contract
 
 
@@ -29,6 +29,7 @@ class SourceStatement(Contract):
 class SourceAnswer(Contract):
     statements:list[SourceStatement]=Field(max_length=12)
     insufficient_evidence:bool
+    _validation:dict=PrivateAttr(default_factory=dict)
 
 
 class WireSourceReference(Contract):
@@ -63,3 +64,53 @@ class WireSourceAnswer(Contract):
                 references.append(data)
             statements.append(dict(text=statement.text,evidence=references))
         return SourceAnswer(statements=statements,insufficient_evidence=self.insufficient_evidence)
+
+
+class SourcePointer(Contract):
+    reference_id:str
+    quote:str|None
+    field:str|None
+
+
+class PointerStatement(Contract):
+    text:str
+    evidence:list[SourcePointer]
+
+
+class PointerAnswer(Contract):
+    """Model selects evidence; server resolves typed values from authorized originals."""
+    statements:list[PointerStatement]
+    insufficient_evidence:bool
+
+    def candidates(self,sources):
+        mapping={s['reference_id']:s for s in sources}
+        accepted=[];rejected=0
+        for statement in self.statements[:12]:
+            try:
+                references=[]
+                for pointer in statement.evidence:
+                    source=mapping.get(pointer.reference_id)
+                    if source is None:raise ValueError('Unknown source reference.')
+                    if pointer.field is not None:
+                        if source['kind']!='fields':raise ValueError('Invalid field pointer.')
+                        fields=[f for f in source['fields'] if f['field']==pointer.field]
+                        if len(fields)!=1:raise ValueError('Unknown field.')
+                        if pointer.quote is not None and (not isinstance(fields[0]['value'],str) or pointer.quote not in fields[0]['value']):
+                            raise ValueError('Invalid field quote.')
+                        references.append(dict(reference_id=pointer.reference_id,kind='field',field=pointer.field,value=fields[0]['value']))
+                    else:
+                        references.append(dict(reference_id=pointer.reference_id,kind='passage',quote=pointer.quote))
+                accepted.append(SourceStatement(text=statement.text,evidence=references))
+            except (ValueError,RecursionError):rejected+=1
+        return accepted,rejected
+
+
+class LinkedStatement(Contract):
+    text:str
+    source_ids:list[str]
+
+
+class LinkedAnswer(Contract):
+    statements:list[LinkedStatement]
+    insufficient_evidence:bool
+    followup_query:str

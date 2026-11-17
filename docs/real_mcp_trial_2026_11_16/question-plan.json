@@ -1,0 +1,70 @@
+[
+  {
+    "id": "live-A01",
+    "question": "Explain the ATLAS beta blocker, its revised target date, and the named delivery, implementation, and product acceptance owners using the selected live issue.",
+    "live_resources": [
+      {
+        "connection_id": "94f16ced-9cfd-4fcb-a677-5949e1bd720a",
+        "native_id": "ATLAS-16"
+      }
+    ],
+    "expected_terms": [
+      "November 27",
+      "Maya",
+      "Omar",
+      "Daniel"
+    ]
+  },
+  {
+    "id": "live-AR02",
+    "question": "من المسؤول حاليًا عن تنفيذ تكامل مصادقة HARBOR؟ وما دور عمر بعد نقل المسؤولية؟ اعتمد على السجل المباشر المحدد.",
+    "live_resources": [
+      {
+        "connection_id": "14b051ea-04f6-45d0-aa0f-89de637d82c7",
+        "native_id": "HARBOR-5"
+      }
+    ],
+    "expected_terms": [
+      "Leo",
+      "Omar"
+    ]
+  },
+  {
+    "id": "live-B05",
+    "question": "What does ADR 007 require for tenant identity, and does its approval prove that the ATLAS claims implementation is complete? Compare the selected live issue and Confluence page.",
+    "live_resources": [
+      {
+        "connection_id": "94f16ced-9cfd-4fcb-a677-5949e1bd720a",
+        "native_id": "ATLAS-4"
+      },
+      {
+        "connection_id": "e604e9fd-85a4-44db-8502-ff50f43e1174",
+        "native_id": "327699"
+      }
+    ],
+    "expected_terms": [
+      "tenant",
+      "audience",
+      "In Progress"
+    ]
+  },
+  {
+    "id": "live-B07",
+    "question": "Is the HARBOR partner pilot ready to launch, or only its webhook delivery subsystem? Explain the remaining authentication and business gates and conditional target from these live sources.",
+    "live_resources": [
+      {
+        "connection_id": "14b051ea-04f6-45d0-aa0f-89de637d82c7",
+        "native_id": "HARBOR-15"
+      },
+      {
+        "connection_id": "e604e9fd-85a4-44db-8502-ff50f43e1174",
+        "native_id": "229602"
+      }
+    ],
+    "expected_terms": [
+      "November 24",
+      "agreement",
+      "approval"
+    ]
+  }
+]

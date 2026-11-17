@@ -3,12 +3,19 @@ import json
 import os
 import re
 import time
+import hashlib
+from uuid import uuid4
+from threading import RLock
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
 import httpx
+from app import chat_trace
+
+_protocol_cache={}
+_protocol_lock=RLock()
 
 
 class SourceFailure(RuntimeError):
@@ -25,10 +32,16 @@ class ReadLimits:
     calls: int = 0
     received: int = 0
     started: float = field(default_factory=time.monotonic)
+    mcp_sessions: dict = field(default_factory=dict, repr=False)
+    lock: object = field(default_factory=RLock,repr=False)
 
     def check(self):
         if self.calls >= self.max_calls or time.monotonic() - self.started >= self.seconds:
             raise SourceFailure('source_limit')
+
+    def reserve_call(self):
+        with self.lock:
+            self.check();self.calls+=1
 
 
 _active = ContextVar('connector_read_limits', default=None)
@@ -38,8 +51,8 @@ def active(): return _active.get()
 
 
 @contextmanager
-def request_limits():
-    token = _active.set(ReadLimits())
+def request_limits(seconds=35):
+    token = _active.set(ReadLimits(seconds=seconds))
     try: yield
     finally: _active.reset(token)
 
@@ -80,11 +93,40 @@ class ReadClient:
         self.limits = limits or active() or ReadLimits()
 
     def request(self, method, url, *, params=None, body=None, headers=None, raw=False, authenticated=True):
+        started=time.monotonic();error=None;attempts=0
+        try:
+            # Only idempotent source reads retry, once, inside the same byte/call/
+            # deadline guard. Never retry model calls, authorization failures or
+            # generic MCP execution. Tool calls reaching this transport are allowlisted.
+            retryable=method=='GET' or (body or {}).get('method')=='tools/call'
+            for attempt in range(2 if retryable else 1):
+                attempts+=1
+                try:
+                    with chat_trace.stage('source.'+str((body or {}).get('method',method))):
+                        return self._request(method,url,params=params,body=body,headers=headers,raw=raw,authenticated=authenticated)
+                except SourceFailure as exc:
+                    if exc.code not in {'source_outage','source_timeout'} or attempt or self.limits.seconds-(time.monotonic()-self.limits.started)<2:raise
+                    chat_trace.event('source_retry',code=exc.code,attempt=attempt+1)
+        except SourceFailure as exc:
+            error=exc.code
+            raise
+        finally:
+            rpc=body or {};tool=rpc.get('params',{}).get('name') if rpc.get('method')=='tools/call' else None
+            chat_trace.event('source_call',tool=tool,method=rpc.get('method',method),
+                ms=round((time.monotonic()-started)*1000),error=error,retries=max(0,attempts-1))
+            trace=chat_trace.active()
+            if trace:
+                trace.count('source_calls',attempts)
+                rpc=body or {}
+                if rpc.get('method')=='tools/call':
+                    name=rpc.get('params',{}).get('name','unknown')
+                    if re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,80}',name):trace.count('mcp.'+name,attempts)
+
+    def _request(self, method, url, *, params=None, body=None, headers=None, raw=False, authenticated=True):
         if os.getenv('LINKMIND_CONNECTOR_NETWORK') != '1':
             raise SourceFailure('network_not_enabled')
-        self.limits.check()
+        self.limits.reserve_call()
         safe_url(url, self.host)
-        self.limits.calls += 1
         values = {'Accept': 'application/json', **(headers or {})}
         if self.host not in {'graph.microsoft.com','mcp.atlassian.com'} and not self.host.endswith(('.atlassian.net','.sharepoint.com')):
             import socket,ipaddress
@@ -106,8 +148,9 @@ class ReadClient:
                     if not 200 <= code < 300: raise SourceFailure('source_response_rejected')
                     chunks = []
                     for chunk in response.iter_bytes():
-                        self.limits.received += len(chunk)
-                        if self.limits.received > self.limits.max_bytes: raise SourceFailure('source_size_limit')
+                        with self.limits.lock:
+                            self.limits.received += len(chunk)
+                            if self.limits.received > self.limits.max_bytes: raise SourceFailure('source_size_limit')
                         if time.monotonic() - self.limits.started > self.limits.seconds: raise SourceFailure('source_limit')
                         chunks.append(chunk)
                     data = b''.join(chunks)
@@ -120,6 +163,8 @@ class ReadClient:
                     return (json.loads(data) if data else {}), dict(response.headers)
         except SourceFailure:
             raise
+        except httpx.TimeoutException:
+            raise SourceFailure('source_timeout') from None
         except (httpx.HTTPError, UnicodeError, ValueError, KeyError, TypeError):
             raise SourceFailure('source_outage') from None
 
@@ -132,7 +177,8 @@ class ReadClient:
 class AtlassianMCP:
     """Explicit read-tool allowlist over negotiated Streamable HTTP; no model-selected writes."""
     endpoint = 'https://mcp.atlassian.com/v2/mcp'
-    allowed = {'getJiraIssue', 'searchJiraIssuesUsingJql', 'getConfluencePage', 'searchConfluenceUsingCql'}
+    allowed = {'getJiraIssue', 'searchJiraIssuesUsingJql', 'getConfluencePage', 'searchConfluenceUsingCql',
+               'getConfluenceContent', 'searchConfluence'}
 
     def __init__(self, reference, limits=None, *, endpoint=None, allowed=None, require_read_hint=False):
         if endpoint: self.endpoint=endpoint
@@ -140,6 +186,24 @@ class AtlassianMCP:
         self.client = ReadClient(reference, urlsplit(self.endpoint).hostname, limits)
         self.headers = {'Accept': 'application/json, text/event-stream'}
         self.sequence = 0
+        enabled=os.getenv('LINKMIND_MCP_DISCOVERY_CACHE')=='1'
+        if enabled:
+            secret=authorization(reference,urlsplit(self.endpoint).hostname)
+            cache_key=(self.endpoint,hashlib.sha256(secret.encode()).hexdigest(),tuple(sorted(self.allowed)),require_read_hint)
+            with _protocol_lock:
+                cached=_protocol_cache.get(cache_key)
+                if cached and cached[0]>time.monotonic():
+                    self.headers.update(cached[1]);self.tools=cached[2]
+                    trace=chat_trace.active()
+                    if trace:trace.count('protocol_cache_hits')
+                    return
+                self._negotiate(require_read_hint)
+                if len(_protocol_cache)>=32:_protocol_cache.clear()
+                _protocol_cache[cache_key]=(time.monotonic()+120,dict(self.headers),dict(self.tools))
+                return
+        self._negotiate(require_read_hint)
+
+    def _negotiate(self,require_read_hint):
         result, headers = self.rpc('initialize', {'protocolVersion': '2025-11-25', 'capabilities': {},
             'clientInfo': {'name': 'Linkmind-readonly', 'version': '1'}})
         protocol = result.get('protocolVersion')
@@ -161,9 +225,10 @@ class AtlassianMCP:
 
     def rpc(self, method, params):
         self.sequence += 1
+        request_id='linkmind-'+uuid4().hex if os.getenv('LINKMIND_MCP_DISCOVERY_CACHE')=='1' else self.sequence
         data, headers = self.client.request('POST', self.endpoint,
-            body={'jsonrpc': '2.0', 'id': self.sequence, 'method': method, 'params': params}, headers=self.headers)
-        if data.get('id') != self.sequence or 'error' in data or 'result' not in data:
+            body={'jsonrpc': '2.0', 'id': request_id, 'method': method, 'params': params}, headers=self.headers)
+        if data.get('id') != request_id or 'error' in data or 'result' not in data:
             raise SourceFailure('mcp_request_rejected')
         return data['result'], headers
 
@@ -174,7 +239,9 @@ class AtlassianMCP:
         if schema.get('additionalProperties') is False and arguments.keys() - schema.get('properties', {}).keys():
             raise SourceFailure('mcp_schema_changed')
         result, _ = self.rpc('tools/call', {'name': tool, 'arguments': arguments})
-        if result.get('isError'): raise SourceFailure('mcp_tool_failed')
+        if result.get('isError'):
+            chat_trace.event('source_tool_error',tool=tool,code='mcp_tool_failed')
+            raise SourceFailure('mcp_tool_failed')
         value = result.get('structuredContent')
         if value is None:
             try: value = json.loads(''.join(c.get('text', '') for c in result.get('content', []) if c.get('type') == 'text'))

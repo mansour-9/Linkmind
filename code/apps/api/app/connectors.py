@@ -41,6 +41,7 @@ class LiveRead(BaseModel):
     model_config = ConfigDict(extra='forbid')
     native_id: str = Field(min_length=1, max_length=200, pattern=r'^[A-Za-z0-9!_,.-]+$')
     question: str | None = Field(default=None, min_length=1, max_length=500)
+    retrieval_query: str | None = Field(default=None, max_length=500)
 
 
 PUBLIC = 'c.id,c.mode,c.health,c.error_code,c.generation,c.last_successful_sync_at,c.next_sync_at,s.kind,s.name,c.config,c.credential_ref'
@@ -165,17 +166,24 @@ def live(viewer, id, body):
         identity = ResourceIdentity(organization_id=viewer.organization_id, source_instance_id=id,
             resource_type='issue' if row.kind == 'jira' else 'page' if row.kind == 'confluence' else 'document', native_id=record.native_id)
         from app.parsers import parse_document
+        from app.chat_retrieval import select_passages,pack_passages
         passages = parse_document(record.filename, record.content)
-        text = '\n'.join(p.text for p in passages[:8])[:12000]
+        if not record.fields:passages=pack_passages(passages)
+        selected,complete=select_passages(passages,body.retrieval_query or body.question or '')
+        text = '\n'.join(p.text for _,p in selected)
         reference=json.dumps([str(id),record.native_id,record.revision]).encode()+record.content
         evidence = SourceEvidence(reference_id='live-' + hashlib.sha256(reference).hexdigest()[:24],
             synthetic=row.config.get('execution')=='mock',
+            display_title=record.display_title or record.filename,
             identity=identity, origin='live', original_url=record.original_url, source_revision=record.revision,
             source_updated_at=record.updated, observed_at=now(), access_dependencies=[identity],
             fields=[FieldEvidence(**v) for v in record.fields], excerpt=None if record.fields else text,
-            coverage=EvidenceCoverage(complete=False, description='One bounded live resource observation; not complete source coverage.'))
-        context = [dict(id=f'{evidence.reference_id}-{i}', text=p.text, filename=record.filename, locator=p.locator, observation_kind='live')
-            for i, p in enumerate(passages[:8]) if sum(len(x.text) for x in passages[:i+1]) <= 12000]
+            coverage=EvidenceCoverage(complete=complete, description='One bounded live resource observation; completeness refers only to this resource text.'))
+        context = [dict(id=f'{evidence.reference_id}-text-v2-{i}', text=p.text, filename=record.filename, locator=p.locator, observation_kind='live')
+            for i, p in selected]
+        from app import chat_trace
+        chat_trace.event('resource_read',connection_id=str(id),native_id=record.native_id,title=evidence.display_title,
+            revision=record.revision,total_passages=len(passages),selected_passages=len(selected),complete=complete)
         result = dict(evidence=evidence.model_dump(mode='json'), passages=context,retained=False,synthetic=row.config.get('execution')=='mock')
         if body.question:
             from app import providers
@@ -393,8 +401,8 @@ def authenticate_connection(viewer,id):
         from app.connector_transport import authorization
         try:
             host='graph.microsoft.com' if spec.kind in {'onedrive','sharepoint'} else urlsplit(spec.mcp_url or spec.site_url).hostname
-            authorization(spec.credential_ref,host)
             if spec.transport=='atlassian_mcp':authorization(spec.mcp_credential_ref,'mcp.atlassian.com')
+            else:authorization(spec.credential_ref,host)
         except SourceFailure:
             raise HTTPException(409,dict(code='provider_setup_required',message='Provider sign-in is not configured for this source yet. Use Demo mode now; a server-owned authentication provider is required to activate the real source. No secret is sent to the browser.')) from None
         state='server_credential'

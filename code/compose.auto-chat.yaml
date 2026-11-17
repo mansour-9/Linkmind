@@ -1,0 +1,15 @@
+services:
+  migrate:
+    image: linkmind-auto-chat-backend:local
+  api:
+    image: linkmind-auto-chat-backend:local
+    environment:
+      LINKMIND_AUTO_CHAT: '1'
+      LINKMIND_TEST_ENVIRONMENT: '0'
+      LINKMIND_ALLOW_DEMO_DATASETS: '0'
+      LINKMIND_CHAT_AGENT: '1'
+      LINKMIND_CHAT_POLISH: '1'
+  worker:
+    image: linkmind-auto-chat-backend:local
+  web:
+    image: linkmind-auto-chat-web:local

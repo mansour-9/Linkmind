@@ -1,3 +1,4 @@
+import re
 """Explicit bounded remote-MCP read contract, without arbitrary model tool execution."""
 from urllib.parse import urlsplit
 from app.connector_providers import Record, timestamp
@@ -21,6 +22,14 @@ class CustomMCPProvider:
         record=self.record(result)
         if record.native_id!=native_id:raise SourceFailure('outside_scope')
         return record
+    def search(self,query,limit=4):
+        # The installed custom MCP contract exposes bounded scope enumeration,
+        # not an unrestricted tool executor. Filter its first validated page.
+        records,_,_=self.page({})
+        words=set(re.findall(r'[^\W_]+',query.casefold()))
+        ranked=sorted(records,key=lambda r:-sum(w in (r.filename+' '+r.content.decode('utf8',errors='replace')).casefold() for w in words))
+        return [dict(native_id=r.native_id,title=r.filename) for r in ranked
+                if any(w in (r.filename+' '+r.content.decode('utf8',errors='replace')).casefold() for w in words)][:min(limit,6)]
     def authorize(self,native_id):return self.get(native_id)
     def page(self,cursor):
         data=self.mcp.call('list_resources',{'scope_id':self.spec.scope_id,'cursor':cursor.get('token')})

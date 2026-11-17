@@ -1,5 +1,24 @@
 # Linkmind - Current Architecture and Retrieval-First Target
 
+2026-11-17 latest delivery: Schema 0020 adds auto policy, archived_at and attachment_document_ids. New auto_agent performs up to three bounded model-directed observation/search rounds before synthesis and independent semantic verification. Attachments are current permission-checked references; full connected bodies remain transient. Existing owner-bound source access is unchanged. See [automatic chat results](AUTO_CHAT_RESULTS.md). Earlier dated requirements below are historical where superseded.
+
+2026-11-17 target clarification: upstream connections belong to the organization; admin credential management and employee read authorization are separate. Backend service identities obtain fresh provider tokens independently of employee sessions. Central grant resolution must gate discovery, reads, retained records, graph/evidence, history and caches. Current owner-bound checks are prototype limits, not organization sharing. See [organization connection design](ORG_MANAGED_CONNECTIONS.md).
+
+2026-11-17 source boundary: schema 0019 adds chat policy and exact-byte fixture provenance. Connector retention mode and chat corpus policy are independent. Live Only forbids stored retrieval and fallback; stored and combined remain deliberate choices. Scope is checked before retrieval, before saving/delivery, and on history/context reuse. Demo loaders/integration suites require an isolated mock handshake. See [current repair](SOURCE_POLICY_REPAIR.md).
+
+2026-11-16 main-chat architecture: the ordinary conversation path now coordinates
+stored retrieval and bounded owner-enabled Jira/Confluence search/read automatically
+when LINKMIND_CHAT_AGENT=1 (enabled in isolated 5197). Field pointers resolve original
+typed values on the server; exact anchoring and independent whole-statement review can
+drop individual unsupported points while retaining supported ones. Schema remains
+0018, policy v11. Existing conversation JSON stores derived text/cited excerpts or field
+values and live dependency metadata; full live evidence context is redacted, with no
+automatic native document/raw-provider import. History/follow-ups and source panels
+recheck source access, generation and revision. Scoped-document and explicit historical
+routes retain their boundaries. See [current delivery](MAIN_CHAT_RESULTS.md) for bounds,
+retention, actual acceptance and Arabic/production limitations. Earlier descriptions of
+stored-only main chat and transient-only answering are dated checkpoints.
+
 Latest RF5 local architecture, 2026-11-15: `/source-answers` combines explicit selected
 documents/retained history with at most two selected live resources. It reuses existing
 adapters, query limits, source authorization and model/spend guards. A new typed citation

@@ -6,18 +6,22 @@ from uuid import UUID
 from app.db import engine,sql
 from app.providers import configured,embed
 from app.source_access import ACCESS,CURRENT,PASSAGES
+from app.source_policy import knowledge_clause,current as source_mode
 from app.repository import filter_clause
 from app.query_language import search_terms,people_question,CONCEPTS
 from app.query_limits import QueryLimitReached
 
 def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,offset=0,diagnostics=None):
+    if source_mode()=="live":
+        from fastapi import HTTPException
+        raise HTTPException(409,"Stored retrieval is disabled in Live Only mode.")
     query=query.strip()
     if not query:
         return []
     from app.connectors import refresh_access
     refresh_access(viewer,document_ids,query=query)
     params={**viewer.access(),"q":query,"pattern":"%"+query.replace("%","\\%").replace("_","\\_")+"%"}
-    where=CURRENT
+    where=CURRENT+knowledge_clause()
     if document_ids:
         where+=" AND d.id=ANY(:documents)"
         params["documents"]=[UUID(str(x)) for x in document_ids]
@@ -103,7 +107,7 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
     # Recheck access after inference, before exposing passages.
     with engine.connect() as conn:
         rows=sql(conn,f"""SELECT k.id,k.text,k.locator,k.line_number,v.id AS version_id,
-            d.id AS document_id,v.filename,v.embedding_status,
+            d.id AS document_id,v.filename,v.embedding_status,v.dataset_id,
             CASE WHEN v.processed_at IS NOT NULL AND EXISTS(SELECT 1 FROM live_entities ge
                 WHERE ge.version_id=v.id AND ge.organization_id=d.organization_id)
                 THEN coalesce(v.active_enrichment_version_id,v.id)::text END AS enrichment_version_id,
@@ -175,7 +179,7 @@ def _source_context(viewer,document_ids,limit,max_characters,question,include_pr
             **viewer.access(),ids=ids).scalar_one()
         if allowed!=len(ids):
             raise HTTPException(404,"A selected source is no longer available.")
-        where=CURRENT
+        where=CURRENT+knowledge_clause()
         if include_previous:
             where=ACCESS+""" AND v.source_version_id IS NULL AND v.search_ready_at IS NOT NULL AND
                 (v.id=d.current_version_id OR v.id=(SELECT prior.id FROM document_versions prior

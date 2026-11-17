@@ -1,5 +1,39 @@
 # Linkmind — Real AI and Mock Testing Policy
 
+2026-11-17 demo delivery: the user explicitly approved simplifying ordinary automatic
+chat to one answer pass, simple links and basic grounding. Independent statement
+verification remains on older advanced explicit-source paths, not the demo auto path.
+Small real Bedrock/MCP acceptance and final focused retests completed; no further paid
+replay is scheduled. Approved original cap USD 17; cumulative spent USD 11.4130081600,
+unknown held USD 0.2873231200/six calls, paused=false. Task settled USD 3.9025998000
+under USD 7 additional approval, including all failed/retired experiments. AWS renewal/
+resume was explicitly approved with holds retained. Pytest remains isolated/mock only.
+Subsequent installed interactive use reached USD 11.4615907600 at handoff, with all
+unknown holds unchanged; it is separate from completed acceptance cost. See
+[measured demo quality and limits](DEMO_READINESS_RESULTS.md). Prior caps below are history.
+
+2026-11-16 main-chat acceptance: [four new Home-chat cases](MAIN_CHAT_RESULTS.md) used
+12 settled planning/answer/support operations, USD 0.3018378000 actual and USD 1.3827066000
+conservative reservations within the scoped USD 2 bound. No paid replay/embeddings/
+extraction/enrichment. Original ledger spent USD 4.7731804600, historical unknown
+USD 0.0566168200/three calls unchanged, paused=false, cap USD 10. Sixteen points remained
+visible; one Arabic candidate failed support. Arabic terminology guidance was revised
+without another paid repetition; broader language/held-out acceptance remains open.
+The full deterministic suite targeted the separately verified mock API with no budget,
+AWS credentials or MCP token. Earlier spend/outcome checkpoints below remain history.
+
+2026-11-16 measured real MCP follow-up: [the clean platform trial](REAL_MCP_TRIAL_RESULTS.md)
+completed four representative questions, all citation_failed, with no independent
+verification calls. Four intentional answer calls cost USD 0.1013925000. Preserve
+and disclose the earlier test-isolation error: four additional settled calls cost
+USD 0.0304194000. Total additional USD 0.1318119000, eight calls, conservative reservations
+USD 0.8522580000 under the same scoped USD 2 bound. Original cumulative spent is now
+USD 4.4106589600; unknown reservations USD 0.0566168200/three calls unchanged,
+paused=false, cap USD 10. Zero embeddings/extraction/enrichment. The deterministic
+355-pass retry targeted a verified separate mock API. Do not automatically repeat
+paid questions or infer answer quality from successful live retrieval/mock tests.
+Earlier spend checkpoints below are historical.
+
 2026-11-15 RF3 repair acceptance: [the concrete follow-up scope](RF34_FOLLOWUP_SCOPE.md)
 completed using the original shared ledger, 15 Sonnet calls, no embeddings and
 USD 0.1153449000 total. Known unsupported additions were rejected and three new answers

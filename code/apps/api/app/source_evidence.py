@@ -31,6 +31,7 @@ class SourceEvidence(BaseModel):
     identity: ResourceIdentity
     origin: Literal['stored', 'live']
     synthetic: bool = False
+    display_title: str | None = None
     original_url: HttpUrl | None = None
     source_revision: str | None = None
     source_updated_at: datetime | None = None
@@ -59,7 +60,7 @@ class SourceEvidence(BaseModel):
 def local_evidence(row):
     identity = ResourceIdentity(organization_id=row['organization_id'],
         source_instance_id=row['source_instance_id'], native_id=row['native_id'], resource_type='document')
-    return SourceEvidence(reference_id=str(row['id']), identity=identity, origin='stored',
+    return SourceEvidence(reference_id=str(row['id']), identity=identity, origin='stored',synthetic=bool(row.get('dataset_id')),
         source_revision=str(row['version_id']), observed_at=row['uploaded_at'], excerpt=row['quote'],
         locator=row['locator'], access_dependencies=[identity],
         coverage=EvidenceCoverage(complete=False, description='One retained source passage; not a complete document review.'))

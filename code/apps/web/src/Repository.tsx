@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, FileText, Plus } from 'lucide-react';
 import { useSession } from './session';
 import { Button, Feedback, PageHeading, SearchField, Sheet } from './ui';
 import { EvidenceAction } from './Evidence';
+import { DocumentUpload } from './DocumentUpload';
+import { SourceControls } from './SourceControls';
+import type { Job } from './api';
 
 type Group = { id: string; name: string; kind: string; created_by_name: string; resource_count: number };
 type Source = { id: string; name: string; kind: string; resource_count: number; searchable_count: number;
@@ -97,11 +100,13 @@ function DocumentDetails({ id }: { id: string }) {
   const [editing, setEditing] = useState(false);
   const [offset, setOffset] = useState(0);
   const document = useQuery({ queryKey: ['document-metadata', id], queryFn: () => service.json<Resource>('/documents/' + id + '/metadata'), refetchInterval: 5000 });
+  const jobs=useQuery({queryKey:['jobs'],queryFn:()=>service.jobs()});
+  const job=jobs.data?.find((j:Job)=>j.document_id===id && j.current_version_id===j.version_id);
   const versions = useQuery({ queryKey: ['document-versions', id, offset], queryFn: () => service.json<{ items: Revision[]; has_more: boolean }>('/documents/' + id + '/versions?limit=20&offset=' + offset), refetchInterval: 5000, enabled: document.isSuccess });
   if (document.isPending) return <Feedback>Loading document details…</Feedback>;
   if (document.isError) return <Feedback error>{document.error.message}<Button variant="outline" onClick={() => void document.refetch()}>Retry</Button></Feedback>;
   const d = document.data;
-  return <div className="repository-detail"><h2>{d.title}</h2><p className="muted">{d.filename}</p>
+  return <div className="repository-detail">{job && <SourceControls job={job}/>}<h2>{d.title}</h2><p className="muted">{d.filename}</p>
     {editing && d.can_manage ? <MetadataEditor document={d} done={() => setEditing(false)} /> : <>
       <dl className="repository-metadata">
         <div><dt>Source</dt><dd>{d.source_name}</dd></div><div><dt>File type</dt><dd>{d.format.toUpperCase()}</dd></div>
@@ -132,14 +137,19 @@ export function Repository() {
   const [input, setInput] = useState(params.get('q') ?? '');
   useEffect(() => setInput(params.get('q') ?? ''), [params]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [uploadOpen,setUploadOpen]=useState(false);
+  const addDocumentButton=useRef<HTMLButtonElement>(null);
   const offset = Math.max(0, Math.min(100000, Number(params.get('offset')) || 0));
   const query = new URLSearchParams(params); query.set('offset', String(offset)); query.set('limit', '20');
   const catalog = useQuery({ queryKey: ['repository-resources', query.toString()], queryFn: () => service.json<Catalog>('/repository/resources?' + query), refetchInterval: 5000 });
   const sources = useQuery({ queryKey: ['repository-sources'], queryFn: () => service.json<Source[]>('/repository/sources'), refetchInterval: 5000 });
   function filter(key: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(key, value); else next.delete(key); next.delete('offset'); setParams(next); }
   function page(value: number) { const next = new URLSearchParams(params); next.set('offset', String(value)); setParams(next); }
-  return <div className="page repository-page"><PageHeading title="Documents" description="Find and organize your stored knowledge."
-    action={<Button asChild><Link to="/admin/sources"><Plus size={18} />Add documents</Link></Button>} />
+  return <div className="page repository-page"><PageHeading title="Documents" description="Upload files, find information and ask questions with supporting sources."
+    action={<Button ref={addDocumentButton} type="button" onClick={()=>setUploadOpen(true)}><Plus size={18}/>Add document</Button>} />
+    <Sheet title="Add documents" description="Upload files to your organization's Documents." side="center" open={uploadOpen} onOpenChange={setUploadOpen} returnFocus={addDocumentButton}>
+      <DocumentUpload/>
+    </Sheet>
     <form className="intelligence-search" onSubmit={e => { e.preventDefault(); filter('q', input.trim()); }}>
       <SearchField className="library-search" aria-label="Find stored knowledge" placeholder="Search content, title, project or team…" value={input} maxLength={500} onChange={e => setInput(e.target.value)} /><Button type="submit">Search documents</Button>
     </form><RepositoryFilters params={params} onChange={filter} />

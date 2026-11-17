@@ -1,5 +1,48 @@
 # Linkmind — Main Implementation Roadmap
 
+2026-11-17 latest demo delivery supersedes ordinary-chat verification complexity:
+5197 now uses one generation, relevant source links and basic native status checks,
+with topic-aware follow-ups and bounded retrieval. 444 API passed/2 skipped, five
+focused browser checks/build and installed desktop/mobile smoke passed. Small real
+Bedrock/MCP acceptance passed final source review; explanatory responses measured
+5–13s, native follow-up 1.6s, Arabic/cold up to 16s. No production auth/graph/indexing
+scope added. See [November 19 demo results and important limits](DEMO_READINESS_RESULTS.md).
+
+2026-11-17 latest delivery: Automatic chat/Documents and AsterBridge content expansion are installed on 5197. Full current-workspace reset and verified backup restoration completed. Deterministic and browser gates passed; real answer quality remains partially accepted partial after the bounded corrected trial; follow-up repairs are validated offline. No knowledge-building jobs started. See [automatic chat results](AUTO_CHAT_RESULTS.md). Earlier dated requirements below are historical where superseded.
+
+2026-11-17 post-renewal acceptance: both exact project queries now return ATLAS, BEACON and HARBOR through live Jira MCP with zero stored retrieval. Confluence ADR 007 live read passed without retention/model inference. Source-boundary repair acceptance is complete for these cases. The next requested architecture is admin-managed organization sources, explicit employee/group grants and unattended service-account token acquisition; it is planned, not shipped. See [design and implementation sequence](ORG_MANAGED_CONNECTIONS.md).
+
+2026-11-17 approved repair: source-boundary and typo/correction routing fixes are installed in 5197, with retained content and MCP settings preserved. Full isolated API 396 passed/2 skipped; final focused 55 and frontend build/UI passed. Same-scope Atlassian renewal and post-renewal live checks remain pending after credential expiry. See [repair status](SOURCE_POLICY_REPAIR.md).
+
+Latest main-chat delivery, 2026-11-16: user-directed ordinary Home chat now performs
+bounded automatic stored + real Jira/Confluence retrieval at **5197**, with three
+searchable fictional company/onboarding sources, follow-up context and per-statement
+support. **365 API / 2 skipped / build**, real four-question journey and responsive/live
+evidence checks completed. Three English answers passed source review; Arabic retained
+four supported points and dropped one, with linguistic quality/refined terminology still
+requiring broader acceptance. Current original ledger spent USD 4.7731804600, historical
+unknown USD 0.0566168200 unchanged. See [measured main-chat results](MAIN_CHAT_RESULTS.md).
+RF3/RF5 main-chat functionality is delivered locally; held-out quality, Microsoft/custom
+search, real sync/auth lifecycle and RF6 production employee/security/operations gates
+remain open. This supersedes earlier statements that main chat cannot use MCP or that
+all representative answers still fail citations; those dated failures are preserved.
+
+Latest clean real MCP trial, 2026-11-16: the user authorized real platform/AI tests
+and a fresh content-isolated runtime of the existing application. This supersedes
+earlier deferral statements. The new **5197** preview has four working real Jira/
+Confluence MCP scopes, no retained demo documents, and 13 actual access checks passed.
+**355 API passed, 2 skipped; frontend build**. All four representative real Sonnet
+questions were rejected by the citation contract before semantic verification, so
+RF5 real answer acceptance remains **blocked by citation rejection**. The next RF3/RF5
+work is an offline classified reproduction/repair with strict citations and semantic
+audit preserved, plus honest provider-state wording; no automatic paid repetition.
+RF4 native auth, sync, refresh/provider revocation and OneDrive/SharePoint remain open.
+Production sign-in/employee delegation remain RF6 gates. The cumulative original
+USD 10 ledger is now USD 4.4106589600 spent, historical unknown USD 0.0566168200
+unchanged. See [measured trial results](REAL_MCP_TRIAL_RESULTS.md), including the
+preserved accidental regression calls and actual scopes/limitations. Earlier dated
+checkpoints below remain history.
+
 ## Unified Company Repository, Retrieval First
 
 Latest RF5 checkpoint, 2026-11-15: the user requested the Git/GitHub checkpoint and a
@@ -89,7 +132,7 @@ provenance and field meaning stay intact. It is not only a transient search prox
 | Conversation discovery/persona | Implemented locally; compatible preview backport recorded | Preserve, extend to source routing |
 | Lantern repair/diagnostics | Offline repairs exist; latest real extraction verifier failed alignment | Keep evidence/fixes; no mandatory extraction-repair rerun |
 | Main/previews | Main last recorded 0010; RF1 Sonnet 0013; RF2 0014; RF3 0015; RF4 0017; new 5195/current source 0018 | Protected container IDs and RF1/RF2 source data preserved; main rollout excluded |
-| Connectors/sync/adaptive live routing | Not implemented in application | RF2–RF5; Codex connections are not app credentials |
+| Connectors/sync/adaptive live routing | Local connector/sync foundation implemented; bounded real Jira/Confluence MCP reads passed, real sync and broad adaptive routing open | RF2–RF5; Codex connections are not app credentials |
 | Production sign-in/native authoring/managed Spaces | Not delivered | Release security in RF6; detailed F2/K1/S1 later |
 
 RF1 changes ordinary processing to source-only by default in current code/new isolated
@@ -107,8 +150,8 @@ Historical reports/ledger figures are not observations of current runtime state.
 | RF1 — Lightweight ingestion | Source-only indexing default; explicit optional enrichment | Completed isolated acceptance: 191 API / 29 browser / build; main rollout excluded |
 | RF2 — Repository/catalog/evidence | Reliable resource identity, non-graph metadata and common evidence | Completed isolated acceptance: 231 API / 32 browser / build; live contract tested offline |
 | RF3 — Retrieval and routing | Useful bilingual source-only answers; bounded index/live planning | Implemented; 264 API / 34 browser / build pass; real quality gate open after two reviewed failures |
-| RF4 — Sources & MCP Connections | Admin lifecycle and local connector foundation for Jira, Confluence, OneDrive, SharePoint and Custom MCP | Implemented/validated locally at 5194; real auth, scopes and source acceptance pending |
-| RF5 - Cross-source journey | Combined answers and light organization over accepted sources | Local explicit stored/live foundation validated at 5196; real source and independent AI acceptance pending |
+| RF4 — Sources & MCP Connections | Admin lifecycle and connector foundation for Jira, Confluence, OneDrive, SharePoint and Custom MCP | Local foundation validated; bounded Jira/Confluence MCP consent/reads/access passed at 5197; other providers, native auth, sync and lifecycle acceptance open |
+| RF5 - Cross-source journey | Combined answers and light organization over accepted sources | Automatic Home-chat retrieval delivered at 5197; four new real answers displayed supported points; broader Arabic/held-out acceptance remains open |
 | RF6 — Core release/rollout | Held-out quality, measured load/cost, production auth, tested recovery | Cross-cutting preparation; security before real employee use; separate rollout approval |
 | Later capabilities | Rich authoring/Spaces, detailed enterprise design, advanced graph/research/actions | Separately requested; no implicit RF1–RF5 dependency |
 
@@ -126,10 +169,10 @@ class. A fixed Jira → Confluence → GitLab sequence no longer blocks document
 | Repository | Selected owner-bound collection implemented locally; real-source acceptance pending | Source-qualified durable records, versions/provenance and selected scopes | RF2/RF4 |
 | Discovery/metadata | RF2 metadata/content catalog and source/format/project/team/date filters delivered locally; entity-kind remains optional | Topic/source/type/project/date discovery without graph or exact filename knowledge | RF2/RF3 |
 | Chat | Local evidence only; broad verification | Useful no-graph cited answers, identity/support safety, coverage and graceful abstention | RF3 |
-| Routing | Intent routing only | Relevant sources, freshness/history routes, bounded expansion, no search-all default | RF3/RF5 |
-| Live access | Native/MCP bounded reads implemented and validated offline; networking off by default | Actual authorized read-only evidence, links/times and fault handling | RF4 |
+| Routing | Bounded main-chat stored/Jira/Confluence routing and context follow-ups delivered locally; other adapters and broader acceptance open | Relevant sources, freshness/history routes, bounded expansion, no search-all default | RF3/RF5 |
+| Live access | Native/MCP bounded reads implemented; actual Jira/Confluence MCP read/access checks passed at 5197, networking remains off by default elsewhere | Actual authorized read-only evidence, links/times and fault handling across accepted providers | RF4 |
 | Sync | Local ordinary-worker collection/checkpoints/revisions/access recovery implemented; real-source acceptance pending | Incremental checkpoints, restart recovery, idempotency, partial/version/access/deletion safety | RF4 |
-| Cross-source reasoning | Uploaded local evidence only | Stored + live + historical evidence, without prebuilt edges | RF5 |
+| Cross-source reasoning | Main Home chat combines stored and fresh authorized Jira/Confluence evidence; explicit retained-history route preserved | Stored + live + historical evidence, without prebuilt edges | RF5 |
 | Graph/links | Existing bounded explorer/legacy facts | Optional reliable links; zero-link resources fully usable; history preserved | RF2/RF5 |
 | Security | Local tenant/owner/org boundaries and demo auth | Existing boundaries preserved, source checks per connector, production auth before employee exposure | All/RF6 |
 | Cost/operations | Usage/pacing/test guard exist; representative limits open | Separate indexing/query/tool measurement, hard budgets, recovery and held-out acceptance | All/RF6 |

@@ -1,5 +1,146 @@
 # Linkmind — Project Guidance
 
+## Git publication authorization — 2026-11-17
+
+The user approved cleaning up the completed changes, pushing them and merging into
+`main`. This supersedes earlier no-main-merge instructions for this delivery. Preserve
+history/other branches and every running environment; no force push, branch deletion,
+runtime redeployment or paid replay. Version authored fixture catalog/builders rather
+than generated datasets, provider readbacks, credentials and private evidence. See
+[publication checkpoint](docs/GIT_CHECKPOINT.md).
+
+## November 19 demo readiness — delivered 2026-11-17
+
+Latest user instruction explicitly supersedes verification-heavy ordinary chat:
+prefer one scoped retrieval and one Bedrock answer, simple source links and practical
+grounding. Installed 5197/schema 0020/policy `grounded-v19-simple-linked-chat`.
+Automatic chat has no model planner, independent verifier or citation repair loop;
+one targeted recovery is allowed, max two answer calls. Native status-only replies
+use current Jira fields with zero model calls. Topic identifiers support follow-ups;
+old answer prose is not new evidence. Keep source permissions, modes and delivery/
+preview/history revision checks. Advanced explicit-source contracts retain their path.
+
+Final real questions and focused retests gave useful overview/ownership/blocker/
+next-action answers, with native workflow status and business blockers distinguished.
+Typical measured explanations took 5–13 seconds; native resolution follow-up 1.6s;
+Arabic/cold requests reached 16s. 444 isolated API passed/2 skipped, build and five
+focused browser workflows passed; installed desktop/mobile/source preview passed.
+All preexisting content/connection/conversation rows and 149 other containers preserved.
+Only this installed preview's API/worker/web updated; no migration/reset/provisioning.
+
+The user approved USD 7 additional spend and the original cap amendment to USD 17,
+then AWS login and resume retaining every unknown. Task settled USD 3.9025998000;
+original cumulative at final acceptance USD 11.4130081600; subsequent interactive
+use reached USD 11.4615907600 at handoff. Unknown USD 0.2873231200/six calls, paused=false.
+No further automatic paid replay, unknown release or new allowance. Renew time-limited
+AWS/Atlassian sessions before the demo. Owner-bound connections/local identities remain.
+See [results, evidence and handoff](docs/DEMO_READINESS_RESULTS.md). Older entries below
+are historical where superseded; no independent semantic-certification claim is made.
+
+## Company experience scope — 2026-11-17
+
+Latest user instructions supersede chat attachment/private-upload defaults: uploads belong only in Documents > Add document popup, with organization visibility by default. Existing private documents remain private. Realistic AsterBridge company content is authorized in Confluence and Jira; retain fictional provenance offline rather than in company-facing prose. No workspace reset, extra paid-model acceptance, graph enrichment or department access design is authorized by this change. Preserve the original inference budget and all unknown reservations. See docs/COMPANY_EXPERIENCE_RESULTS.md for tests, publication and runtime evidence. Confluence space settings rename is blocked by Computer Use URL verification; homepage rename succeeded. Local demo identities and owner-bound MCP connections remain prototype limitations.
+
+Installed at 5197, grounding v14/schema 0020. API 424 passed/2 skipped; isolated browser upload/access checks and installed desktop/mobile smoke passed. Confluence 70 pages and Jira 108 descriptions/108 comments fully read back against intended content, with testing disclaimers removed. Six organization documents are search ready; preexisting document/chat preserved. MCP read-only login was explicitly approved and renewed, with all four installed source reads passing; AWS STS passed. No paid model call or budget mutation in this delivery. Company demo answer quality has not been paid-retested. Evidence: output/company-demo-2026-11-17 in the chat workspace.
+## Final automatic-chat checkpoint — 2026-11-17
+
+Installed at 5197, schema 0020, grounding v13. 414 isolated API tests passed/2 skipped; final build and installed browser checks passed. Current workspace has zero active Documents, zero graph entities and zero active chats after acceptance cleanup; connections match the pre-reset configuration fingerprint. Confluence expansion readback passed for 12 new and 4 updated pages. Real acceptance is partial: two cases passed source review, one was partial, one failed fresh-source delivery, two could not dispatch within reservations. Follow-up standalone-answer and source-read-limit corrections passed isolated tests but were not paid-retested. The corrected bounded run used 20 settled calls/USD 0.4043292000, conservative reservations USD 1.8806601, with the initial rejected request's USD 0.0646239000 unknown held separately. Original ledger: spent USD 6.1672753600, unknown held USD 0.1836305200/5 calls, cap USD 10, paused=false. The approved run is finished; no automatic paid repeat, new allowance or unknown release. See docs/AUTO_CHAT_RESULTS.md and output evidence in the chat workspace.
+
+
+## Approved bounded acceptance continuation — 2026-11-17
+
+The user explicitly approved resuming the original USD 10 guard after the new planner's rejected request, preserving all 5 unknown calls/USD 0.1836305200 held. The correction is installed and its supported wire schema is tested offline. The remaining acceptance is capped at USD 1.9353 cumulative conservative reservations and 23 operations, with the initial USD 0.0646239000 unknown request preserved separately. No additional automatic restart or unknown release is authorized. The bounded run completed with partial quality acceptance: 2 passed, 1 partial, 1 delivery failure and 2 blocked by the reservation ceiling. Follow-up standalone-answer/read-limit repairs passed mock tests but were not paid-retested. See delivery results. Original guard remains unpaused with all 5 unknown reservations preserved; no further paid replay is authorized by this exhausted trial.
+
+
+## Automatic chat and approved content reset — 2026-11-17
+
+Latest explicit user scope supersedes the previous visible source-mode requirement for new chats: automatic authorized MCP plus Documents, shared drag/drop/attachments, full current-workspace old-content reset after verified backup, and AsterBridge Confluence expansion. Installed at 5197/schema 0020. Existing explicit live/stored policies retain their boundaries. See [delivery](docs/AUTO_CHAT_RESULTS.md). Real acceptance is incomplete: the first new planner request returned ValidationException, held USD 0.0646239000 as unknown and paused the original USD 10 guard. The schema correction passes offline tests. Do not clear unknowns, resume the guard silently, or restart the USD 2/24-operation trial; any continuation must deduct the failed reservation and operation. No new graph/sync enrichment, employee sharing or infrastructure deployment is delivered.
+
+
+
+## AWS recovery and explicit budget-resume approval — 2026-11-17
+
+The user explicitly approved aws login, resuming the original paused USD 10 guard while preserving all unknown reservations, and one bounded real-answer test (max 3 operations/USD 0.50 reservations). Login and STS passed. The two-operation test produced a successful answer-model response but the verification operation returned content_filtered; no unverified answer was published and no retry was performed. Spent USD 0.0389598000; original cumulative USD 5.6806804600, held unknown USD 0.1190066200/4 calls unchanged, paused=false, cap USD 10. This narrow approval supersedes the earlier do-not-unpause instruction for this recorded recovery only. Do not replay the paid case or clear unknowns. See [measured recovery](docs/AWS_MODEL_RECOVERY_2026_11_17.md). Existing source policies and service-account/shared-source architecture status are unchanged.
+
+## Organization-managed connector requirement — 2026-11-17
+
+The user clarified that admins connect company sources once and employees log into Linkmind to query explicitly shared sources. Do not model the target as each employee authorizing Jira/Confluence. Use provider-supported service identities and automatic token acquisition; never promise non-expiring access or bypass native restrictions. Current prototype connections remain owner-bound and employee auth remains local demo. Organization sharing, group grants and durable service-account authentication are planned, not implemented. Preserve the repaired live-only boundary and current connections. Post-renewal verification now passed for both exact project questions (3 live Jira scopes, no stored retrieval) and a real Confluence ADR read. See [organization connection design](docs/ORG_MANAGED_CONNECTIONS.md) and [repair](docs/SOURCE_POLICY_REPAIR.md).
+
+## Latest source boundary repair — 2026-11-17
+
+The user approved fixing the confirmed demo-data contamination and project-count/source-action routing issues. The 5197 preview now uses additive schema 0019 and grounding policy v12. New real-connected chats default to server-enforced Live Only; Stored knowledge and Combined remain explicit modes. Known exact-byte fixtures are labelled and excluded from automatic retrieval, with original content and explicit selection preserved. Legacy mixed chats are preserved but cannot continue as current live answers. Never remove these boundaries or run integration tests against live MCP/AI; use the dedicated guarded mock stack. Full API 396 passed/2 skipped; final focused 55 and frontend build/UI checks passed. Atlassian expired at 02:09 Riyadh, so final post-renewal live acceptance is pending. Preserve existing source IDs/modes/generations, credentials, original budget and all retained content. See [repair and current limits](docs/SOURCE_POLICY_REPAIR.md). Earlier All sources/mixed-default instructions below are historical where superseded.
+
+## Latest main-chat delivery — 2026-11-16
+
+The user explicitly requested starting automatic source retrieval from the ordinary
+main chat, adding company/employee knowledge, natural GPT-like interaction and useful
+partial answers rather than whole-answer refusal for one uncertain point. Implemented
+locally on `rf5/main-chat-agent`, preserving earlier uncommitted connector work. Main
+Home at **5197** now searches stored knowledge plus relevant owner-enabled Jira/
+Confluence scopes; users do not choose ticket/page IDs or use Ask across sources.
+Three existing fictional AsterBridge company, people/project and onboarding Markdown
+documents are Search Ready/team-visible; no invented real HR policy, graph enrichment
+or embeddings. Demo identities remain; production employee delegation is not delivered.
+
+New pointer contract resolves actual typed field values on the server. Exact citation
+and independent semantic checks run per statement, retaining supported points. Scoped
+documents, historical routing, ambiguous identities and fresh permission/revision checks
+remain enforced. Derived replies/cited excerpts or field values persist with dependencies;
+live evidence context bodies are redacted and native documents/raw provider objects are
+not automatically imported. Saved live answers may be hidden during source unavailability
+until a fresh check succeeds; this is not authority to bypass permission checks.
+
+**365 API passed, 2 skipped; frontend build passed.** Four new real Home-chat questions
+used 12 settled operations: HARBOR overview (5 approved points), ownership follow-up (3),
+launch blockers (4), Arabic employee introduction (4 retained, 1 semantically rejected).
+Three English cases passed agent source review. Arabic software terminology was too
+literal; prompt guidance was corrected afterward without another paid repetition, so
+broader Arabic/held-out acceptance remains open. Live citation and desktop/tablet/mobile
+checks passed; the historical 43-test browser suite was not rerun.
+
+This acceptance cost **USD 0.3018378000**, conservative reservations USD 1.3827066000,
+under the scoped four-question/twelve-operation/USD 2 bound. Original cumulative ledger
+spent **USD 4.7731804600** / 615 settled calls, cap USD 10, paused=false, historical unknown
+USD 0.0566168200 / three calls unchanged. No reset/clone/increase/unpause/unknown release,
+paid retry, extraction or embeddings. Do not automatically replay paid cases. Prior
+failed trials and fixture failures remain recorded. See [main-chat results](docs/MAIN_CHAT_RESULTS.md)
+and [validation](docs/main_chat_2026_11_16/validation.json). No commit/push/merge/main rollout
+or AWS infrastructure deployment. Older checkpoint statuses below are history.
+
+## Latest clean real MCP trial — 2026-11-16
+
+The user subsequently authorized actual connector/AI platform testing and AWS login,
+then clarified a clean runtime of this same application with no demo content (not a
+new company workspace feature). This supersedes the earlier real-trial deferral below.
+Work is uncommitted on `fix/asterbridge-real-mcp`; no push/merge/main rollout occurred.
+
+New `linkmind-asterbridge-live` at **5197**, schema 0018: four actual read-only MCP
+sources (Jira ATLAS/BEACON/HARBOR and Confluence ABL) passed bounded source reads;
+13 actual owner/scope/disconnect/generation checks passed. Final clean DB has zero
+documents, graph entities, conversations and retained resources/revisions. Local demo
+identities remain; production employee authentication is not delivered. Corrected
+read-only Atlassian PKCE consent completed by the user; no refresh token retained.
+
+Adapter compatibility/re-authorization and explicit-resource test UI fixes passed
+**355 API, 2 skipped; frontend build**. One current UI question and source panel were
+checked; the historical 43-test browser suite was not rerun. **All four real Sonnet
+questions failed citation validation before semantic verification.** RF5 answer
+acceptance remains open; do not infer AI acceptance from connector/mock checks. The
+provider label incorrectly says verified on rejection and remains a recorded UI gap.
+
+Preserve the initial isolation failure: a legacy HTTP integration hit the AI-enabled
+first trial API, causing four settled calls (USD 0.0304194000). It was disclosed and
+retained separately at 5199 with verified mock-only configuration. Successful API
+regression ran only after that correction. Four intentional real-source questions
+cost USD 0.1013925000. Total addition **USD 0.1318119000**, eight settled calls; original
+cumulative ledger spent **USD 4.4106589600**, historical unknown **USD 0.0566168200**
+(three unchanged calls), paused=false, original cap USD 10. No reset/clone/increase/
+unpause/unknown release. Zero embeddings/extraction/enrichment. Do not automatically
+repeat the paid cases. OneDrive, real sync/refresh/provider revocation and production
+release acceptance remain open. See [trial results](docs/REAL_MCP_TRIAL_RESULTS.md),
+[validation](docs/real_mcp_trial_2026_11_16/validation.json) and the single roadmap.
+Earlier checkpoint statements below are dated history where superseded.
+
 ## Latest RF5 local checkpoint - 2026-11-15
 
 Git checkpoint `checkpoint/rf1-rf4-local` is published (e020372, clean-checkout CI fix

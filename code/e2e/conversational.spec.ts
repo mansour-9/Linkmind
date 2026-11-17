@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 const headers = { Authorization: "Bearer demo-amal" };
 
-test("uploads support approximate discovery, clarification and scoped follow-ups", async ({ page, request }) => {
+test("stored-knowledge chat supports approximate discovery, clarification and scoped follow-ups", async ({ page, request }) => {
   expect(process.env.BRAIN_E2E_DISPOSABLE).toBe("1");
   expect((await (await request.get("/api/v1/runtime", { headers })).json()).provider).toBe("mock");
   const jobs: any[] = [];
@@ -24,7 +24,9 @@ test("uploads support approximate discovery, clarification and scoped follow-ups
       await expect.poll(async () => (await (await request.get("/api/v1/jobs/" + job.id, { headers })).json()).search_status).toBe("ready");
     }
     await page.goto("/");
-    await expect(page.getByRole("link", { name: "Add documents", exact: true })).toHaveAttribute("href", "/admin/sources");
+    await expect(page.getByRole("link", { name: "Documents", exact: true }).last()).toHaveAttribute("href", "/content/documents");
+    const conversation=await (await request.post('/api/v1/conversations',{headers,data:{title:'Stored discovery regression',source_policy:'stored'}})).json();
+    await page.goto('/chat/'+conversation.id);
     const send = async (question: string) => {
       await page.getByLabel("Ask a question").fill(question);
       await page.getByRole("button", { name: "Send question", exact: true }).click();

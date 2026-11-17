@@ -1,5 +1,32 @@
 # Linkmind local development
 
+> **November 19 demo — delivered 2026-11-17.** Open http://127.0.0.1:5197 and start
+> a new chat. Schema 0020, policy v19: ordinary auto chat uses one Bedrock answer,
+> simple relevant links, basic native-status checks and topic-aware follow-ups.
+> No model planning/independent-verification/citation-repair loop. 444 API passed,
+> 2 skipped; build/five focused browser workflows and installed desktop/mobile passed.
+> Original ledger cap is explicitly approved at USD 17; all unknown holds preserved.
+> Renew AWS/Atlassian access before the live demo. Read [delivery and limits](../docs/DEMO_READINESS_RESULTS.md).
+> Uploads remain only in Documents > Add document; older attachment guidance below is historical.
+
+Offline CI must include `-f code/compose.ci.yaml` after `-f code/compose.yaml` in a
+dedicated disposable Compose project. It enables the test-only endpoints/fixtures,
+uses mock inference and disables external connectors and shared budget access. Never
+apply that overlay to the connected 5197 preview. Test guards intentionally refuse
+ordinary or live runtimes. Generated AsterBridge datasets and full provider evidence
+stay local; only their authored catalog/builders are versioned.
+
+> **Automatic chat/Documents — 2026-11-17.** Installed local preview: http://127.0.0.1:5197.
+> New ordinary chats use `auto` scope, connected sources plus accessible Documents, with
+> shared drag/drop attachments and no source-mode selector. Schema 0020, grounding v13.
+> Current workspace old content was reset after verified backup/restore; Confluence ABL
+> has 12 new pages and 4 expanded overviews. 414 API tests passed, 2 skipped; build/browser
+> checks passed. Real acceptance is partial, with documented failures and budget-limited
+> cases; follow-up repairs were only mock-retested. Read [results](../docs/AUTO_CHAT_RESULTS.md)
+> and [rollback](../docs/AUTO_CHAT_ROLLOUT.md). The original USD 10 ledger and all unknown
+> reservations are preserved. This is not authorization for another paid replay.
+
+
 > **RF5 local foundation - 2026-11-15.**
 > [Ask across sources at 5196](http://127.0.0.1:5196/ask/sources) combines explicitly
 > selected saved context with up to two connected resources. Exact passages and typed

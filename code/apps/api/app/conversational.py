@@ -1,5 +1,6 @@
 """Source discovery, clarification, and scoped follow-ups without trusting chat as evidence."""
 import re
+import os
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -10,10 +11,13 @@ from app.question_intent import intent,needs_selection
 from app.retrieval import dependencies_allowed,selected_context
 from app.retrieval_coordinator import QuestionRetriever
 from app.query_language import arabic,people_question,historical_question,operational_question,explain
-from app import repository
+from app import repository,source_policy
 
 
 def response(viewer,question,previous,document_ids,engine,search,answer,configured,source_document_id=None):
+    if (source_policy.current()=='live' or os.getenv('LINKMIND_CHAT_AGENT')=='1') and not source_document_id and (source_policy.current()=='live' or not historical_question(question)):
+        from app.chat_agent import response as agent_response
+        return agent_response(viewer,question,previous,engine,search,configured,document_ids)
     scope=dict(org=viewer.organization_id,user=viewer.id)
     matches=[]
     evidence=[]

@@ -20,4 +20,5 @@ class DemoProvider:
         if native_id!='demo-1': raise SourceFailure('resource_missing')
         return self.record()
     def authorize(self,native_id): return self.get(native_id)
+    def search(self,query,limit=4):return [dict(native_id='demo-1',title='Synthetic connector demonstration')]
     def page(self,cursor): return [self.record()],{},True

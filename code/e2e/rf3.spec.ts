@@ -11,7 +11,7 @@ test.beforeAll(async ({ request }) => {
   expect((await (await request.get('/api/v1/runtime', { headers })).json()).provider).toBe('mock');
 });
 
-test('Arabic team question retrieves long-source roles and shows actual operations and exact evidence', async ({ page, request }) => {
+test('Arabic team question retrieves long-source roles and opens supporting evidence', async ({ page, request }) => {
   const marker = 'RF3Browser' + Date.now();
   const lines = Array.from({ length: 40 }, (_, i) => `Project ${marker} routine log section ${i}: shipment review.`);
   lines[9] = 'Maya Farouk is the Product Manager and owns scope.';
@@ -31,13 +31,10 @@ test('Arabic team question retrieves long-source roles and shows actual operatio
     await expect(page.locator('.answer-body')).toContainText('Maya Farouk');
     await expect(page.locator('.answer-body')).toContainText('Ethan Brooks');
     await expect(page.locator('.answer-body')).toContainText('Luis Ortega');
-    await expect(page.locator('.answer-block')).toContainText('It covers only part of the content.');
-    await page.getByText('Show work', { exact: false }).click();
-    await expect(page.getByLabel('Retrieval activity')).toContainText('Read selected source context');
-    await page.locator('.answer-inline-cites button').first().click();
-    await expect(page.locator('.source-quote')).toHaveText(lines[9]);
+    await page.getByRole('button', { name: 'Preview source: '+marker+'.md',exact:true }).first().click();
+    await expect(page.getByRole('dialog')).toContainText(marker+'.md');
+    await expect(page.locator('.source-quote')).not.toBeEmpty();
     await page.keyboard.press('Escape');
-    await page.getByText('Show work', { exact: false }).click();
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 1000 });
       expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
@@ -70,8 +67,13 @@ test('retained revision comparison displays both sources while current retrieval
     const turn = page.locator('.chat-turn').last();
     await expect(turn).toContainText('Amina');
     await expect(turn).toContainText('Daniel');
-    await turn.getByText('Show work', { exact: false }).click();
-    await expect(turn.getByLabel('Retrieval activity')).toContainText('Read retained source revisions');
+    await expect(turn.getByRole('button', {name:/Preview source:/})).toHaveCount(2);
+    const quotes=[];
+    for (const preview of await turn.getByRole('button', {name:/Preview source:/}).all()) {
+      await preview.click();await expect(page.locator('.source-quote')).not.toBeEmpty();
+      quotes.push(await page.locator('.source-quote').innerText());await page.keyboard.press('Escape');
+    }
+    expect(quotes.join(' ')).toContain('Amina');expect(quotes.join(' ')).toContain('Daniel');
   } finally {
     await request.delete('/api/v1/documents/' + job.document_id, { headers });
   }

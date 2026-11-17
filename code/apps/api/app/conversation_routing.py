@@ -7,6 +7,7 @@ from pydantic import BaseModel,Field,ConfigDict
 from fastapi import HTTPException
 from app import providers
 from app.question_intent import intent,needs_selection
+from app.source_intent import source_action,meaningful_previous
 from app.source_discovery import terms
 from app.assistant_persona import CONVERSATION_SYSTEM,PRODUCT_FACTS,local_reply
 from app.query_limits import QueryLimitReached
@@ -28,10 +29,12 @@ class ConversationVerdict(BaseModel):
 
 
 def followup(question):
-    return bool(re.search(r"\b(it|its|he|his|she|her|that|this|they|their|those|them|also|what about|and who|and when)\b|عنه|عنها|طيب|ومتى|ومين|ووش|هذا|هذه|\b(هو|هي|هم)\b",question.casefold()))
+    return bool(re.search(r"\b(it|its|he|his|she|her|that|this|they|their|those|them|also|what about|and who|and when)\b|عنه|عنها|طيب|ومتى|ومين|ووش|هذا|هذه|\bذا\b|\bذي\b|\b(هو|هي|هم)\b",question.casefold()))
 
 
 def plan(question,previous,scope,authorize,document_ids=None):
+    if intent(question) not in {"greeting","help","social"}:previous=meaningful_previous(previous)
+    if source_action(question):return dict(route="answer",query=question[:500],use_previous=bool(previous and followup(question)),planning="source_action")
     route=intent(question)
     if route in {"greeting","help","social","find_sources","document_overview"}:
         return dict(route=route,query=question[:500],use_previous=followup(question) or needs_selection(question),planning="local",

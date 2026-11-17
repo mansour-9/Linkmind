@@ -33,7 +33,7 @@ def test_help_does_not_retrieve_or_invoke_models(workspace,monkeypatch,question)
     assert result["provider"]=="system" and not result["insufficient_evidence"]
     assert len(result["message"])<250 and result["evidence"]==[]
     if 'upload' in question:
-        assert 'Add documents' in result['message']
+        assert 'Add document' in result['message']
 
 
 @pytest.mark.parametrize("question",["is there any file call PRFAQ ?","any file mentioning PREFQA?","فيه ملف PRFAQ؟","PRFAQ?"])

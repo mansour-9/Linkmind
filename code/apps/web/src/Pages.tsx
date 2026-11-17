@@ -18,7 +18,7 @@ export function Sources() {
   const ingest = useIngest();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [visibility, setVisibility] = useState<Visibility>("private");
+  const [visibility, setVisibility] = useState<Visibility>("team");
   const [downloadError, setDownloadError] = useState("");
   const addButton = useRef<HTMLButtonElement>(null);
   const visible = jobs.isSuccess ? jobs.data : [];
@@ -29,7 +29,7 @@ export function Sources() {
   function openUpload() {
     ingest.reset();
     setFile(null);
-    setVisibility("private");
+    setVisibility("team");
     setOpen(true);
   }
   function submit(event: FormEvent) {
@@ -95,9 +95,7 @@ export function Sources() {
       <form className="upload-form" onSubmit={submit}>
         <label>File<input aria-label="Choose file" type="file" accept=".pdf,.docx,.txt,.md" required
           onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
-        <label>Access<select value={visibility} onChange={(event) => setVisibility(event.target.value as Visibility)}>
-          <option value="private">Only me</option><option value="team">My organization</option>
-        </select></label>
+        <p className="muted">New documents are shared with your organization.</p>
         {ingest.isError && <Feedback error>{ingest.error.message}</Feedback>}
         <Button type="submit" disabled={!file || ingest.isPending}><UploadCloud size={18} />
           {ingest.isPending ? "Uploading…" : "Upload file"}</Button>

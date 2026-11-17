@@ -28,6 +28,15 @@ credentials
 tmp/
 .local/
 
+# Connected-source trial payloads/screenshots stay local; retain reviewed summaries.
+docs/main_chat_2026_11_16/*.json
+!docs/main_chat_2026_11_16/validation.json
+docs/main_chat_2026_11_16/*.jpg
+docs/real_mcp_trial_2026_11_16/*.json
+!docs/real_mcp_trial_2026_11_16/validation.json
+!docs/real_mcp_trial_2026_11_16/question-plan.json
+docs/real_mcp_trial_2026_11_16/*.jpg
+
 # Full local provider-run outputs; reviewed scopes, rates and summaries are versioned.
 docs/company_demo/budget_interruption.json
 docs/company_demo/live_checkpoint.json

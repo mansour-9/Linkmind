@@ -35,6 +35,17 @@ def test_reservation_settlement_and_fixed_limit(budget_environment,monkeypatch):
         inference_budget.reserve('test/model','answer',{},10)
 
 
+def test_trial_is_an_additional_call_and_reservation_bound(budget_environment):
+    with inference_budget.bounded_trial('0.05',1) as trial:
+        first=inference_budget.reserve('test/model','query_understanding',{},100)
+        inference_budget.settle(first,{'usage':{'inputTokens':10,'outputTokens':1}},None)
+        with pytest.raises(inference_budget.BudgetStopped):
+            inference_budget.reserve('test/model','answer',{},100)
+        assert trial['calls']==1 and 0<trial['reservations']<=Decimal('0.05')
+    with inference_budget.bounded_trial('0.00001',10):
+        with pytest.raises(inference_budget.BudgetStopped):inference_budget.reserve('test/model','answer',{},100)
+
+
 def test_unknown_usage_pauses_all_new_calls_and_keeps_reservation(budget_environment):
     call=inference_budget.reserve('test/model','answer',{},100)
     inference_budget.settle(call,{},'TimeoutError')

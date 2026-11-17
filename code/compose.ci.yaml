@@ -1,0 +1,14 @@
+# Disposable offline CI only. Never apply this to a connected preview.
+x-test-environment: &test-environment
+  AI_PROVIDER: mock
+  LINKMIND_TEST_ENVIRONMENT: '1'
+  LINKMIND_ALLOW_DEMO_DATASETS: '1'
+  LINKMIND_CONNECTOR_NETWORK: '0'
+  BEDROCK_BUDGET_DATABASE_URL: ''
+services:
+  migrate:
+    environment: *test-environment
+  api:
+    environment: *test-environment
+  worker:
+    environment: *test-environment

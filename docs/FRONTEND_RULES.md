@@ -1,5 +1,18 @@
 # Linkmind frontend rules
 
+2026-11-17 latest delivery: New Home/chat no longer exposes Answer sources or a focus-mode picker. Attach files and Documents share multi-file drop/upload readiness. Default new chats use auto. Explicit document-only questions retain a server boundary; legacy policy contracts remain compatible. See [automatic chat results](AUTO_CHAT_RESULTS.md). Earlier dated requirements below are historical where superseded.
+
+Latest source-policy UX, 2026-11-17: Home exposes Live Only, Stored knowledge, and Live + stored. The server defaults real-connected users to Live Only. Source choice is immutable within a conversation; changing it starts a new draft. Stored document selection remains explicit and synthetic samples carry Demo labels. Preserve the source boundary on every history/citation surface. See [repair](SOURCE_POLICY_REPAIR.md); earlier All sources default guidance is superseded.
+
+2026-11-16 main-chat UX: Home is the primary interaction. All sources lets the agent
+choose relevant stored knowledge and enabled owner-authorized connectors. Focus sources
+continues to restrict to selected documents. Do not require users to enter issue/page
+IDs or navigate to Ask across sources; its advanced route remains but its Home shortcut
+was removed. Live citations open a fresh authorized original and group duplicate page
+references. Rejected output is never labelled verified; supported partial points remain
+visible with useful uncertainty. Desktop/tablet/mobile and current live evidence were
+checked; no full historical browser-suite rerun is claimed. [Delivery](MAIN_CHAT_RESULTS.md).
+
 Latest RF5 UI, 2026-11-15: Home links to the working `/ask/sources` flow. Reuse
 FocusSources with explicit-only semantics: zero stored selections never means search-all
 in this flow. Users choose at most two connected resources. Distinguish actual field

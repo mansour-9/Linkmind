@@ -1,5 +1,13 @@
 # Sources & MCP Connections — local authentication foundation
 
+2026-11-16 one-shot Atlassian MCP trial: the user completed a separate read-only
+PKCE consent for the actual Atlassian MCP service. Four scoped real reads passed in
+the clean 5197 runtime. This is a server-managed MCP trial credential, not acceptance
+of native-provider OAuth/scope discovery, production delegated employee login or
+refresh/revocation lifecycle. Provider-required offline scope was requested, but no
+refresh token was retained or used. Credentials stay outside repository/OneDrive.
+See [actual results and limitations](REAL_MCP_TRIAL_RESULTS.md).
+
 Implemented in the isolated 5195 follow-up, schema `0018_connection_oauth`.
 Real-server testing is deferred by the user. Default external networking is disabled;
 no provider registration, account consent or live-source acceptance is claimed.

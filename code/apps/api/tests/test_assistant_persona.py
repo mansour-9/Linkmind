@@ -68,7 +68,7 @@ def test_social_verifier_blocks_unsupported_capabilities_or_company_facts(monkey
 
 def test_user_language_and_upload_help_are_respected():
     assert local_reply('مين انت','help').startswith('أنا Linkmind')
-    assert 'Add documents' in local_reply('how do I upload a file?','help')
+    assert 'Add document' in local_reply('how do I upload a file?','help')
     assert len(local_reply('what can you do?','help'))<200
 
 

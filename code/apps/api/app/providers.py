@@ -15,6 +15,28 @@ from app.inference_budget import reserve,settle
 from app.assistant_persona import CONVERSATION_SYSTEM
 from app.query_limits import active as active_query_limits
 from app.query_language import arabic, operational_question
+from app import chat_trace
+
+def streamed_converse(client,request,response,operation='model'):
+    """Drain billed output through usage metadata; never expose unverified JSON."""
+    started=time.monotonic()
+    opened=client.converse_stream(**request)
+    response['ResponseMetadata']=opened.get('ResponseMetadata',{})
+    stream=opened['stream'];parts=[];first=True
+    try:
+        for event in stream:
+            if 'contentBlockDelta' in event:
+                if first:
+                    first=False
+                    chat_trace.first_output(started,operation)
+                parts.append(event['contentBlockDelta']['delta'].get('text',''))
+            if 'messageStop' in event:response['stopReason']=event['messageStop']['stopReason']
+            if 'metadata' in event:response['usage']=event['metadata'].get('usage',{})
+            if any(key.endswith('Exception') for key in event):raise ModelResponseError('stream_failed')
+        response['output']={'message':{'content':[{'text':''.join(parts)}]}}
+    finally:
+        if hasattr(stream,'close'):stream.close()
+    return response
 
 class ProviderUnavailable(RuntimeError):
     pass
@@ -108,11 +130,15 @@ def structured(contract, system, payload, scope, operation, model_var="BEDROCK_E
         request["inferenceConfig"]["maxTokens"]=256
     elif operation=="answer_verification":
         request["inferenceConfig"]["maxTokens"]=2400
+    if os.getenv('LINKMIND_CHAT_POLISH')=='1' and operation in {'answer','answer_verification'}:
+        request['inferenceConfig']['maxTokens']=1800
+    chat_trace.checkpoint()
     limits=active_query_limits()
     if limits:
         limits.model(operation,request)
     from app.model_limits import pace
-    pace(model,os.getenv("AWS_REGION","us-east-1"))
+    with chat_trace.stage('model_pacing'):
+        pace(model,os.getenv("AWS_REGION","us-east-1"))
     if authorize is not None:
         authorize()
     reservation=reserve(model,operation,request,request["inferenceConfig"]["maxTokens"])
@@ -121,7 +147,14 @@ def structured(contract, system, payload, scope, operation, model_var="BEDROCK_E
     error=None
     diagnostic=None
     try:
-        response=runtime().converse(**request)
+        trace=chat_trace.active()
+        if trace:trace.count('model_calls')
+        chat_trace.activity('checking_answer' if operation.endswith('verification') else 'preparing_answer')
+        with chat_trace.stage('model.'+operation):
+            if os.getenv('LINKMIND_CHAT_POLISH')=='1' and chat_trace.active():
+                streamed_converse(runtime(),request,response,operation)
+            else:response=runtime().converse(**request)
+        chat_trace.checkpoint()
         if limits:
             limits.checkpoint()
         stop_reason=response.get("stopReason")
@@ -144,6 +177,9 @@ def structured(contract, system, payload, scope, operation, model_var="BEDROCK_E
         error=getattr(exc,"response",{}).get("Error",{}).get("Code",type(exc).__name__)
         raise
     finally:
+        chat_trace.event('model_result',operation=operation,model=model,error=error,
+            usage=response.get('usage',{}),retries=response.get('ResponseMetadata',{}).get('RetryAttempts',0),
+            stop_reason=response.get('stopReason'))
         try:
             record(scope,operation,model,started,response,error,diagnostic)
         finally:

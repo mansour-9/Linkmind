@@ -4,6 +4,25 @@ import { Download, FileText } from "lucide-react";
 import { useSession } from "./session";
 import { Button, Feedback, Sheet, sourceLocation } from "./ui";
 import type { Evidence } from "./api";
+import type { Passage } from './contracts';
+
+function LiveEvidenceAction({source,title,number,variant}:{source:Passage;title:string;number?:number;variant:string}){
+ const {service}=useSession();const [open,setOpen]=useState(false);
+ const evidence=useQuery({queryKey:['chat-live-evidence',source.id,source.live],enabled:open,refetchOnMount:'always',queryFn:async()=>{
+  const check=await service.json<{allowed:boolean}>('/source-answers/access',{method:'POST',body:JSON.stringify({passage_ids:[],historical_dependencies:[],live:[source.live]})});
+  if(!check.allowed)throw new Error('Source access or revision changed. Ask again for current evidence.');
+  const value=await service.json<{evidence:{source_revision:string;original_url:string;observed_at:string;source_updated_at:string;excerpt:string|null;fields:{field:string;value:unknown}[]}}>('/connections/'+source.live!.connection_id+'/live',{method:'POST',body:JSON.stringify({native_id:source.live!.native_id})});
+  if(value.evidence.source_revision!==source.live!.revision)throw new Error('Source revision changed. Ask again for current evidence.');
+  return value.evidence;
+ }});
+ return <><button className={variant==='cite'?'cite-marker':variant==='source'?'source-ref':'citation-action'} onClick={()=>setOpen(true)} aria-label={'View live source: '+title}>{number!=null?'['+number+'] ':''}{variant!=='cite'&&title}</button>
+ <Sheet title="Live source evidence" description={title} open={open} onOpenChange={setOpen}>
+ {evidence.isPending&&<Feedback>Checking current source access…</Feedback>}{evidence.isError&&<Feedback error>{evidence.error.message}</Feedback>}
+ {evidence.isSuccess&&<><p className="muted">Fresh source read · {new Date(evidence.data.observed_at).toLocaleString()}</p><p className="muted">Source revision: {evidence.data.source_revision}</p>
+ {evidence.data.fields.length?<dl>{evidence.data.fields.map(f=><div key={f.field}><dt>{f.field}</dt><dd dir="auto">{typeof f.value==='string'?f.value:JSON.stringify(f.value)}</dd></div>)}</dl>:<blockquote dir="auto">{evidence.data.excerpt}</blockquote>}
+ <a href={evidence.data.original_url} target="_blank" rel="noopener noreferrer">Open original source</a></>}
+ </Sheet></>;
+}
 
 export function SourcePreview({ evidence }: { evidence: Evidence }) {
   const { service } = useSession();
@@ -26,7 +45,7 @@ export function SourcePreview({ evidence }: { evidence: Evidence }) {
  *  variant="cite"   — compact superscript [n] button (inline after statement)
  *  variant="source" — [n] filename row in sources footer
  */
-export function EvidenceAction({ id, title = "View evidence", citationNumber, variant = "chip" }: {
+function StoredEvidenceAction({ id, title = "View evidence", citationNumber, variant = "chip" }: {
   id: string;
   title?: string;
   citationNumber?: number;
@@ -56,4 +75,8 @@ export function EvidenceAction({ id, title = "View evidence", citationNumber, va
   }
 
   return <><Button ref={trigger} variant="ghost" className="citation-action" title={title} onClick={() => setOpen(true)}><FileText size={14} /><span>{title}</span></Button>{sheet}</>;
+}
+
+export function EvidenceAction(props:{id:string;title?:string;citationNumber?:number;variant?:'chip'|'cite'|'source';source?:Passage}){
+ return props.source?.live?<LiveEvidenceAction source={props.source} title={props.title??props.source.filename} number={props.citationNumber} variant={props.variant??'chip'}/>:<StoredEvidenceAction {...props}/>;
 }

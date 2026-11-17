@@ -15,7 +15,7 @@ test('selected stored reasons and live fields share a transient answer with reau
  const uploaded=await request.post('/api/v1/sources/upload',{headers,multipart:{file:{name,mimeType:'text/markdown',buffer:Buffer.from('SYNTHETIC RF5 DECISION '+name+'\nThe fictional review moved from Wednesday to Thursday because integration tests were incomplete.')},visibility:'team'}});
  expect(uploaded.ok()).toBeTruthy();const job=await uploaded.json();await expect.poll(async()=>(await(await request.get('/api/v1/jobs/'+job.id,{headers})).json()).search_status).toBe('ready');
  const conversations=(await(await request.get('/api/v1/conversations',{headers})).json()).length;
- await page.goto('/');await page.getByRole('link',{name:'Ask across sources',exact:true}).click();await expect(page.getByRole('heading',{name:'Ask across sources',exact:true})).toBeVisible();
+ await page.goto('/ask/sources');await expect(page.getByRole('heading',{name:'Ask across sources',exact:true})).toBeVisible();
  await expect(page.getByText('No stored documents selected',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Focus sources',exact:true}).click();await expect(page.getByRole('dialog')).toContainText('Only explicitly selected documents are used');
  await page.getByLabel('Find sources by topic').fill(name);await page.getByRole('dialog').getByRole('button',{name:'Search',exact:true}).click();
  await page.getByRole('checkbox',{name:'Select '+name,exact:true}).check();await page.getByRole('button',{name:'Apply selection',exact:true}).click();

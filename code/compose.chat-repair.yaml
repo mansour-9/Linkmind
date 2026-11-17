@@ -1,0 +1,18 @@
+# Apply only after isolated real-source acceptance; inherit existing secret mounts,
+# content database, source IDs and the original shared budget database unchanged.
+services:
+  api:
+    image: linkmind-chat-fix-backend:local
+    environment:
+      LINKMIND_AUTO_CHAT: '1'
+      LINKMIND_TEST_ENVIRONMENT: '0'
+      LINKMIND_ALLOW_DEMO_DATASETS: '0'
+      LINKMIND_CHAT_AGENT: '1'
+      LINKMIND_CHAT_POLISH: '1'
+      BEDROCK_BUDGET_USD: '17'
+  worker:
+    image: linkmind-chat-fix-backend:local
+    environment:
+      BEDROCK_BUDGET_USD: '17'
+  web:
+    image: linkmind-chat-fix-web:local

@@ -1,0 +1,34 @@
+services:
+  migrate:
+    image: linkmind-chat-fix-backend:local
+    environment:
+      DATABASE_URL: postgresql+psycopg://brain:brain-local@db:5432/brain_chat_repair
+  api:
+    image: linkmind-chat-fix-backend:local
+    environment:
+      DATABASE_URL: postgresql+psycopg://brain:brain-local@db:5432/brain_chat_repair
+      AI_PROVIDER: mock
+      LINKMIND_TEST_ENVIRONMENT: '1'
+      LINKMIND_ALLOW_DEMO_DATASETS: '1'
+      LINKMIND_CONNECTOR_NETWORK: '0'
+      LINKMIND_CHAT_POLISH: '0'
+      LINKMIND_MCP_DISCOVERY_CACHE: '0'
+  worker:
+    image: linkmind-chat-fix-backend:local
+    environment:
+      DATABASE_URL: postgresql+psycopg://brain:brain-local@db:5432/brain_chat_repair
+      AI_PROVIDER: mock
+      LINKMIND_TEST_ENVIRONMENT: '1'
+      LINKMIND_ALLOW_DEMO_DATASETS: '1'
+      LINKMIND_CONNECTOR_NETWORK: '0'
+  web:
+    image: linkmind-chat-fix-web:local
+    environment:
+      VITE_API_PROXY: http://api:8000
+    ports: !override
+      - '127.0.0.1:5210:5173'
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.253.22.0/24

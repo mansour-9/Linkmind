@@ -31,7 +31,9 @@ test("ordinary source text is ready without enrichment and optional failures do 
     expect(job.enrichment_requested).toBe(false);
     expect(job.search_status).toBe("ready");
     expect(job.entity_count).toBe(0);
-    expect(await (await request.get("/api/v1/search?q=" + marker, { headers: auth("demo-omar") })).json()).toEqual([]);
+    const shared=await (await request.get("/api/v1/search?q=" + marker, { headers: auth("demo-omar") })).json();
+    expect(shared.some((p:any)=>p.document_id===documentId)).toBe(true);
+    expect(await (await request.get("/api/v1/search?q=" + marker, { headers: auth("demo-nour") })).json()).toEqual([]);
     await page.goto("/search?q=" + marker);
     await expect(page.locator(".search-result")).toContainText(text.trim());
     await page.getByRole("button", { name: "Open source passage", exact: true }).click();
@@ -64,7 +66,7 @@ test("ordinary source text is ready without enrichment and optional failures do 
     await page.getByLabel("Ask a question").fill(marker);
     await page.getByRole("button", { name: "Send question", exact: true }).click();
     await expect(page.locator(".answer-statement")).toContainText(text.trim());
-    await expect(page.getByText("Demo · verbatim evidence excerpts", { exact: true })).toBeVisible();
+    await expect(page.locator('.answer-provider')).toContainText('Demo');
   } finally {
     if (documentId) await request.delete("/api/v1/documents/" + documentId, { headers: auth() });
   }
