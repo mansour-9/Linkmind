@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-14",
+  "scope": "RF2 local implementation and deterministic acceptance; Arabic/answer enhancement remains RF3",
+  "preview": "http://127.0.0.1:5191/content/documents",
+  "project": "linkmind-rf2-validation",
+  "runtime": {
+    "schema": "0014_repository_metadata",
+    "provider_configured": false,
+    "bedrock_usage_rows": 0,
+    "original_budget_copies": 0
+  },
+  "full_api": {
+    "passed": 231,
+    "failed": 0
+  },
+  "rf2_final_api": {
+    "passed": 16,
+    "failed": 0,
+    "pagination_resource_count": 203
+  },
+  "full_browser": {
+    "passed": 32,
+    "failed": 0
+  },
+  "presentation_followup_browser": {
+    "passed": 3,
+    "failed": 0
+  },
+  "frontend_build": "TypeScript/Vite passed in Docker",
+  "viewports": [
+    1440,
+    1024,
+    390,
+    1920
+  ],
+  "protected_previous_container_ids_unchanged": 48,
+  "rf1_source_fingerprints_unchanged": true,
+  "original_budget_unchanged": true,
+  "additional_paid_usage": 0,
+  "running_source_hashes": {
+    "apps/api/app/main.py": "a956b2a3551ecf4aae7c852967fbccf8e18264f0947678cf3d0c55a618b903ce",
+    "apps/api/app/repository.py": "9957251727d535857c48b83c5a8b9426a85632fbf8828cc9b5015d8fe3b60d37",
+    "apps/api/app/source_access.py": "0db8282435f0fd0a04503b700aea0b3c0313c008ebad80c73cfc5af365a44a0e",
+    "apps/api/app/source_evidence.py": "b93b6f5d51718cce369f1592f3563a9c90e142ec732e8c0aedb19b2fd3eba4a6",
+    "apps/api/app/retrieval.py": "e6b571ce0c1f4a5211bed2a2d3b827573c0ea99983db3e2db14b824fad4eaf21",
+    "apps/api/alembic/versions/0014_repository_metadata.py": "069742facf082360ffddd2271fe29b575c8d5aeec67ed559562e7b87b6125809"
+  },
+  "limitations": [
+    "Live evidence tested as offline fixtures only; no connector/auth/sync delivered.",
+    "One explicit project and team per document; no managed Spaces.",
+    "RF1 Sonnet and main remain on their previous schema/build.",
+    "Mock validation does not establish new model/retrieval quality."
+  ],
+  "private_evidence": "code/.local/rf2-validation and code/e2e/results (ignored)",
+  "final_readonly_browser": {
+    "viewports": [
+      1440,
+      1024,
+      390,
+      1920
+    ],
+    "pages": [
+      "review",
+      "search"
+    ],
+    "overflow": false,
+    "mutations": 0,
+    "pageErrors": []
+  },
+  "review_sample": {
+    "project_id": "aef3e647-f5e5-4eb8-9efe-dd724269dfee",
+    "project_name": "Project Alpha (CB-ALPHA)",
+    "document_count": 2,
+    "source": "Existing fictional benchmark files only; associations explicitly applied for local review.",
+    "url": "http://127.0.0.1:5191/content/documents?project_id=aef3e647-f5e5-4eb8-9efe-dd724269dfee"
+  }
+}

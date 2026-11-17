@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { List, Network, PanelLeftClose, PanelLeftOpen, Search, X } from "lucide-react";
@@ -15,6 +15,8 @@ const uuid = (value: string | null) => value && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}
 export function GraphWorkspace() {
   const { token, service } = useSession();
   const [params, setParams] = useSearchParams();
+  const latestParams=useRef(params);
+  useLayoutEffect(()=>{latestParams.current=params;},[params]);
   const selected = uuid(params.get("node"));
   const [fallbackScope, setFallbackScope] = useState<string | null>(null);
   const explicitScope = uuid(params.get("scope"));
@@ -40,8 +42,11 @@ export function GraphWorkspace() {
   const expandedRoots = useRef("");
 
   function update(changes: Record<string, string | null>, replace = false) {
-    const next = new URLSearchParams(params);
+    // Async discovery can run before navigation from a newer input commits.
+    // Keep the latest local intent synchronously, not a render's old URL snapshot.
+    const next = new URLSearchParams(latestParams.current);
     Object.entries(changes).forEach(([key, value]) => value ? next.set(key, value) : next.delete(key));
+    latestParams.current=next;
     setParams(next, { replace });
   }
   function center(id: string) {
@@ -88,10 +93,10 @@ export function GraphWorkspace() {
     if (expanded.isError) setExpandedGraphs({});
   }, [expanded.data, expanded.isSuccess, expanded.isError]);
   useEffect(() => {
-    if (root || !discovery.isSuccess || resultOffset) return;
+    if (root || q || latestParams.current.get('q') || !discovery.isSuccess || resultOffset) return;
     const first = discovery.data.nodes.find(node => node.kind === "project") ?? discovery.data.nodes[0];
     if (first) { setFallbackScope(first.id); update({ scope: first.id, node: first.id }, true); }
-  }, [discovery.data, discovery.isSuccess, root, resultOffset]);
+  }, [discovery.data, discovery.isSuccess, root, resultOffset, q]);
 
   const graph = useMemo(() => mergeGraphs(primaryGraph, expandedGraphs), [primaryGraph, expandedGraphs]);
   const selectedNode = graph.nodes.find(node => node.id === selected);

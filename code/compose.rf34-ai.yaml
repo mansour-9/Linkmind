@@ -1,0 +1,16 @@
+# One-shot scoped grounding harness only; does not change running mock services.
+services:
+  api:
+    environment:
+      DATABASE_URL: postgresql+psycopg://brain:brain-local@linkmind-rf34-followup-db-1:5432/brain
+      BEDROCK_BUDGET_DATABASE_URL: ${BEDROCK_BUDGET_DATABASE_URL:?Original shared ledger required}
+      BEDROCK_BUDGET_RUN: northstar-sonnet-2026-11-12
+      BEDROCK_BUDGET_USD: "10"
+      BEDROCK_RATES_JSON: /run/config/followup-rates.json
+    volumes:
+      - ../docs/company_demo/resumed_preflight/rates.json:/run/config/followup-rates.json:ro
+    networks: [default, budget]
+networks:
+  budget:
+    external: true
+    name: ${BRAIN_BUDGET_NETWORK:?Original ledger network required}

@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-14",
+  "milestone": "RF1",
+  "status": "implemented_and_validated_isolated_local",
+  "authorization": "RF1 implementation and isolated local mock validation; no paid inference or main rollout",
+  "preview": {
+    "url": "http://127.0.0.1:5189",
+    "project": "linkmind-rf1-validation",
+    "provider": "mock",
+    "schema": "0013_optional_enrichment",
+    "running_api_matches_workspace": true
+  },
+  "api": {
+    "tests": 191,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "new_rf1_cases": 11,
+    "existing_warning": "Starlette/AnyIO deprecated BlockingPortal alias",
+    "junit": "code/.local/rf1-validation/api-junit.xml"
+  },
+  "browser": {
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "duration_seconds": 104.32,
+    "report": "code/e2e/results/rf1-full-report.json",
+    "widths": [
+      1440,
+      1024,
+      390,
+      1920
+    ]
+  },
+  "frontend": {
+    "typescript": "passed",
+    "vite_production_build": "passed",
+    "source_ready_desktop_mobile_inspected": true,
+    "optional_enrichment_dialog_inspected": true,
+    "processing_source_only_inspected": true,
+    "user_visual_acceptance": "not_claimed"
+  },
+  "compatibility": {
+    "legacy_job_intent_preserved": true,
+    "new_job_default_enrichment": false,
+    "downgrade_guard_tested": true,
+    "existing_saved_turns_rewritten": false,
+    "answer_grounding_policy": "grounded-v6-source-identifiers",
+    "grounding_rules_relaxed": false
+  },
+  "preservation": {
+    "existing_running_container_count": 40,
+    "existing_container_ids_unchanged": true,
+    "main_or_existing_preview_mutations": false,
+    "ledger_touched": false,
+    "paid_model_calls": 0,
+    "aws_infrastructure_changes": false,
+    "private_originals": "existing Lantern originals mounted read-only in isolated offline/stub tests"
+  },
+  "limits": [
+    "No live Sonnet quality/latency/cost acceptance",
+    "No main-data cutover or actual-main restore rehearsal",
+    "RF2-RF6 remain planned",
+    "Existing queued jobs retain prior intent; review before later rollout"
+  ],
+  "source_sha256": {
+    "apps/api/app/processing.py": "e3a7a5bf2f485c59eed56f233954f5ef5eb296e0aad7ea7404c975afb9d910be",
+    "apps/api/app/main.py": "53e218d8831244c137f3e7ae9c3d968dc3f9728003edcb910b4dcbd283afa113",
+    "apps/api/app/retrieval.py": "3f7613b9b1177b452474aca593ee78281a0454702be866c2df397fed64d2e2f6",
+    "apps/api/app/conversational.py": "9a814a34d10cee54d5b9ba2c8c9bdf642a9eb9da08d679d260e82458b1be5da4",
+    "apps/api/app/assistant_persona.py": "ccc9b6609250a16276700cdea56cdbed040ee3e4da2652335ebd5cdb9d42b95c"
+  }
+}

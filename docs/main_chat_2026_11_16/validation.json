@@ -1,0 +1,155 @@
+{
+  "date": "2026-11-16",
+  "branch": "rf5/main-chat-agent",
+  "web": "http://127.0.0.1:5197/",
+  "schema": "0018_connection_oauth",
+  "policy": "grounded-v11-main-chat-partial-support",
+  "api": {
+    "passed": 365,
+    "skipped": 2,
+    "warnings": 2,
+    "seconds": 56.97
+  },
+  "frontend_build": "TypeScript/Vite passed",
+  "company_documents": [
+    {
+      "filename": "AsterBridge-company-and-teams.md",
+      "sha256": "cefbecb4bd4816419f5dede24b4b171c11f10e6336bd214a49be681bc9303076",
+      "job_id": "ba9d5e2e-2de9-47f1-852f-7da9af5fa3ee",
+      "document_id": "7d985bba-2a3d-4b30-935d-e1271c0f42bc",
+      "fictional": true,
+      "search_status": "ready",
+      "enrichment_status": "not_requested"
+    },
+    {
+      "filename": "AsterBridge-employee-onboarding.md",
+      "sha256": "025653eea3838ea0dc93df353829d67933d1961f7ec5aad8cd70d8a7fb012afa",
+      "job_id": "efb68ca0-84cb-4883-9dc6-30e82c7d5ffe",
+      "document_id": "b1417e80-0926-495a-ba1f-8dd6cf3e5d21",
+      "fictional": true,
+      "search_status": "ready",
+      "enrichment_status": "not_requested"
+    },
+    {
+      "filename": "AsterBridge-people-and-projects.md",
+      "sha256": "c2586c1d4ec8b76649a06d66cce8ac6eaad879dccba387a07b027b3abbf54953",
+      "job_id": "ff4f44f6-3b60-44cd-a7c3-c522b9dba727",
+      "document_id": "83e6e1fd-4bad-46b9-a6a8-d746c1352c9f",
+      "fictional": true,
+      "search_status": "ready",
+      "enrichment_status": "not_requested"
+    }
+  ],
+  "real_questions": [
+    {
+      "question": "What is HARBOR?",
+      "conversation": "4f73d30a-a5b5-43df-a963-554140d83743",
+      "provider": "bedrock",
+      "state": {
+        "code": "partial"
+      },
+      "validation": {
+        "accepted": 5,
+        "anchored": 5,
+        "candidates": 5,
+        "citation_rejected": 0,
+        "semantic_rejected": 0
+      },
+      "suppressed": false
+    },
+    {
+      "question": "Who owns it?",
+      "conversation": "4f73d30a-a5b5-43df-a963-554140d83743",
+      "provider": "bedrock",
+      "state": {
+        "code": "partial"
+      },
+      "validation": {
+        "accepted": 3,
+        "anchored": 3,
+        "candidates": 3,
+        "citation_rejected": 0,
+        "semantic_rejected": 0
+      },
+      "suppressed": false
+    },
+    {
+      "question": "What is blocking its launch?",
+      "conversation": "4f73d30a-a5b5-43df-a963-554140d83743",
+      "provider": "bedrock",
+      "state": {
+        "code": "partial"
+      },
+      "validation": {
+        "accepted": 4,
+        "anchored": 4,
+        "candidates": 4,
+        "citation_rejected": 0,
+        "semantic_rejected": 0
+      },
+      "suppressed": false
+    },
+    {
+      "question": "أنا موظف جديد، عرفني على الشركة والفرق، ومن أتواصل معه في البداية؟",
+      "conversation": "0a331a81-955c-4f6b-b923-f0d613b7a03e",
+      "provider": "bedrock",
+      "state": {
+        "code": "partial"
+      },
+      "validation": {
+        "accepted": 4,
+        "anchored": 5,
+        "candidates": 5,
+        "citation_rejected": 0,
+        "semantic_rejected": 1
+      },
+      "suppressed": false
+    }
+  ],
+  "budget": {
+    "run": "northstar-sonnet-2026-11-12",
+    "limit_usd": "10.0000000000",
+    "baseline_spent_usd": "4.4713426600",
+    "final_spent_usd": "4.7731804600",
+    "additional_actual_usd": "0.3018378000",
+    "conservative_reservations_usd": "1.3827066000",
+    "settled_before": 603,
+    "settled_after": 615,
+    "new_model_operations": 12,
+    "questions": 4,
+    "historical_unknown_calls": 3,
+    "historical_unknown_usd": "0.0566168200",
+    "paused": false,
+    "embeddings": 0,
+    "extraction": 0,
+    "enrichment": 0,
+    "paid_retries": 0
+  },
+  "limitations": [
+    "Arabic accepted output contained literal software pilot/sandbox translations; guidance was corrected without another paid repetition. Broader Arabic quality remains open.",
+    "Three English cases had every candidate accepted. One of five Arabic candidates was semantically rejected while four supported paragraphs remained.",
+    "Conservative current live access/revision checks can temporarily hide saved replies when a provider cannot be checked; a fresh check restored observed replies without new inference.",
+    "Owner-bound local demo authentication remains; this is not production employee delegation.",
+    "Actual automatic discovery delivered for Jira and Confluence. Microsoft/custom source search still needs explicit scoped implementation; unavailable tools do not become generic execution.",
+    "Held-out company acceptance, native sync/refresh/provider revocation and RF6 release gates remain open.",
+    "The existing 43-test browser suite was not rerun; current UI checks are direct main-chat, follow-ups, citations and responsive visual checks."
+  ],
+  "preserved_test_failures": [
+    "Initial scoped-search fixture omitted a required connection name; corrected before acceptance.",
+    "A historical guard test assumed an empty shared mock DB; isolated its stored search to exercise the intended no-history case.",
+    "An identity-clarification fixture supplied a filename inconsistent with its actual document; the access check correctly rejected it. Corrected the fixture."
+  ],
+  "retention": "Derived conversation text and cited excerpts/field values are saved with source dependency metadata; live evidence context text is redacted and no native source documents/raw provider objects are imported. Access and revision are rechecked on history/follow-up and evidence opening.",
+  "ui_checks": {
+    "main_home_no_manual_source_selection": true,
+    "three_related_turns": true,
+    "fresh_live_citation_opened": true,
+    "original_jira_link": true,
+    "viewport_overflow": {
+      "1280": false,
+      "768": false,
+      "390": false
+    },
+    "viewport_reset": true
+  }
+}

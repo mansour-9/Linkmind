@@ -67,12 +67,18 @@ def test_real_upload_pipeline_and_permissions():
     assert first["version_id"] == second["version_id"]
     assert upload("cloud-migration.md", payload, "private")[0] == 409
     assert await_job(first["id"])["status"] == "ready"
+    # Graph assertions deliberately request optional enrichment; uploads default to text.
+    from test_m2 import call
+    assert call("/jobs/"+first["id"]+"/reprocess",body={})[0]==202
+    assert await_job(first["id"])["enrichment_status"] == "ready"
 
     private = FIXTURES["private-review"].path.read_bytes()
     status, raw = upload("private-review.md", private, "private")
     assert status == 202, raw
     restricted = json.loads(raw)
     assert await_job(restricted["id"])["status"] == "ready"
+    assert call("/jobs/"+restricted["id"]+"/reprocess",body={})[0]==202
+    assert await_job(restricted["id"])["enrichment_status"] == "ready"
 
     graph = read("/graph")
     shared_nodes = [node for node in graph["nodes"] if node["version_id"] == first["version_id"]]
@@ -113,7 +119,7 @@ def test_unknown_text_and_invalid_uploads():
         if result["status"] not in {"queued","processing"}:
             break
         time.sleep(0.25)
-    assert result["status"] == "extraction_unavailable"
+    assert result["status"] == "ready" and result["enrichment_status"] == "not_requested"
     assert job["version_id"] not in {node["version_id"] for node in read("/graph", NOUR)["nodes"]}
     assert upload("unsupported.pdf", b"plain text", "private")[0] == 422
     assert upload("invalid.txt", b"\xff\xff", "private")[0] == 422

@@ -1,0 +1,187 @@
+{
+  "recorded_at": "2026-11-12T05:12:14.077603+00:00",
+  "stage": "M3.2A baseline; no production changes",
+  "checkpoint_tag": "m3.1-ui-checkpoint",
+  "checkpoint_commit": "b25f5288b23fd75de6105653f178e2adf05b02c2",
+  "workspace_byte_sha256": {
+    "code/apps/api/app/artifacts.py": "200760fed15835fe4b4932766b1b573a44c575c51b9c5b2390bf4b426be403a0",
+    "code/apps/api/app/conflict_detection.py": "a784c9656a097e2e07331f7eb5db43077bb95bab3d395f6952ecc11a27e9b951",
+    "code/apps/api/app/contracts.py": "b998aded760a729bd054cdcf6cc117dfd12e0384e4fc50d204f8d9eadf9c756b",
+    "code/apps/api/app/db.py": "8e2cff541f05ec4e855f9b950435444480696386a9c2323efd48f5aa55359b4d",
+    "code/apps/api/app/fixture_provider.py": "b61b437547ce62457af6e9c02aef7cb40858280ad9035bd855819dd19934a5d7",
+    "code/apps/api/app/graph_demo.py": "c3fdfd4f78eb41841ec9167e46a9f28b67b964e9ac1cffb2420dd4264a7292c8",
+    "code/apps/api/app/graph_explorer.py": "7f544b013bd0a3a09f845e975ba9e45d2086556eb6b5d8bda9d09806157be1be",
+    "code/apps/api/app/main.py": "6c2fa486256d773e620028e33721ebeea000a52284ef6bdfc38073226f720d76",
+    "code/apps/api/app/model_limits.py": "706f23f15ce7695af560ddb9a858c96887fa92e2d9e9be51287e3b23db8eb375",
+    "code/apps/api/app/parsers.py": "71536c28a4186bd41848c9efd8148d2c7d6659738019461b52d032a2e3683893",
+    "code/apps/api/app/processing.py": "21b2d58aac034feb5bf7e9ff513021f38ac7fbd7f69edd4f5893ab1c437461a2",
+    "code/apps/api/app/processing_periods.py": "95367e484c97a62e5463917b1cff816f50695fe038be1efe226c29aa3247d0d4",
+    "code/apps/api/app/providers.py": "7ca2b63a0f105a8f630e5c20464a81bf08950b78a6a3a14e2ded6b06ec48cc4f",
+    "code/apps/api/app/resolution.py": "69876b3e1d6fb1ce19273e4fcf1c3d30ec8d9ed9773af97a01fac7da7afd1cc4",
+    "code/apps/api/app/retrieval.py": "8d39c5d448541600e6c798e50e7b9859fef150fa98e361b7415d822351fd52d4",
+    "code/apps/api/app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "code/apps/api/diagnostics/m32.py": "c51ec6a896d825abf16708b6a1d993d1b98147f7a9822008d7a8bdef233a25ea",
+    "code/apps/api/diagnostics/m32_core.py": "99fe0463aa3cc68535e547d57513a64c9059ccd46df5cc13974fc6d416eaf652",
+    "code/apps/api/diagnostics/m32_live.py": "979fe09a1343fd480643e3b5dd842c6f087b9d13f55cf0c2223eb20a08bb82be",
+    "code/apps/api/diagnostics/m32_offline.py": "d7539e911dc933b2c07f649670a397940e8e9670f5bd144ce01006ff282420ca",
+    "code/apps/api/diagnostics/__init__.py": "107cd4416ea8f27626e9f8acbc708b15db341cb3891ba277094b82565604a5be",
+    "code/apps/api/tests/benchmark.py": "892b55760db2e0411890884e0ab6be386f08639ef7db2730b8d002a2882ab1a3",
+    "code/apps/api/tests/diagnose_answer.py": "417438b1ca5b46944b39aec47c3f4cea03cf90c56b10d9001a0f137d04c13bfa",
+    "code/apps/api/tests/diagnose_extraction.py": "6ec3f1def52286f298429473f2090860d6d38b32c71dbe668415fb61d2473061",
+    "code/apps/api/tests/test_answer_policy.py": "01dcb21bfade359bf9f906f509519f62de9c79bfd830513706faf8f3fa391b4f",
+    "code/apps/api/tests/test_document_catalog.py": "d908bdc8cadc5497523a171df8141c2bd5cb80e282bbb2263e0c0115b9377ae1",
+    "code/apps/api/tests/test_graph_demo.py": "015e695b94fd7a571739f2e402e435a44afd249a68e551cc3b71e4da76309d45",
+    "code/apps/api/tests/test_graph_explorer.py": "59078c09eec973a6fb60951a7edd174cb5793f5af3a6ee2eacac58c2ae9add64",
+    "code/apps/api/tests/test_grounding.py": "75f3608c208de746434754d71ac75996684d2604ba42c5bd2d58136677451ea2",
+    "code/apps/api/tests/test_integrity.py": "0dead72b6160421a005238a35829a01c2955e0222d237406f300bbe36f504726",
+    "code/apps/api/tests/test_legacy_retry.py": "f12ee1c5204b81de42856df5a65cb5d00d733231a8d62823f6a6fd7e8da81df0",
+    "code/apps/api/tests/test_m1.py": "564f369c81683be083053ea72e7a47db81d377e5fd600048db336eb0153e40fc",
+    "code/apps/api/tests/test_m2.py": "b7eebf7a2ccbb2d264c6c4aad75caf1549786cfa827b5edd198b7882c61d917e",
+    "code/apps/api/tests/test_m32_diagnostics.py": "20eabd9a258105a88fd73a30dc5d1fb1ab3c702df492b2d76f670147a98528bf",
+    "code/apps/api/tests/test_model_limits.py": "ed4eb790dd4210d7e2c6436e173cf89f31b9556940b51f678a6ec7f7822f9069",
+    "code/apps/api/tests/test_pdf.py": "c5d5cff2aabc2618ed2384ba09a5cab43ca1e99209c6823049684f91c62c9a00",
+    "code/apps/api/tests/test_resolution.py": "5489a8a545dd0e34d20e3b03038e4b86126a143b350b157312d64b0a1176e26b",
+    "code/apps/api/tests/test_retrieval.py": "10f3eef92055861fbd3a2ccd18dc2ba7d02ff6558894ab4f03122f368bcc9338",
+    "code/apps/api/tests/test_retry.py": "0d6dec997a423c3f2f9f441acc7169ec311e628b2aa8cde12244bc6e2e4a6261",
+    "code/apps/api/tests/verify_targeted.py": "27c1e9362ac54c846ac2c9b57224b285229814680ce99d7b6854ceb51de19f60",
+    "code/fixtures/cloud-migration.md": "a41d51564cab86ab5f1ceb3e8a45680fd570be09eb70799971dd4700433a12cd",
+    "code/fixtures/generate_graph_demo.py": "43fe8dbbb8fce28d84ea4f32c8024926439e4148cf1031636d2dab786573cae8",
+    "code/fixtures/generate_m32_cases.py": "7a0296a574b9f206317a8f74ca7b6c2499b595a0c035bf82971e558a161fe4b2",
+    "code/fixtures/private-review.md": "e4088be6810a340775dc4127127d1898d7487696aa12b003d1c155e764b31d2a",
+    "code/fixtures/benchmark/alpha-architecture.md": "a4f0c049247abaa9c2c166ac1ad2a31a8cd69a013bca49d659500e250cb7a61b",
+    "code/fixtures/benchmark/alpha-charter.md": "52a9006307e5b33be88af060e3aa2d14fc4e3c87a9cb0f47a98e3956154dc859",
+    "code/fixtures/benchmark/alpha-decision.md": "04dbea5c7e5020b9542577f8cb14a32b4262f6a37c21d4abaa357fd29c56bb5b",
+    "code/fixtures/benchmark/alpha-history.md": "012c93a959e8e0a1a4896b1214f91294eefc8bda8ba0ab2aae0ee59c0660ecef",
+    "code/fixtures/benchmark/alpha-private.md": "92dda2774b1b39f8184fcaaafadb445899dbf13ab92910f866117641f101a901",
+    "code/fixtures/benchmark/alpha-review.md": "0e4e46fd69b6d346d5473a4e38b378e4cfffaf7081cc5cc024a6955ebbea90fa",
+    "code/fixtures/benchmark/alpha-revision.md": "8620574acfc610c76cb83ec18f8f8de0d4549263443ecbb56caac72400077226",
+    "code/fixtures/benchmark/alpha-task.md": "e4f1d3d8a8bfae0fb31dceb392c22404e573d40912337c568a624b65ec2c97e1",
+    "code/fixtures/benchmark/ambiguous-alpha.md": "f84d32c551e243f2af79f04fd4e17ea080a591df422abf0afdba0df826a77af7",
+    "code/fixtures/benchmark/cedar-charter.md": "624aa5c0222955de2a4bcc0da98f71c95eb9d46a5c7e69b6854d7c3b75b80daf",
+    "code/fixtures/benchmark/cedar-complement.md": "b383fda38843ab620679d6586c84ef38299731db1880913cc779027d59c54099",
+    "code/fixtures/benchmark/manifest.json": "ee4a2dfcda24d178ad33599c0ee57ff9041d8cae1bf6a4cb5def139557aec520",
+    "code/fixtures/benchmark/missing-info.md": "a232a7ff06950d1c32ec5341c8cfedc519a71ea2dce095a4a1cfa20b8d0c4f28",
+    "code/fixtures/graph_demo/graph-demo-connections.md": "dce64de2ec8062eaa434fb363c4eb707806389a95204ac5bb55f6b8e8af92a81",
+    "code/fixtures/graph_demo/graph-demo-operations.md": "e748ca13ead02500b50067c00dcbac7d8be53dd7c67d815777ca1ae2a6891d29",
+    "code/fixtures/graph_demo/manifest.json": "2ddcd04ac64e291d8e7cc2617035650a7bddfa9ffac5adc38c79d6541a0cbd35",
+    "code/fixtures/m32/manifest.json": "2041fa052d855985b7414fc3815679f3c0f1df971c8522eae9f985d9cb6f563b",
+    "code/fixtures/m32/sections.md": "e6b9665b9b461ccec8954af3f13a0f4d6f9cf2fabe1dfecb275b7c1f6af4664b",
+    "code/fixtures/m32/simple.pdf": "5fec327b7048775fa9bb88903bb379d32b75b06800aee72e9a7302034a9722fd",
+    "code/fixtures/m32/table.docx": "e410a3618966cd00200b70ac0369d6b9367eeeb2ea385ec78f35d060080bdd81",
+    "code/fixtures/m32/temporal.md": "9256b49c456f53d0f2ec7249f1ad487a016b3fd9e27b1fea737ec0bf1aa1f0d4",
+    "code/fixtures/m32/typography.pdf": "2d68006d9389916463ac8787afcce4fcffc2eb1b077922cb3fdab8f2e2f0d36e",
+    "code/fixtures/m32/unicode.txt": "c8566ea9fcecd870109146398ae1d0cc53b3152707f321d3e922d2ba12689f2c",
+    "code/apps/api/requirements.txt": "1dc875778d7ace7fc6f01dbaf4989d2caa0efca0027ea0adde08f9973cc50c67",
+    "code/apps/web/package-lock.json": "458c6790a27a1f11ca98069384abcf1c86c784d3a04805ddcfbcfc909c7c814a",
+    "code/e2e/package-lock.json": "5dddc73254e13cff8cd67bc0386b2560889be39543ece845f222859774b52242",
+    "code/compose.yaml": "1e93879820e51029639953df7f5d84739051bea2b67243d28bc0f3062cc4e399",
+    "code/compose.bedrock.yaml": "5ec5380c209d7a5e38cf200872b8dac115bf9101268615c9dc3d85c600f2aa28"
+  },
+  "main_runtime": {
+    "api": {
+      "container_id": "60e42bb4d569650f577e54b4a869f37a4d6a6b880f1700ba4acfded2f0e0f01f",
+      "configuration_sha256": "fbf6ae18f713ffaf69b0e9845a0663a5bce97c60bafa4e1968d32256d373ae18",
+      "nonsecret_settings": {
+        "AI_PROVIDER": "bedrock",
+        "BEDROCK_ANSWER_MODEL": "us.anthropic.claude-sonnet-4-6",
+        "AWS_REGION": "us-east-1",
+        "BEDROCK_EXTRACTION_MODEL": "us.anthropic.claude-sonnet-4-6",
+        "AWS_PROFILE": "default",
+        "BEDROCK_EMBEDDING_MODEL": "amazon.titan-embed-text-v2:0",
+        "BEDROCK_REQUESTS_PER_MINUTE": "9"
+      }
+    },
+    "worker": {
+      "container_id": "790a21191fd60555e6d1920cc174afe905b7ae0bb096ce13f6081b34a0bd13e5",
+      "configuration_sha256": "707a44596dcf31137c646918c156130430f12a3b13057d60e332423d532dae0c",
+      "nonsecret_settings": {
+        "BEDROCK_EXTRACTION_MODEL": "us.anthropic.claude-sonnet-4-6",
+        "AWS_PROFILE": "default",
+        "AI_PROVIDER": "bedrock",
+        "BEDROCK_ANSWER_MODEL": "us.anthropic.claude-sonnet-4-6",
+        "BEDROCK_REQUESTS_PER_MINUTE": "9",
+        "AWS_REGION": "us-east-1",
+        "BEDROCK_EMBEDDING_MODEL": "amazon.titan-embed-text-v2:0"
+      }
+    },
+    "web": {
+      "container_id": "bb30593027c72d4f5b650687fe48a2f68254c45d628abb011c6a626cb5f5d994",
+      "configuration_sha256": "955a466af26ec1a3887209c95474e9a1c6723509d9a8dc9a272863cccb3f2d77"
+    },
+    "db": {
+      "container_id": "b9ca4655c807e860f4d88a4df53a8da9c747a2c17342b8cf40065e8696f15583",
+      "configuration_sha256": "5de64f91c506981921c18096ad3ad0132bd02508f8be3301aac7c5bc81f1e822"
+    }
+  },
+  "main_row_counts": {
+    "ai_usage": 635,
+    "chunks": 283,
+    "claims": 80,
+    "conversation_turns": 160,
+    "conversations": 184,
+    "document_versions": 50,
+    "documents": 47,
+    "entities": 165,
+    "processing_jobs": 50,
+    "relationships": 149
+  },
+  "experiment": {
+    "manifest_sha256": "3681ecd9c3d96bd586205919025cc39bc2bda1cd2d8a2169c78ea791cea2b0f7",
+    "extraction_schema_sha256": "3050dfaf4488d56cf32c783225d3654d1ff5f173c3b7b84a534970d61939f4c4",
+    "prompt_sha256": "1337d498236de710accc3d05a78130b997a51923c53afe53fade91d440fb5b28",
+    "source_passages": [
+      {
+        "id": "simple_pdf",
+        "source_sha256": "5fec327b7048775fa9bb88903bb379d32b75b06800aee72e9a7302034a9722fd",
+        "passage_sha256": "c3e1ef448ab95557cae8e57228d8422bf1e3e3c16b4debfdb585cb98e0d76004",
+        "passages": 1
+      },
+      {
+        "id": "typography_pdf",
+        "source_sha256": "2d68006d9389916463ac8787afcce4fcffc2eb1b077922cb3fdab8f2e2f0d36e",
+        "passage_sha256": "a19bfc72cc5de8d137542477d17102cbd9a65f5696a9cc54b4c4d6d70bed51ec",
+        "passages": 1
+      },
+      {
+        "id": "docx_table",
+        "source_sha256": "e410a3618966cd00200b70ac0369d6b9367eeeb2ea385ec78f35d060080bdd81",
+        "passage_sha256": "eeb95359a39915d8737fcae351282d27a039c5f672c4727731692a4c18bac252",
+        "passages": 7
+      },
+      {
+        "id": "markdown_sections",
+        "source_sha256": "e6b9665b9b461ccec8954af3f13a0f4d6f9cf2fabe1dfecb275b7c1f6af4664b",
+        "passage_sha256": "16f6794d29a67d36a4b03828dacbef809672cc36ef2b48fbe55ce45c36209355",
+        "passages": 11
+      },
+      {
+        "id": "unicode_crlf",
+        "source_sha256": "c8566ea9fcecd870109146398ae1d0cc53b3152707f321d3e922d2ba12689f2c",
+        "passage_sha256": "3ab50eca7ad2fc796eb83baf917555d73d893c2188dfa3648ce0b19f4e2c6ef9",
+        "passages": 5
+      },
+      {
+        "id": "temporal_untrusted",
+        "source_sha256": "9256b49c456f53d0f2ec7249f1ad487a016b3fd9e27b1fea737ec0bf1aa1f0d4",
+        "passage_sha256": "f33895d8e8380407deb035bc30886dc5fcca27b6947a7149be465253a9f87778",
+        "passages": 8
+      }
+    ],
+    "settings": {
+      "region": "us-east-1",
+      "models": [
+        "google.gemma-4-31b",
+        "us.anthropic.claude-sonnet-4-6"
+      ],
+      "max_attempts": 24,
+      "projected_usd_limit": "5",
+      "temperature": 0,
+      "extraction_max_output": 6000,
+      "verification_max_output": 1024,
+      "automatic_retries": 0,
+      "repair_calls": 0
+    }
+  },
+  "review": "Six synthetic sources and expected identifiers/facts checked before collecting model responses. No independent external human review claimed.",
+  "historical_results": "M3_2_BASELINE.json and earlier live benchmarks retained as history; not current model-comparison results."
+}

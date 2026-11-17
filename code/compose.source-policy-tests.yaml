@@ -1,0 +1,26 @@
+services:
+  api:
+    image: linkmind-source-policy-backend:local
+    environment:
+      AI_PROVIDER: mock
+      LINKMIND_TEST_ENVIRONMENT: '1'
+      LINKMIND_ALLOW_DEMO_DATASETS: '1'
+      LINKMIND_CONNECTOR_NETWORK: '0'
+      LINKMIND_CHAT_AGENT: '1'
+      LINKMIND_CHAT_POLISH: '1'
+  migrate:
+    image: linkmind-source-policy-backend:local
+  worker:
+    image: linkmind-source-policy-backend:local
+    environment:
+      AI_PROVIDER: mock
+      LINKMIND_CONNECTOR_NETWORK: '0'
+  web:
+    image: linkmind-source-policy-web:local
+    ports: !override
+      - '127.0.0.1:5201:5173'
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.253.19.0/24

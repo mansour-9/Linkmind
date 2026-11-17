@@ -4,6 +4,7 @@ import time
 from sqlalchemy.exc import OperationalError
 
 from app.processing import process_one
+from app.connectors import process_one as collect_one
 
 
 def main() -> None:
@@ -13,6 +14,8 @@ def main() -> None:
     while True:
         try:
             if process_one():
+                continue
+            if collect_one():
                 continue
         except OperationalError:
             logger.warning("Database connection unavailable. Retrying.")

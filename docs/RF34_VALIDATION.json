@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-15",
+  "status": "rf3_bounded_grounding_repair_and_rf4_local_oauth_foundation_validated",
+  "preview": "http://127.0.0.1:5195/admin/connections",
+  "project": "linkmind-rf34-followup",
+  "schema": "0018_connection_oauth",
+  "trust_policy": "grounded-v10-qualified-statement-support",
+  "validation": {
+    "full_api_passed": 315,
+    "api_failures": 0,
+    "api_warnings": 2,
+    "final_oauth_checks_passed": 8,
+    "full_browser_passed": 39,
+    "browser_failures": 0,
+    "frontend_build": "passed",
+    "retrieval_mock": {
+      "passed": 16,
+      "total": 16,
+      "independent_heldout": false
+    },
+    "visual_widths": [
+      1440,
+      390
+    ],
+    "broad_browser_widths": [
+      1440,
+      1024,
+      390,
+      1920
+    ],
+    "state_survived_api_restart": true
+  },
+  "rf3_real_model": {
+    "model": "us.anthropic.claude-sonnet-4-6",
+    "new_generation_cases_source_review_accepted": 3,
+    "new_generation_cases_total": 3,
+    "initial_verification_controls_passed": 5,
+    "initial_verification_controls_total": 6,
+    "initial_false_rejection_preserved": true,
+    "targeted_correction_passed": 3,
+    "targeted_correction_total": 3,
+    "distinct_controls_final_expected_outcomes": 6,
+    "sonnet_calls": 15,
+    "embedding_calls": 0,
+    "all_usage_settled": true,
+    "actual_cost_usd": "0.1153449000",
+    "conservative_first_run_usd": "1.0521588",
+    "conservative_correction_usd": "0.2434146",
+    "old_failed_outputs_modified": false,
+    "independent_enterprise_acceptance": false
+  },
+  "rf4": {
+    "consent_protocols_offline_validated": [
+      "jira",
+      "confluence",
+      "onedrive",
+      "sharepoint"
+    ],
+    "server_owned_encrypted_tokens": true,
+    "microsoft_s256_pkce_checked": true,
+    "replay_cookie_expiry_generation_audience_and_refresh_checks": true,
+    "scope_discovery_and_explicit_selection": true,
+    "custom_mcp": "explicit server-managed bounded read contract; generic MCP OAuth unavailable",
+    "default_network": "disabled",
+    "real_source_calls": 0,
+    "real_provider_accounts_connected": 0,
+    "demo_sources": 5,
+    "uvicorn_callback_queries_redacted": true
+  },
+  "protected": {
+    "original_container_count": 109,
+    "preserved_count": 109,
+    "missing_original_ids": [],
+    "protected_builds_or_schemas_replaced": false,
+    "source_fingerprints_recomputed": false
+  },
+  "budget": {
+    "original_run": "northstar-sonnet-2026-11-12",
+    "original_cap_usd": "10.0",
+    "spent_before_usd": "4.1635021600",
+    "spent_after_usd": "4.2788470600",
+    "unknown_reservations_usd": "0.0566168200",
+    "unknown_reservations_unchanged": true,
+    "paused": false,
+    "new_preview_budget_run_count": 0
+  },
+  "remaining": [
+    "real provider registration/consent and selected server trials (user deferred)",
+    "real source permissions, expiry/revocation, live/sync lifecycle acceptance",
+    "representative company and independent AI quality acceptance",
+    "RF5 cross-source journey",
+    "RF6 production authentication/access, operations and rollout"
+  ]
+}

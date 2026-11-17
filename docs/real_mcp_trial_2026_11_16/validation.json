@@ -1,0 +1,243 @@
+{
+  "date": "2026-11-16",
+  "branch": "fix/asterbridge-real-mcp",
+  "runtime": {
+    "project": "linkmind-asterbridge-live",
+    "web": "http://127.0.0.1:5197",
+    "schema": "0018_connection_oauth",
+    "documents": 0,
+    "entities": 0,
+    "conversations": 0,
+    "connected_resources": 0,
+    "connected_revisions": 0,
+    "real_connections": 4,
+    "ai_usage_records": 4,
+    "authentication": "local demo identities; production authentication not delivered"
+  },
+  "acceptance": "real MCP bounded reads passed; real-model answer acceptance failed",
+  "deterministic": {
+    "api_passed": 355,
+    "api_skipped": 2,
+    "api_warnings": 2,
+    "api_seconds": 46.8,
+    "frontend": "TypeScript/Vite build succeeded in unique Docker image",
+    "historical_browser_suite": "43 RF5 browser tests were recorded before this change; not rerun for this trial",
+    "current_browser_checks": [
+      "four Real Live Only cards",
+      "explicit authorized-resource test sheet",
+      "ATLAS-16 test passed",
+      "one real Sonnet question",
+      "live evidence panel with original link and timestamps",
+      "citation rejection visibly withheld answer"
+    ],
+    "actual_access_checks": [
+      {
+        "check": "actual provider resource outside selected project rejected",
+        "passed": true,
+        "observed": [
+          503,
+          "outside_scope"
+        ],
+        "expected": [
+          503,
+          "outside_scope"
+        ]
+      },
+      {
+        "check": "non-admin cannot list connections",
+        "passed": true,
+        "observed": 403,
+        "expected": 403
+      },
+      {
+        "check": "another local identity has no inherited connections",
+        "passed": true,
+        "observed": [
+          200,
+          []
+        ],
+        "expected": [
+          200,
+          []
+        ]
+      },
+      {
+        "check": "another local identity cannot read owner connection",
+        "passed": true,
+        "observed": 404,
+        "expected": 404
+      },
+      {
+        "check": "current real MCP dependency can be reauthorized",
+        "passed": true,
+        "observed": [
+          200,
+          {
+            "allowed": true
+          }
+        ],
+        "expected": [
+          200,
+          {
+            "allowed": true
+          }
+        ]
+      },
+      {
+        "check": "disconnect selected BEACON scope",
+        "passed": true,
+        "observed": 200,
+        "expected": 200
+      },
+      {
+        "check": "old dependency denied after local disconnect",
+        "passed": true,
+        "observed": [
+          200,
+          {
+            "allowed": false
+          }
+        ],
+        "expected": [
+          200,
+          {
+            "allowed": false
+          }
+        ]
+      },
+      {
+        "check": "direct live read denied while disconnected",
+        "passed": true,
+        "observed": 409,
+        "expected": 409
+      },
+      {
+        "check": "real resource retested before restoration",
+        "passed": true,
+        "observed": [
+          200,
+          "passed",
+          false
+        ],
+        "expected": [
+          200,
+          "passed",
+          false
+        ]
+      },
+      {
+        "check": "restore BEACON Live Only",
+        "passed": true,
+        "observed": 200,
+        "expected": 200
+      },
+      {
+        "check": "previous generation remains invalid after restoration",
+        "passed": true,
+        "observed": [
+          200,
+          {
+            "allowed": false
+          }
+        ],
+        "expected": [
+          200,
+          {
+            "allowed": false
+          }
+        ]
+      },
+      {
+        "check": "restored scope reads actual source without retaining",
+        "passed": true,
+        "observed": [
+          200,
+          false,
+          false
+        ],
+        "expected": [
+          200,
+          false,
+          false
+        ]
+      },
+      {
+        "check": "exactly four real sources restored in Live Only",
+        "passed": true,
+        "observed": 4,
+        "expected": 4
+      }
+    ]
+  },
+  "live_questions": [
+    {
+      "id": "live-A01",
+      "transport": "browser UI",
+      "outcome": "citation_failed",
+      "accepted_statements": 0,
+      "retained": false
+    },
+    {
+      "id": "live-AR02",
+      "transport": "Linkmind HTTP API",
+      "outcome": "citation_failed",
+      "accepted_statements": 0,
+      "retained": false
+    },
+    {
+      "id": "live-B05",
+      "transport": "Linkmind HTTP API",
+      "outcome": "citation_failed",
+      "accepted_statements": 0,
+      "retained": false
+    },
+    {
+      "id": "live-B07",
+      "transport": "Linkmind HTTP API",
+      "outcome": "citation_failed",
+      "accepted_statements": 0,
+      "retained": false
+    }
+  ],
+  "budget": {
+    "run": "northstar-sonnet-2026-11-12",
+    "limit_usd": "10.0000000000",
+    "baseline_spent_usd": "4.2788470600",
+    "final_spent_usd": "4.4106589600",
+    "additional_total_usd": "0.1318119000",
+    "isolation_error_usd": "0.0304194000",
+    "four_real_questions_usd": "0.1013925000",
+    "conservative_reservations_total_usd": "0.8522580000",
+    "historical_unknown_usd": "0.0566168200",
+    "unknown_calls_before": 3,
+    "unknown_calls_after": 3,
+    "settled_before": 590,
+    "settled_after": 598,
+    "paused": false,
+    "total_new_calls": 8,
+    "real_question_answer_calls": 4,
+    "real_question_verification_calls": 0,
+    "accidental_mock_integration_answer_calls": 2,
+    "accidental_mock_integration_verification_calls": 2,
+    "embeddings": 0,
+    "extraction": 0,
+    "cap_reset": false
+  },
+  "preserved_failures": [
+    "Initial Atlassian consent invalid_request before callback; corrected read-only PKCE consent completed by user.",
+    "Original adapter did not unwrap MCP data and omitted current Confluence content tool; fixed with deterministic regressions.",
+    "Initial full API suite targeted AI-enabled HTTP API despite mock test process: 1 failed, 354 passed, 2 skipped. Four accidental settled calls disclosed. Separate mock API verified before successful rerun.",
+    "Arabic harness initially hit sandbox socket denial before any HTTP/model request. Ledger confirmed unchanged; preserved preflight failure before permitted network execution.",
+    "All four real-source answers rejected by citation contract before independent semantic verification; no accepted answer or root-cause certification.",
+    "UI still labels the provider Sonnet verified source answer even when citation validation fails; failure message is visible. Wording correction remains open."
+  ],
+  "limitations": [
+    "OneDrive/SharePoint not connected or tested",
+    "no real sync/import lifecycle trial",
+    "no provider-side grant revocation test",
+    "no refresh token retained or used",
+    "no production sign-in",
+    "no main cutover, merge, commit, push or AWS deployment",
+    "complete old-container baseline not available in restored tool memory; original budget DB ID independently rechecked"
+  ]
+}

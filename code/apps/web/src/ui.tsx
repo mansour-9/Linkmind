@@ -71,11 +71,24 @@ export const jobLabels: Record<Job["status"], string> = {
   cancelled: "Cancelled",
   ready: "Ready",
   extraction_unavailable: "Extraction unavailable",
+  enrichment_staged_failed: "Knowledge refresh failed",
   failed: "Failed",
 };
 
 export function StatusBadge({ status }: { status: Job["status"] }) {
   return <span className={"status-pill " + status}>{jobLabels[status]}</span>;
+}
+
+const enrichmentLabels: Record<Job["enrichment_status"], string> = {
+  not_requested: "Ready for search and answers",
+  ready: "Knowledge Enriched", queued: "Enrichment queued", processing: "Enriching knowledge",
+  unavailable: "Enrichment unavailable", failed: "Enrichment failed", cancelled: "Enrichment cancelled",
+  enrichment_staged_failed: "Knowledge refresh failed",
+};
+export function ReadinessBadge({ job }: { job: Job }) {
+  return <><span className={"status-pill " + (job.search_status === "ready" ? "ready" : job.status)}>
+    {job.search_status === "ready" ? "Search Ready" : jobLabels[job.status]}</span>
+    {job.search_status === "ready" && <small>{enrichmentLabels[job.enrichment_status]}</small>}</>;
 }
 
 export function SearchField({ className, ...props }: ComponentProps<"input">) {

@@ -1,0 +1,58 @@
+{
+  "status": "passed",
+  "main_mutated": false,
+  "paid_calls": 0,
+  "legacy_before": {
+    "schema": "0010_test_budget",
+    "documents": 1,
+    "versions": 1,
+    "chunks": 6,
+    "entities": 5,
+    "claims": 4,
+    "relationships": 4,
+    "pointers": "60144eb00159a32051d98de232a3c954",
+    "evidence": "8d060a7f7b03ea9b2fb8fc65c4dadab4",
+    "facts": "45b89d482eb5dba8933f5da89b456a18"
+  },
+  "candidate_after_upgrade": {
+    "schema": "0011_staged_enrichment",
+    "documents": 1,
+    "versions": 1,
+    "chunks": 6,
+    "entities": 5,
+    "claims": 4,
+    "relationships": 4,
+    "pointers": "60144eb00159a32051d98de232a3c954",
+    "evidence": "8d060a7f7b03ea9b2fb8fc65c4dadab4",
+    "facts": "45b89d482eb5dba8933f5da89b456a18"
+  },
+  "backup_restore_verified": true,
+  "legacy_rollback_verified": true,
+  "source_ids_and_files_preserved": true,
+  "main_inventory": {
+    "schema": "0010_test_budget",
+    "documents": 54,
+    "versions": 59,
+    "chunks": 305,
+    "entities": 218,
+    "claims": 94,
+    "relationships": 193,
+    "pointers": "f8503c8634157bb08ed016d89d82a08d",
+    "evidence": "47d16ce6526e8c1aa0a7c248ee870374",
+    "facts": "ecc83789bcfe9c2f1c91d936389942ed"
+  },
+  "main_after": {
+    "schema": "0010_test_budget",
+    "documents": 54,
+    "versions": 59,
+    "chunks": 305,
+    "entities": 218,
+    "claims": 94,
+    "relationships": 193,
+    "pointers": "f8503c8634157bb08ed016d89d82a08d",
+    "evidence": "47d16ce6526e8c1aa0a7c248ee870374",
+    "facts": "ecc83789bcfe9c2f1c91d936389942ed"
+  },
+  "legacy_image_id": "sha256:1fdfa3f194583eb0ff4bc19e7bde24f251110196bb33f1d2c0c044986aa7be5d",
+  "candidate_image_id": "sha256:6845c4eb608e0a6e7296cf91cf418cb1fc4714671b1e560b64b590d2adc7217c"
+}

@@ -1,0 +1,30 @@
+# RF1 answer/embedding preview: join the ORIGINAL persistent spend/pacing ledger.
+# Use only with the RF1 project, base compose.yaml, and compose.bedrock.yaml.
+# Neither the application database nor the USD 10 run is copied or reinitialized.
+x-rf1-budget: &rf1-budget
+  DATABASE_URL: postgresql+psycopg://brain:brain-local@${BRAIN_RF1_DB_HOST:?Set the existing RF1 database container name}:5432/brain
+  BEDROCK_BUDGET_DATABASE_URL: ${BEDROCK_BUDGET_DATABASE_URL:?Set the original spend database URL}
+  BEDROCK_BUDGET_RUN: northstar-sonnet-2026-11-12
+  BEDROCK_BUDGET_USD: "10"
+  BEDROCK_RATES_JSON: /run/config/rf1-rates.json
+services:
+  api:
+    environment: *rf1-budget
+    volumes:
+      - type: bind
+        source: ../docs/company_demo/resumed_preflight/rates.json
+        target: /run/config/rf1-rates.json
+        read_only: true
+    networks: [default, budget]
+  worker:
+    environment: *rf1-budget
+    volumes:
+      - type: bind
+        source: ../docs/company_demo/resumed_preflight/rates.json
+        target: /run/config/rf1-rates.json
+        read_only: true
+    networks: [default, budget]
+networks:
+  budget:
+    external: true
+    name: ${BRAIN_BUDGET_NETWORK:?Set the original spend database network}

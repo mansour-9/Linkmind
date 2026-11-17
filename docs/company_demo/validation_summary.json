@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-12",
+  "run_id": "northstar-sonnet-2026-11-12",
+  "status": "completed",
+  "checkpoint_complete": true,
+  "provider": "bedrock",
+  "budget_usd": {
+    "limit": 10.0,
+    "spent": 1.5874433,
+    "reserved": 0.05645144,
+    "remaining": 8.3561
+  },
+  "questions": {
+    "total": 15,
+    "passed": 9,
+    "content_pass_literal_mismatch": 2,
+    "failed_insufficient_evidence": 5,
+    "failed_known_fixture_gaps": ["Q4", "Q5", "Q9", "Q10", "Q11"]
+  },
+  "question_results": [
+    {"number": 1, "verdict": "pass", "supported": true, "literal": true},
+    {"number": 2, "verdict": "pass", "supported": true, "literal": true},
+    {"number": 3, "verdict": "pass", "supported": true, "literal": true},
+    {"number": 4, "verdict": "fail", "reason": "insufficient_evidence — ember-handover enrichment gap"},
+    {"number": 5, "verdict": "fail", "reason": "insufficient_evidence — atlas-decision identifier namespace known issue"},
+    {"number": 6, "verdict": "pass", "supported": true, "literal": true},
+    {"number": 7, "verdict": "content_pass", "supported": true, "exact_quotes": true, "note": "conflict correctly detected; expected string not literal match"},
+    {"number": 8, "verdict": "pass", "supported": true, "literal": true},
+    {"number": 9, "verdict": "fail", "reason": "insufficient_evidence — company-leave-policy enrichment gap"},
+    {"number": 10, "verdict": "fail", "reason": "insufficient_evidence — Arabic leave policy enrichment gap"},
+    {"number": 11, "verdict": "fail", "reason": "insufficient_evidence — company-onboarding enrichment gap"},
+    {"number": 12, "verdict": "content_pass", "supported": true, "exact_quotes": true, "note": "selected-document overview answered; expected describes format not literal value"},
+    {"number": 13, "verdict": "pass", "supported": true, "permission_check": "omar_denied=true"},
+    {"number": 14, "verdict": "skip", "mode": "revision", "note": "handled in revision stage"},
+    {"number": 15, "verdict": "pass", "mode": "missing-evidence", "abstained": true}
+  ],
+  "revision": {
+    "verdict": "pass",
+    "upload_status": "ready",
+    "old_answer_suppressed": true,
+    "new_deadline_found": true,
+    "note": "December 8 deadline correctly returned after atlas-handover revision"
+  },
+  "user_addition": {
+    "verdict": "partial",
+    "job_status": "failed",
+    "search_status": "ready",
+    "note": "Enrichment failed; raw text is searchable. Expected for F1.1 — search readiness is independent of extraction."
+  },
+  "blockers": [],
+  "known_gaps": [
+    "Q4/Q5/Q9/Q10/Q11: 5 questions got insufficient_evidence due to fixture enrichment failures. Text is searchable but entity/claim extraction did not produce grounded answers. These are F1.2 scope (safe quotation and relationship safeguards).",
+    "user_addition enrichment failed — same F1.2 scope issue."
+  ],
+  "api_tests": {"passed": 83, "failed": 0},
+  "browser_workflows": {"passed": 25, "failed": 0},
+  "frontend_build": "passed"
+}

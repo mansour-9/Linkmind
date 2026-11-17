@@ -1,3 +1,14 @@
+> **Historical original specification — superseded by the 2026-11-14 direction.**
+> Its original body is preserved below. Mandatory seven-stage extraction, graph-first
+> priority, enterprise-access delivery order, OCR extensions, Terraform choices and
+> automatic-build instructions are not the active requirements or authorization.
+> Use [current scope](docs/PROJECT_SCOPE.md), [architecture](docs/ARCHITECTURE_M2_M3.md)
+> and the [single RF roadmap](docs/IMPLEMENTATION_PLAN.md): unified company repository,
+> lightweight indexing, optional/default-off enrichment and bounded evidence-based AI.
+> Native authoring/Spaces and advanced workflows remain later ambitions. Current work
+> follows the later explicit RF1 implementation request only; this original spec does
+> not authorize later RF work, paid model calls or deployment.
+
 # Company Brain — Codex Master Build Specification
 **Version:** 1.0 (MVP)  
 **Status:** Implementation brief  

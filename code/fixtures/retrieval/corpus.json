@@ -1,0 +1,33 @@
+{
+  "description": "RF3 fictional source-only retrieval corpus. Deterministic evidence coverage, not model quality.",
+  "documents": [
+    {"key":"roles","filename":"harbor-roles.md","text":"Project Harbor (HB-42) is a fictional customer support portal.\nNora Chen sponsors Project Harbor.\nMaya Farouk is the Product Manager and owns scope and product goals.\nEthan Brooks is the Operations Lead and reviews exceptions at both warehouse sites.\nLuis Ortega is the Integrations Engineer and investigates delayed source updates.\nSara Kim is the Customer Success Lead and owns support readiness."},
+    {"key":"arabic","filename":"staff-policy-ar.md","text":"سياسة العمل عن بعد في شركة المرفأ الخيالية.\nالمسؤوليات: ليلى حسن مسؤولة عن مراجعة طلبات العمل عن بعد.\nالموظفون يستطيعون العمل عن بعد يومين أسبوعيًا بعد موافقة المدير.\nإجراءات التقديم: يرسل الموظف الطلب قبل يوم الخميس."},
+    {"key":"policy","filename":"remote-working.md","text":"The fictional Harbor remote work policy permits two remote days per week after manager approval.\nLeila Hassan reviews remote work requests.\nRequests must be submitted before Thursday."},
+    {"key":"decision","filename":"harbor-approved-decision.md","text":"Decision HB-DEC-4 for Project Harbor (HB-42): the pilot moves from 15 December 2026 to 22 December 2026.\nMaya Farouk approved HB-DEC-4 because the integration test was incomplete.\nThis decision changes the pilot date; it does not change project ownership."},
+    {"key":"disagreement","filename":"harbor-review-draft.md","text":"Unapproved draft for Project Harbor (HB-42): the proposed pilot date is 18 December 2026.\nThe draft is owned by Omar Saleh and has not superseded decision HB-DEC-4."},
+    {"key":"long_roles","filename":"harbor-long-notes.md","generated_sections":40,"role_lines":{"9":"Maya Farouk is the Product Manager and owns Project Harbor scope.","14":"Ethan Brooks is the Operations Lead and reviews warehouse exceptions.","19":"Luis Ortega is the Integrations Engineer and investigates delayed source updates."}},
+    {"key":"history","filename":"harbor-release-history.md","text":"Project Harbor (HB-42) release owner is Amina.\nThe earlier release checkpoint is 10 December 2026.","revision_text":"Project Harbor (HB-42) release owner is Daniel.\nThe revised release checkpoint is 17 December 2026."},
+    {"key":"private","filename":"harbor-private-finance.md","visibility":"private","text":"Private fictional finance note: Harbor restricted finance marker is FIN-SECRET-742.\nThe internal contingency draft is not an approved budget."}
+  ],
+  "development_questions":[
+    {"id":"roles-en","question":"Who are the people and what are their responsibilities?","sources":["roles"],"expected":["Maya Farouk is the Product Manager","Ethan Brooks is the Operations Lead","Luis Ortega is the Integrations Engineer"]},
+    {"id":"roles-ar","question":"تقدر تقولي من الاشخاص و المسؤوليات؟","sources":["roles"],"expected":["Maya Farouk is the Product Manager","Ethan Brooks is the Operations Lead","Luis Ortega is the Integrations Engineer"]},
+    {"id":"long-en","question":"List the people and responsibilities in this project.","sources":["long_roles"],"expected":["Maya Farouk is the Product Manager","Ethan Brooks is the Operations Lead","Luis Ortega is the Integrations Engineer"]},
+    {"id":"long-ar","question":"مين الأشخاص ومسؤولياتهم في المشروع؟","sources":["long_roles"],"expected":["Maya Farouk is the Product Manager","Ethan Brooks is the Operations Lead","Luis Ortega is the Integrations Engineer"]},
+    {"id":"arabic-policy","question":"من مسؤول مراجعة طلبات العمل عن بعد؟","sources":["arabic"],"expected":["ليلى حسن مسؤولة"]},
+    {"id":"bilingual-policy","question":"كم يوم يسمح بالعمل عن بعد؟","sources":["policy"],"expected":["two remote days per week"]},
+    {"id":"explicit-key","question":"What changed in HB-DEC-4?","sources":[],"expected":["moves from 15 December 2026 to 22 December 2026","integration test was incomplete"]},
+    {"id":"source-comparison","question":"Compare the pilot dates and distinguish the approved decision from the draft.","sources":["decision","disagreement"],"expected":["22 December 2026","18 December 2026"]},
+    {"id":"prior-version","question":"Compare the previous version with the current version: who owns the release and what changed?","sources":["history"],"expected":["release owner is Amina","release owner is Daniel"]},
+    {"id":"overview","question":"Summarize this document","sources":["roles"],"expected":["Project Harbor","Nora Chen"]},
+    {"id":"missing-topic","question":"UnrecordedQuantumFunding742?","sources":[],"expected":[],"must_abstain":true}
+  ],
+  "heldout_questions":[
+    {"id":"heldout-roles-mixed","question":"وش roles فريق Harbor والمسؤوليات؟","sources":["long_roles"],"expected":["Product Manager","Operations Lead","Integrations Engineer"]},
+    {"id":"heldout-arabic-spelling","question":"ما اجراءات العمل عن بعد؟","sources":["arabic"],"expected":["يرسل الموظف الطلب قبل يوم الخميس"]},
+    {"id":"heldout-history-ar","question":"قارن النسخة السابقة بالحالية: من مسؤول الإصدار؟","sources":["history"],"expected":["release owner is Amina","release owner is Daniel"]},
+    {"id":"heldout-operations","question":"How does Ethan Brooks contribute to the project?","sources":["roles"],"expected":["Ethan Brooks is the Operations Lead"]},
+    {"id":"heldout-bilingual","question":"Who reviews remote work requests?","sources":["arabic"],"expected":["ليلى حسن مسؤولة"]}
+  ]
+}

@@ -1,0 +1,25 @@
+# RF3 only: separate content, direct use of the original spend/pacing database.
+# Layer over compose.yaml and compose.bedrock.yaml after deterministic acceptance.
+services:
+  api:
+    environment:
+      DATABASE_URL: postgresql+psycopg://brain:brain-local@linkmind-rf3-ai-db-1:5432/brain
+      BEDROCK_BUDGET_DATABASE_URL: ${BEDROCK_BUDGET_DATABASE_URL:?Set the original budget database URL}
+      BEDROCK_BUDGET_RUN: northstar-sonnet-2026-11-12
+      BEDROCK_BUDGET_USD: "10"
+      BEDROCK_RATES_JSON: /run/config/rf3-rates.json
+    volumes:
+      - type: bind
+        source: ../docs/company_demo/resumed_preflight/rates.json
+        target: /run/config/rf3-rates.json
+        read_only: true
+    networks: [default, budget]
+  worker:
+    # Evaluation indexing is explicitly bounded in rf3_ai_check.py. Background
+    # uploads remain lexical-only in this evaluation preview.
+    environment:
+      AI_PROVIDER: mock
+networks:
+  budget:
+    external: true
+    name: ${BRAIN_BUDGET_NETWORK:?Set the original budget database network}

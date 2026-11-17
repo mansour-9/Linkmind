@@ -1,0 +1,822 @@
+{
+  "status": "completed",
+  "rows": [
+    {
+      "case": "simple_pdf",
+      "model": "google.gemma-4-31b",
+      "status": "schema_failure",
+      "schema_valid": false,
+      "exact_citations_valid": false,
+      "extraction": {
+        "text": "```json\n{\n  \"entities\": [\n    {\n      \"key\": \"project_aster\",\n      \"kind\": \"project\",\n      \"name\": \"Project Aster\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"project_key\",\n          \"value\": \"M32-ASTER\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"simple_pdf:1\",\n          \"quote\": \"Project Aster (project key M32-ASTER)\"\n        }\n      ]\n    },\n    {\n      \"key\": \"nora\",\n      \"kind\": \"person\",\n      \"name\": \"Nora\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"email\",\n          \"value\": \"nora@m32.example\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"simple_pdf:1\",\n          \"quote\": \"Nora (email nora@m32.example)\"\n        }\n      ]\n    }\n  ],\n  \"claims\": [],\n  \"relationships\": [\n    {\n      \"source_key\": \"project_aster\",\n      \"target_key\": \"nora\",\n      \"predicate\": \"owner\",\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"simple_pdf:1\",\n          \"quote\": \"Project Aster (project key M32-ASTER) is owned by Nora (email nora@m32.example).\"\n        }\n      ]\n    }\n  ]\n}\n```",
+        "complete": true,
+        "attempt": 1,
+        "request_id": "chatcmpl-d5znztkgvi3jypry4upvosb4hv26sbyg2e77deu63bmlstakpzkq"
+      }
+    },
+    {
+      "case": "simple_pdf",
+      "model": "us.anthropic.claude-sonnet-4-6",
+      "status": "accepted_first_pass",
+      "schema_valid": true,
+      "exact_citations_valid": true,
+      "extraction": {
+        "text": "{\"entities\":[{\"key\":\"project_aster\",\"kind\":\"project\",\"name\":\"Project Aster\",\"identifiers\":[{\"namespace\":\"project_key\",\"value\":\"M32-ASTER\"}],\"evidence\":[{\"passage_id\":\"simple_pdf:1\",\"quote\":\"Project Aster (project key M32-ASTER)\"}]},{\"key\":\"nora\",\"kind\":\"person\",\"name\":\"Nora\",\"identifiers\":[{\"namespace\":\"email\",\"value\":\"nora@m32.example\"}],\"evidence\":[{\"passage_id\":\"simple_pdf:1\",\"quote\":\"owned by Nora (email nora@m32.example)\"}]}],\"claims\":[{\"entity_key\":\"project_aster\",\"predicate\":\"owner\",\"value\":\"Nora\",\"asserted_by\":null,\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"simple_pdf:1\",\"quote\":\"Project Aster (project key M32-ASTER) is owned by Nora (email nora@m32.example)\"}]}],\"relationships\":[{\"source_key\":\"project_aster\",\"target_key\":\"nora\",\"predicate\":\"owned_by\",\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"simple_pdf:1\",\"quote\":\"Project Aster (project key M32-ASTER) is owned by Nora (email nora@m32.example)\"}]}]}",
+        "complete": true,
+        "attempt": 2,
+        "request_id": "271b153d-c248-4089-9012-2614d453c3ce"
+      },
+      "gold": {
+        "entities": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "identifiers": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "claims": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "relationships": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "incorrect_relationship_direction": 0,
+        "forbidden_entities": []
+      },
+      "verification": {
+        "text": "{\"supported\":[true,true,true,true]}",
+        "complete": true,
+        "attempt": 3,
+        "request_id": "23447b25-097c-454e-a0fb-56bdfacdd6f8"
+      },
+      "unsupported_assertions": 0
+    },
+    {
+      "case": "typography_pdf",
+      "model": "us.anthropic.claude-sonnet-4-6",
+      "status": "evidence_failure",
+      "schema_valid": true,
+      "exact_citations_valid": false,
+      "extraction": {
+        "text": "{\"entities\":[{\"key\":\"project_birch\",\"kind\":\"project\",\"name\":\"Project Birch\",\"identifiers\":[{\"namespace\":\"project_key\",\"value\":\"M32-BIRCH\"}],\"evidence\":[{\"passage_id\":\"typography_pdf:1\",\"quote\":\"Project Birch has project key M32-BIRCH.\"}]},{\"key\":\"nora\",\"kind\":\"person\",\"name\":\"Nora\",\"identifiers\":[{\"namespace\":\"email\",\"value\":\"nora@m32.example\"}],\"evidence\":[{\"passage_id\":\"typography_pdf:1\",\"quote\":\"Nora has email nora@m32.example.\"}]}],\"claims\":[{\"entity_key\":\"project_birch\",\"predicate\":\"owner\",\"value\":\"Nora\",\"asserted_by\":null,\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"typography_pdf:1\",\"quote\":\"Project Birch is owned by\\nNora.\"}]},{\"entity_key\":\"project_birch\",\"predicate\":\"status\",\"value\":\"pre-launch\",\"asserted_by\":null,\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"typography_pdf:1\",\"quote\":\"Project Birch status is \\\"\\npre-\\nlaunch\\\".\"}]}],\"relationships\":[{\"source_key\":\"nora\",\"target_key\":\"project_birch\",\"predicate\":\"owner\",\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"typography_pdf:1\",\"quote\":\"Project Birch is owned by\\nNora.\"}]}]}",
+        "complete": true,
+        "attempt": 4,
+        "request_id": "5d5e22a8-3141-4725-a337-89e2acc7a649"
+      },
+      "validation_error": "Evidence quote does not exist in its passage"
+    },
+    {
+      "case": "typography_pdf",
+      "model": "google.gemma-4-31b",
+      "status": "schema_failure",
+      "schema_valid": false,
+      "exact_citations_valid": false,
+      "extraction": {
+        "text": "```json\n{\n  \"entities\": [\n    {\n      \"key\": \"project_birch\",\n      \"kind\": \"project\",\n      \"name\": \"Project Birch\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"project_key\",\n          \"value\": \"M32-BIRCH\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"typography_pdf:1\",\n          \"quote\": \"Project Birch has project key M32-BIRCH.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"nora\",\n      \"kind\": \"person\",\n      \"name\": \"Nora\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"email\",\n          \"value\": \"nora@m32.example\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"typography_pdf:1\",\n          \"quote\": \"Nora has email nora@m32.example.\"\n        }\n      ]\n    }\n  ],\n  \"claims\": [\n    {\n      \"entity_key\": \"project_birch\",\n      \"predicate\": \"status\",\n      \"value\": \"pre-launch\",\n      \"asserted_by\": null,\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"typography_pdf:1\",\n          \"quote\": \"Project Birch status is “pre-launch”.\"\n        }\n      ]\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source_key\": \"project_birch\",\n      \"target_key\": \"nora\",\n      \"predicate\": \"owner\",\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"typography_pdf:1\",\n          \"quote\": \"Project Birch is owned by Nora.\"\n        }\n      ]\n    }\n  ]\n}\n```",
+        "complete": true,
+        "attempt": 5,
+        "request_id": "chatcmpl-hiwtm2dyl2jhvegizwt2ohtpkeeezuywgj6fspwx5ejwzaf26mcq"
+      }
+    },
+    {
+      "case": "docx_table",
+      "model": "google.gemma-4-31b",
+      "status": "schema_failure",
+      "schema_valid": false,
+      "exact_citations_valid": false,
+      "extraction": {
+        "text": "```json\n{\n  \"entities\": [\n    {\n      \"key\": \"project_cedar\",\n      \"kind\": \"project\",\n      \"name\": \"Project Cedar\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"project_key\",\n          \"value\": \"M32-CEDAR\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"docx_table:2\",\n          \"quote\": \"Project Cedar has project key M32-CEDAR.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"data_services\",\n      \"kind\": \"team\",\n      \"name\": \"Data Services\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"url\",\n          \"value\": \"https://m32.example/teams/data\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"docx_table:3\",\n          \"quote\": \"Data Services is a team with URL https://m32.example/teams/data.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"postgresql\",\n      \"kind\": \"technology\",\n      \"name\": \"PostgreSQL\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"url\",\n          \"value\": \"https://m32.example/technologies/postgresql\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"docx_table:4\",\n          \"quote\": \"PostgreSQL is a technology with URL https://m32.example/technologies/postgresql.\"\n        }\n      ]\n    }\n  ],\n  \"claims\": [\n    {\n      \"entity_key\": \"project_cedar\",\n      \"predicate\": \"status\",\n      \"value\": \"Pilot\",\n      \"asserted_by\": null,\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"docx_table:6\",\n          \"quote\": \"Project Cedar status | Pilot\"\n        }\n      ]\n    },\n    {\n      \"entity_key\": \"project_cedar\",\n      \"predicate\": \"target_database\",\n      \"value\": \"PostgreSQL\",\n      \"asserted_by\": null,\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"docx_table:7\",\n          \"quote\": \"Project Cedar target database | PostgreSQL\"\n        }\n      ]\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source_key\": \"project_cedar\",\n      \"target_key\": \"data_services\",\n      \"predicate\": \"managed_by\",\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"docx_table:5\",\n          \"quote\": \"Project Cedar is managed by Data Services.\"\n        }\n      ]\n    }\n  ]\n}\n```",
+        "complete": true,
+        "attempt": 6,
+        "request_id": "chatcmpl-berduhx6r77cqljlrq2murwulbzwuxp7ms2ve562o5ycb3xruwqq"
+      }
+    },
+    {
+      "case": "docx_table",
+      "model": "us.anthropic.claude-sonnet-4-6",
+      "status": "accepted_first_pass",
+      "schema_valid": true,
+      "exact_citations_valid": true,
+      "extraction": {
+        "text": "{\"entities\":[{\"key\":\"project_cedar\",\"kind\":\"project\",\"name\":\"Project Cedar\",\"identifiers\":[{\"namespace\":\"project_key\",\"value\":\"M32-CEDAR\"}],\"evidence\":[{\"passage_id\":\"docx_table:2\",\"quote\":\"Project Cedar has project key M32-CEDAR.\"}]},{\"key\":\"data_services\",\"kind\":\"team\",\"name\":\"Data Services\",\"identifiers\":[{\"namespace\":\"url\",\"value\":\"https://m32.example/teams/data\"}],\"evidence\":[{\"passage_id\":\"docx_table:3\",\"quote\":\"Data Services is a team with URL https://m32.example/teams/data.\"}]},{\"key\":\"postgresql\",\"kind\":\"technology\",\"name\":\"PostgreSQL\",\"identifiers\":[{\"namespace\":\"url\",\"value\":\"https://m32.example/technologies/postgresql\"}],\"evidence\":[{\"passage_id\":\"docx_table:4\",\"quote\":\"PostgreSQL is a technology with URL https://m32.example/technologies/postgresql.\"}]}],\"claims\":[{\"entity_key\":\"project_cedar\",\"predicate\":\"status\",\"value\":\"Pilot\",\"asserted_by\":null,\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"docx_table:6\",\"quote\":\"Project Cedar status | Pilot\"}]},{\"entity_key\":\"project_cedar\",\"predicate\":\"target_database\",\"value\":\"PostgreSQL\",\"asserted_by\":null,\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"docx_table:7\",\"quote\":\"Project Cedar target database | PostgreSQL\"}]}],\"relationships\":[{\"source_key\":\"project_cedar\",\"target_key\":\"data_services\",\"predicate\":\"managed_by\",\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"docx_table:5\",\"quote\":\"Project Cedar is managed by Data Services.\"}]},{\"source_key\":\"project_cedar\",\"target_key\":\"postgresql\",\"predicate\":\"target_database\",\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"docx_table:7\",\"quote\":\"Project Cedar target database | PostgreSQL\"}]}]}",
+        "complete": true,
+        "attempt": 7,
+        "request_id": "dba6b26e-240b-495b-8449-feadec260a54"
+      },
+      "gold": {
+        "entities": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "identifiers": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "claims": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 1,
+          "precision": 1.0,
+          "recall": 0.6666666666666666,
+          "missing": [
+            [
+              "cedar",
+              "managed_by",
+              "data services",
+              "",
+              ""
+            ]
+          ],
+          "extra": []
+        },
+        "relationships": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.5,
+          "recall": 0.5,
+          "missing": [
+            [
+              "cedar",
+              "uses",
+              "postgresql",
+              "",
+              ""
+            ]
+          ],
+          "extra": [
+            [
+              "cedar",
+              "target_database",
+              "postgresql",
+              "",
+              ""
+            ]
+          ]
+        },
+        "incorrect_relationship_direction": 0,
+        "forbidden_entities": []
+      },
+      "verification": {
+        "text": "{\"supported\":[true,true,true,true,true,true,true]}",
+        "complete": true,
+        "attempt": 8,
+        "request_id": "9dd07545-a55a-4c16-916b-32e7e32c25d6"
+      },
+      "unsupported_assertions": 0
+    },
+    {
+      "case": "markdown_sections",
+      "model": "us.anthropic.claude-sonnet-4-6",
+      "status": "accepted_first_pass",
+      "schema_valid": true,
+      "exact_citations_valid": true,
+      "extraction": {
+        "text": "{\"entities\":[{\"key\":\"project_delta\",\"kind\":\"project\",\"name\":\"Project Delta\",\"identifiers\":[{\"namespace\":\"project_key\",\"value\":\"M32-DELTA\"}],\"evidence\":[{\"passage_id\":\"markdown_sections:2\",\"quote\":\"# Project Delta\"},{\"passage_id\":\"markdown_sections:3\",\"quote\":\"Project Delta has project key M32-DELTA.\"}]},{\"key\":\"omar\",\"kind\":\"person\",\"name\":\"Omar\",\"identifiers\":[{\"namespace\":\"email\",\"value\":\"omar@m32.example\"}],\"evidence\":[{\"passage_id\":\"markdown_sections:4\",\"quote\":\"Omar has email omar@m32.example.\"}]},{\"key\":\"task_gd_m32_101\",\"kind\":\"task\",\"name\":\"Validate rollback\",\"identifiers\":[{\"namespace\":\"issue_key\",\"value\":\"GD-M32-101\"}],\"evidence\":[{\"passage_id\":\"markdown_sections:6\",\"quote\":\"GD-M32-101 is a task named Validate rollback.\"}]}],\"claims\":[{\"entity_key\":\"project_delta\",\"predicate\":\"status\",\"value\":\"Active\",\"asserted_by\":null,\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"markdown_sections:11\",\"quote\":\"Project Delta status is Active.\"}]},{\"entity_key\":\"task_gd_m32_101\",\"predicate\":\"owner\",\"value\":\"Omar\",\"asserted_by\":null,\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"markdown_sections:8\",\"quote\":\"GD-M32-101 is assigned to Omar.\"}]}],\"relationships\":[{\"source_key\":\"task_gd_m32_101\",\"target_key\":\"project_delta\",\"predicate\":\"belongs_to\",\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"markdown_sections:7\",\"quote\":\"GD-M32-101 belongs to Project Delta.\"}]},{\"source_key\":\"omar\",\"target_key\":\"task_gd_m32_101\",\"predicate\":\"assigned_to\",\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"markdown_sections:8\",\"quote\":\"GD-M32-101 is assigned to Omar.\"}]}]}",
+        "complete": true,
+        "attempt": 9,
+        "request_id": "23261fed-9387-45f1-86d0-18c843421867"
+      },
+      "gold": {
+        "entities": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "identifiers": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "claims": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "missing": [],
+          "extra": [
+            [
+              "task",
+              "owner",
+              "omar",
+              "",
+              ""
+            ]
+          ]
+        },
+        "relationships": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.5,
+          "recall": 0.5,
+          "missing": [
+            [
+              "task",
+              "assigned_to",
+              "omar",
+              "",
+              ""
+            ]
+          ],
+          "extra": [
+            [
+              "omar",
+              "assigned_to",
+              "task",
+              "",
+              ""
+            ]
+          ]
+        },
+        "incorrect_relationship_direction": 1,
+        "forbidden_entities": []
+      },
+      "verification": {
+        "text": "{\"supported\":[true,true,true,true,true,true,true]}",
+        "complete": true,
+        "attempt": 10,
+        "request_id": "1628976d-b513-493e-af89-c61edf159e45"
+      },
+      "unsupported_assertions": 0
+    },
+    {
+      "case": "markdown_sections",
+      "model": "google.gemma-4-31b",
+      "status": "schema_failure",
+      "schema_valid": false,
+      "exact_citations_valid": false,
+      "extraction": {
+        "text": "```json\n{\n  \"entities\": [\n    {\n      \"key\": \"project_delta\",\n      \"kind\": \"project\",\n      \"name\": \"Project Delta\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"project_key\",\n          \"value\": \"M32-DELTA\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"markdown_sections:2\",\n          \"quote\": \"# Project Delta\"\n        },\n        {\n          \"passage_id\": \"markdown_sections:3\",\n          \"quote\": \"Project Delta has project key M32-DELTA.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"omar\",\n      \"kind\": \"person\",\n      \"name\": \"Omar\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"email\",\n          \"value\": \"omar@m32.example\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"markdown_sections:4\",\n          \"quote\": \"Omar has email omar@m32.example.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"gd_m32_101\",\n      \"kind\": \"task\",\n      \"name\": \"Validate rollback\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"issue_key\",\n          \"value\": \"GD-M32-101\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"markdown_sections:6\",\n          \"quote\": \"GD-M32-101 is a task named Validate rollback.\"\n        }\n      ]\n    }\n  ],\n  \"claims\": [\n    {\n      \"entity_key\": \"project_delta\",\n      \"predicate\": \"status\",\n      \"value\": \"Active\",\n      \"asserted_by\": null,\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"markdown_sections:11\",\n          \"quote\": \"Project Delta status is Active.\"\n        }\n      ]\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source_key\": \"gd_m32_101\",\n      \"target_key\": \"project_delta\",\n      \"predicate\": \"belongs_to\",\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"markdown_sections:7\",\n          \"quote\": \"GD-M32-101 belongs to Project Delta.\"\n        }\n      ]\n    },\n    {\n      \"source_key\": \"gd_m32_101\",\n      \"target_key\": \"omar\",\n      \"predicate\": \"assigned_to\",\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"markdown_sections:8\",\n          \"quote\": \"GD-M32-101 is assigned to Omar.\"\n        }\n      ]\n    }\n  ]\n}\n```",
+        "complete": true,
+        "attempt": 11,
+        "request_id": "chatcmpl-kns6tmzjabby6dsgnmbgxzlux4xf7cvystah4k6ggfrbcujsxyza"
+      }
+    },
+    {
+      "case": "unicode_crlf",
+      "model": "google.gemma-4-31b",
+      "status": "schema_failure",
+      "schema_valid": false,
+      "exact_citations_valid": false,
+      "extraction": {
+        "text": "```json\n{\n  \"entities\": [\n    {\n      \"key\": \"project_echo\",\n      \"kind\": \"project\",\n      \"name\": \"Project Echo\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"project_key\",\n          \"value\": \"M32-ECHO\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"unicode_crlf:2\",\n          \"quote\": \"Project Echo has project key M32-ECHO.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"renee\",\n      \"kind\": \"person\",\n      \"name\": \"Renée\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"email\",\n          \"value\": \"renee@m32.example\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"unicode_crlf:3\",\n          \"quote\": \"Renée has email renee@m32.example.\"\n        }\n      ]\n    }\n  ],\n  \"claims\": [\n    {\n      \"entity_key\": \"project_echo\",\n      \"predicate\": \"status\",\n      \"value\": \"Active\",\n      \"asserted_by\": null,\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"unicode_crlf:5\",\n          \"quote\": \"Project Echo status is Active.\"\n        }\n      ]\n    }\n  ],\n  \"relationships\": [\n    {\n      \"source_key\": \"project_echo\",\n      \"target_key\": \"renee\",\n      \"predicate\": \"owner\",\n      \"effective_from\": null,\n      \"effective_to\": null,\n      \"evidence\": [\n        {\n          \"passage_id\": \"unicode_crlf:4\",\n          \"quote\": \"Project Echo is owned by Renée.\"\n        }\n      ]\n    }\n  ]\n}\n```",
+        "complete": true,
+        "attempt": 12,
+        "request_id": "chatcmpl-ulkc6tztq5zxjygk5d5m33e5sn3lfsp4t6trlk63av2sflhhe3xq"
+      }
+    },
+    {
+      "case": "unicode_crlf",
+      "model": "us.anthropic.claude-sonnet-4-6",
+      "status": "accepted_first_pass",
+      "schema_valid": true,
+      "exact_citations_valid": true,
+      "extraction": {
+        "text": "{\"entities\":[{\"key\":\"project_echo\",\"kind\":\"project\",\"name\":\"Project Echo\",\"identifiers\":[{\"namespace\":\"project_key\",\"value\":\"M32-ECHO\"}],\"evidence\":[{\"passage_id\":\"unicode_crlf:2\",\"quote\":\"Project Echo has project key M32-ECHO.\"}]},{\"key\":\"renee\",\"kind\":\"person\",\"name\":\"Renée\",\"identifiers\":[{\"namespace\":\"email\",\"value\":\"renee@m32.example\"}],\"evidence\":[{\"passage_id\":\"unicode_crlf:3\",\"quote\":\"Renée has email renee@m32.example.\"}]}],\"claims\":[{\"entity_key\":\"project_echo\",\"predicate\":\"owner\",\"value\":\"Renée\",\"asserted_by\":null,\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"unicode_crlf:4\",\"quote\":\"Project Echo is owned by Renée.\"}]},{\"entity_key\":\"project_echo\",\"predicate\":\"status\",\"value\":\"Active\",\"asserted_by\":null,\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"unicode_crlf:5\",\"quote\":\"Project Echo status is Active.\"}]}],\"relationships\":[{\"source_key\":\"project_echo\",\"target_key\":\"renee\",\"predicate\":\"owned_by\",\"effective_from\":null,\"effective_to\":null,\"evidence\":[{\"passage_id\":\"unicode_crlf:4\",\"quote\":\"Project Echo is owned by Renée.\"}]}]}",
+        "complete": true,
+        "attempt": 13,
+        "request_id": "0a09a340-736d-45c2-8c2e-a407ca4bd649"
+      },
+      "gold": {
+        "entities": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "identifiers": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "claims": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "relationships": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "incorrect_relationship_direction": 0,
+        "forbidden_entities": []
+      },
+      "verification": {
+        "text": "{\"supported\":[true,true,true,true,true]}",
+        "complete": true,
+        "attempt": 14,
+        "request_id": "1078c059-46b0-415f-84f3-8aee540a5c6e"
+      },
+      "unsupported_assertions": 0
+    },
+    {
+      "case": "temporal_untrusted",
+      "model": "us.anthropic.claude-sonnet-4-6",
+      "status": "accepted_first_pass",
+      "schema_valid": true,
+      "exact_citations_valid": true,
+      "extraction": {
+        "text": "{\"entities\":[{\"key\":\"project_fjord\",\"kind\":\"project\",\"name\":\"Project Fjord\",\"identifiers\":[{\"namespace\":\"project_key\",\"value\":\"M32-FJORD\"}],\"evidence\":[{\"passage_id\":\"temporal_untrusted:2\",\"quote\":\"Project Fjord has project key M32-FJORD.\"}]},{\"key\":\"mira\",\"kind\":\"person\",\"name\":\"Mira\",\"identifiers\":[{\"namespace\":\"email\",\"value\":\"mira@m32.example\"}],\"evidence\":[{\"passage_id\":\"temporal_untrusted:3\",\"quote\":\"Mira has email mira@m32.example.\"}]},{\"key\":\"omar\",\"kind\":\"person\",\"name\":\"Omar\",\"identifiers\":[{\"namespace\":\"email\",\"value\":\"omar@m32.example\"}],\"evidence\":[{\"passage_id\":\"temporal_untrusted:4\",\"quote\":\"Omar has email omar@m32.example.\"}]}],\"claims\":[{\"entity_key\":\"project_fjord\",\"predicate\":\"owner\",\"value\":\"Mira\",\"asserted_by\":null,\"effective_from\":\"2026-01-01\",\"effective_to\":\"2026-06-30\",\"evidence\":[{\"passage_id\":\"temporal_untrusted:5\",\"quote\":\"From 2026-01-01 through 2026-06-30, Project Fjord is owned by Mira.\"}]},{\"entity_key\":\"project_fjord\",\"predicate\":\"owner\",\"value\":\"Omar\",\"asserted_by\":null,\"effective_from\":\"2026-07-01\",\"effective_to\":\"2026-12-31\",\"evidence\":[{\"passage_id\":\"temporal_untrusted:6\",\"quote\":\"From 2026-07-01 through 2026-12-31, Project Fjord is owned by Omar.\"}]}],\"relationships\":[{\"source_key\":\"mira\",\"target_key\":\"project_fjord\",\"predicate\":\"owns\",\"effective_from\":\"2026-01-01\",\"effective_to\":\"2026-06-30\",\"evidence\":[{\"passage_id\":\"temporal_untrusted:5\",\"quote\":\"From 2026-01-01 through 2026-06-30, Project Fjord is owned by Mira.\"}]},{\"source_key\":\"omar\",\"target_key\":\"project_fjord\",\"predicate\":\"owns\",\"effective_from\":\"2026-07-01\",\"effective_to\":\"2026-12-31\",\"evidence\":[{\"passage_id\":\"temporal_untrusted:6\",\"quote\":\"From 2026-07-01 through 2026-12-31, Project Fjord is owned by Omar.\"}]}]}",
+        "complete": true,
+        "attempt": 15,
+        "request_id": "a9a58a07-3e62-4e7b-9d54-ba76e25857cd"
+      },
+      "gold": {
+        "entities": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "identifiers": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "claims": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "relationships": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "missing": [],
+          "extra": []
+        },
+        "incorrect_relationship_direction": 0,
+        "forbidden_entities": []
+      },
+      "verification": {
+        "text": "{\"supported\":[true,true,true,true,true,true,true]}",
+        "complete": true,
+        "attempt": 16,
+        "request_id": "88577ca8-0465-4b4f-ab5e-8c0df80e3beb"
+      },
+      "unsupported_assertions": 0
+    },
+    {
+      "case": "temporal_untrusted",
+      "model": "google.gemma-4-31b",
+      "status": "schema_failure",
+      "schema_valid": false,
+      "exact_citations_valid": false,
+      "extraction": {
+        "text": "```json\n{\n  \"entities\": [\n    {\n      \"key\": \"project_fjord\",\n      \"kind\": \"project\",\n      \"name\": \"Project Fjord\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"project_key\",\n          \"value\": \"M32-FJORD\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"temporal_untrusted:2\",\n          \"quote\": \"Project Fjord has project key M32-FJORD.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"mira\",\n      \"kind\": \"person\",\n      \"name\": \"Mira\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"email\",\n          \"value\": \"mira@m32.example\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"temporal_untrusted:3\",\n          \"quote\": \"Mira has email mira@m32.example.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"omar\",\n      \"kind\": \"person\",\n      \"name\": \"Omar\",\n      \"identifiers\": [\n        {\n          \"namespace\": \"email\",\n          \"value\": \"omar@m32.example\"\n        }\n      ],\n      \"evidence\": [\n        {\n          \"passage_id\": \"temporal_untrusted:4\",\n          \"quote\": \"Omar has email omar@m32.example.\"\n        }\n      ]\n    }\n  ],\n  \"claims\": [],\n  \"relationships\": [\n    {\n      \"source_key\": \"project_fjord\",\n      \"target_key\": \"mira\",\n      \"predicate\": \"owner\",\n      \"effective_from\": \"2026-01-01\",\n      \"effective_to\": \"2026-06-30\",\n      \"evidence\": [\n        {\n          \"passage_id\": \"temporal_untrusted:5\",\n          \"quote\": \"From 2026-01-01 through 2026-06-30, Project Fjord is owned by Mira.\"\n        }\n      ]\n    },\n    {\n      \"source_key\": \"project_fjord\",\n      \"target_key\": \"omar\",\n      \"predicate\": \"owner\",\n      \"effective_from\": \"2026-07-01\",\n      \"effective_to\": \"2026-12-31\",\n      \"evidence\": [\n        {\n          \"passage_id\": \"temporal_untrusted:6\",\n          \"quote\": \"From 2026-07-01 through 2026-12-31, Project Fjord is owned by Omar.\"\n        }\n      ]\n    }\n  ]\n}\n```",
+        "complete": true,
+        "attempt": 17,
+        "request_id": "chatcmpl-36zfkvqvbpcovcvefg6avtssylscwk6fvhw5ayiqghshdxidjfiq"
+      }
+    }
+  ],
+  "limitations": [
+    "Six paired synthetic cases are a pilot, not statistical model equivalence or full Chat/retrieval quality.",
+    "Gold metrics use frozen literal/alias tuples; additional source-supported paraphrases require separate adjudication.",
+    "Common Sonnet verification can be biased; gold matching and explicit source review remain separate.",
+    "Sonnet uses native constrained output; Gemma uses a schema in the same prompt with strict local validation. No silent output repair.",
+    "Costs are token estimates at verified list rates, not an AWS bill."
+  ],
+  "preflight": {
+    "authenticated": true,
+    "sonnet_profile": "us.anthropic.claude-sonnet-4-6",
+    "gemma_listed": true,
+    "default_project": true,
+    "region": "us-east-1"
+  },
+  "prices": {
+    "us.anthropic.claude-sonnet-4-6": {
+      "currency": "USD",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrockFoundationModels/current/us-east-1/index.json",
+      "published": "2026-11-09T22:43:12Z",
+      "dimensions": [
+        {
+          "sku": "KPFGPZJ8VWMREGAV",
+          "unit": "1M tokens",
+          "effective": "2026-09-01T00:00:00Z",
+          "usage": "USE1-MP:USE1_InputTokenCount-Units"
+        },
+        {
+          "sku": "GMB9AQ5DYNAGYZEC",
+          "unit": "1M tokens",
+          "effective": "2026-09-01T00:00:00Z",
+          "usage": "USE1-MP:USE1_OutputTokenCount-Units"
+        }
+      ],
+      "input": "3.3000000000",
+      "output": "16.5000000000"
+    },
+    "google.gemma-4-31b": {
+      "currency": "USD",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/current/us-east-1/index.json",
+      "published": "2026-11-11T01:30:37Z",
+      "dimensions": [
+        {
+          "sku": "UHB2VWK2NG4A93BN",
+          "unit": "1K tokens",
+          "effective": "2026-11-01T00:00:00Z",
+          "usage": "USE1-google.gemma-4-31b-mantle-input-tokens-standard"
+        },
+        {
+          "sku": "F2RSSBZ8F3XQP2AN",
+          "unit": "1K tokens",
+          "effective": "2026-11-01T00:00:00Z",
+          "usage": "USE1-google.gemma-4-31b-mantle-output-tokens-standard"
+        }
+      ],
+      "input": "0.1400000000",
+      "output": "0.4000000000"
+    }
+  },
+  "attempts": 17,
+  "ledger": {
+    "identity": {
+      "manifest_sha256": "3681ecd9c3d96bd586205919025cc39bc2bda1cd2d8a2169c78ea791cea2b0f7",
+      "extraction_schema_sha256": "3050dfaf4488d56cf32c783225d3654d1ff5f173c3b7b84a534970d61939f4c4",
+      "prompt_sha256": "1337d498236de710accc3d05a78130b997a51923c53afe53fade91d440fb5b28",
+      "source_passages": [
+        {
+          "id": "simple_pdf",
+          "source_sha256": "5fec327b7048775fa9bb88903bb379d32b75b06800aee72e9a7302034a9722fd",
+          "passage_sha256": "c3e1ef448ab95557cae8e57228d8422bf1e3e3c16b4debfdb585cb98e0d76004",
+          "passages": 1
+        },
+        {
+          "id": "typography_pdf",
+          "source_sha256": "2d68006d9389916463ac8787afcce4fcffc2eb1b077922cb3fdab8f2e2f0d36e",
+          "passage_sha256": "a19bfc72cc5de8d137542477d17102cbd9a65f5696a9cc54b4c4d6d70bed51ec",
+          "passages": 1
+        },
+        {
+          "id": "docx_table",
+          "source_sha256": "e410a3618966cd00200b70ac0369d6b9367eeeb2ea385ec78f35d060080bdd81",
+          "passage_sha256": "eeb95359a39915d8737fcae351282d27a039c5f672c4727731692a4c18bac252",
+          "passages": 7
+        },
+        {
+          "id": "markdown_sections",
+          "source_sha256": "e6b9665b9b461ccec8954af3f13a0f4d6f9cf2fabe1dfecb275b7c1f6af4664b",
+          "passage_sha256": "16f6794d29a67d36a4b03828dacbef809672cc36ef2b48fbe55ce45c36209355",
+          "passages": 11
+        },
+        {
+          "id": "unicode_crlf",
+          "source_sha256": "c8566ea9fcecd870109146398ae1d0cc53b3152707f321d3e922d2ba12689f2c",
+          "passage_sha256": "3ab50eca7ad2fc796eb83baf917555d73d893c2188dfa3648ce0b19f4e2c6ef9",
+          "passages": 5
+        },
+        {
+          "id": "temporal_untrusted",
+          "source_sha256": "9256b49c456f53d0f2ec7249f1ad487a016b3fd9e27b1fea737ec0bf1aa1f0d4",
+          "passage_sha256": "f33895d8e8380407deb035bc30886dc5fcca27b6947a7149be465253a9f87778",
+          "passages": 8
+        }
+      ],
+      "settings": {
+        "region": "us-east-1",
+        "models": [
+          "google.gemma-4-31b",
+          "us.anthropic.claude-sonnet-4-6"
+        ],
+        "max_attempts": 24,
+        "projected_usd_limit": "5",
+        "temperature": 0,
+        "extraction_max_output": 6000,
+        "verification_max_output": 1024,
+        "automatic_retries": 0,
+        "repair_calls": 0
+      }
+    },
+    "max_attempts": 24,
+    "projected_usd_limit": "5",
+    "attempts": [
+      {
+        "number": 1,
+        "model": "google.gemma-4-31b",
+        "role": "extraction",
+        "case": "simple_pdf",
+        "state": "settled",
+        "input_bound": 9495,
+        "output_bound": 6000,
+        "reserved_usd": "0.0037293000",
+        "cost_usd": "0.0003303000",
+        "input_tokens": 1265,
+        "output_tokens": 383,
+        "latency_ms": 3066,
+        "error": null
+      },
+      {
+        "number": 2,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "extraction",
+        "case": "simple_pdf",
+        "state": "settled",
+        "input_bound": 13070,
+        "output_bound": 6000,
+        "reserved_usd": "0.1421310000",
+        "cost_usd": "0.0153681000",
+        "input_tokens": 2987,
+        "output_tokens": 334,
+        "latency_ms": 2510,
+        "error": null
+      },
+      {
+        "number": 3,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "verification",
+        "case": "simple_pdf",
+        "state": "settled",
+        "input_bound": 6446,
+        "output_bound": 1024,
+        "reserved_usd": "0.0381678000",
+        "cost_usd": "0.0024849000",
+        "input_tokens": 678,
+        "output_tokens": 15,
+        "latency_ms": 966,
+        "error": null
+      },
+      {
+        "number": 4,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "extraction",
+        "case": "typography_pdf",
+        "state": "settled",
+        "input_bound": 13152,
+        "output_bound": 6000,
+        "reserved_usd": "0.1424016000",
+        "cost_usd": "0.0160446000",
+        "input_tokens": 3012,
+        "output_tokens": 370,
+        "latency_ms": 2949,
+        "error": null
+      },
+      {
+        "number": 5,
+        "model": "google.gemma-4-31b",
+        "role": "extraction",
+        "case": "typography_pdf",
+        "state": "settled",
+        "input_bound": 9577,
+        "output_bound": 6000,
+        "reserved_usd": "0.0037407800",
+        "cost_usd": "0.0003725800",
+        "input_tokens": 1287,
+        "output_tokens": 481,
+        "latency_ms": 5321,
+        "error": null
+      },
+      {
+        "number": 6,
+        "model": "google.gemma-4-31b",
+        "role": "extraction",
+        "case": "docx_table",
+        "state": "settled",
+        "input_bound": 10402,
+        "output_bound": 6000,
+        "reserved_usd": "0.0038562800",
+        "cost_usd": "0.0005043400",
+        "input_tokens": 1531,
+        "output_tokens": 725,
+        "latency_ms": 5038,
+        "error": null
+      },
+      {
+        "number": 7,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "extraction",
+        "case": "docx_table",
+        "state": "settled",
+        "input_bound": 13977,
+        "output_bound": 6000,
+        "reserved_usd": "0.1451241000",
+        "cost_usd": "0.0189354000",
+        "input_tokens": 3273,
+        "output_tokens": 493,
+        "latency_ms": 2764,
+        "error": null
+      },
+      {
+        "number": 8,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "verification",
+        "case": "docx_table",
+        "state": "settled",
+        "input_bound": 7154,
+        "output_bound": 1024,
+        "reserved_usd": "0.0405042000",
+        "cost_usd": "0.0030624000",
+        "input_tokens": 823,
+        "output_tokens": 21,
+        "latency_ms": 848,
+        "error": null
+      },
+      {
+        "number": 9,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "extraction",
+        "case": "markdown_sections",
+        "state": "settled",
+        "input_bound": 17193,
+        "output_bound": 6000,
+        "reserved_usd": "0.1557369000",
+        "cost_usd": "0.0215853000",
+        "input_tokens": 3906,
+        "output_tokens": 527,
+        "latency_ms": 3087,
+        "error": null
+      },
+      {
+        "number": 10,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "verification",
+        "case": "markdown_sections",
+        "state": "settled",
+        "input_bound": 7129,
+        "output_bound": 1024,
+        "reserved_usd": "0.0404217000",
+        "cost_usd": "0.0031251000",
+        "input_tokens": 842,
+        "output_tokens": 21,
+        "latency_ms": 867,
+        "error": null
+      },
+      {
+        "number": 11,
+        "model": "google.gemma-4-31b",
+        "role": "extraction",
+        "case": "markdown_sections",
+        "state": "settled",
+        "input_bound": 13618,
+        "output_bound": 6000,
+        "reserved_usd": "0.0043065200",
+        "cost_usd": "0.0006059600",
+        "input_tokens": 2174,
+        "output_tokens": 754,
+        "latency_ms": 5256,
+        "error": null
+      },
+      {
+        "number": 12,
+        "model": "google.gemma-4-31b",
+        "role": "extraction",
+        "case": "unicode_crlf",
+        "state": "settled",
+        "input_bound": 9986,
+        "output_bound": 6000,
+        "reserved_usd": "0.0037980400",
+        "cost_usd": "0.0003920400",
+        "input_tokens": 1426,
+        "output_tokens": 481,
+        "latency_ms": 6290,
+        "error": null
+      },
+      {
+        "number": 13,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "extraction",
+        "case": "unicode_crlf",
+        "state": "settled",
+        "input_bound": 13561,
+        "output_bound": 6000,
+        "reserved_usd": "0.1437513000",
+        "cost_usd": "0.0162261000",
+        "input_tokens": 3152,
+        "output_tokens": 353,
+        "latency_ms": 2300,
+        "error": null
+      },
+      {
+        "number": 14,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "verification",
+        "case": "unicode_crlf",
+        "state": "settled",
+        "input_bound": 6559,
+        "output_bound": 1024,
+        "reserved_usd": "0.0385407000",
+        "cost_usd": "0.0025509000",
+        "input_tokens": 688,
+        "output_tokens": 17,
+        "latency_ms": 825,
+        "error": null
+      },
+      {
+        "number": 15,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "extraction",
+        "case": "temporal_untrusted",
+        "state": "settled",
+        "input_bound": 14181,
+        "output_bound": 6000,
+        "reserved_usd": "0.1457973000",
+        "cost_usd": "0.0210936000",
+        "input_tokens": 3357,
+        "output_tokens": 607,
+        "latency_ms": 3082,
+        "error": null
+      },
+      {
+        "number": 16,
+        "model": "us.anthropic.claude-sonnet-4-6",
+        "role": "verification",
+        "case": "temporal_untrusted",
+        "state": "settled",
+        "input_bound": 7220,
+        "output_bound": 1024,
+        "reserved_usd": "0.0407220000",
+        "cost_usd": "0.0034815000",
+        "input_tokens": 950,
+        "output_tokens": 21,
+        "latency_ms": 800,
+        "error": null
+      },
+      {
+        "number": 17,
+        "model": "google.gemma-4-31b",
+        "role": "extraction",
+        "case": "temporal_untrusted",
+        "state": "settled",
+        "input_bound": 10606,
+        "output_bound": 6000,
+        "reserved_usd": "0.0038848400",
+        "cost_usd": "0.0004953200",
+        "input_tokens": 1618,
+        "output_tokens": 672,
+        "latency_ms": 5765,
+        "error": null
+      }
+    ]
+  }
+}

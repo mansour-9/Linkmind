@@ -1,79 +1,122 @@
 # Linkmind
 
-Linkmind turns uploaded documents into permission-aware knowledge, a browsable
-graph, source-backed pages, and cited AI answers. The current release runs locally
-with Docker Compose. English is the current interface language.
+## RF5 local preview - 2026-11-15
 
-## Current checkpoint
+[Ask across sources](http://127.0.0.1:5196/ask/sources) now combines explicitly selected
+stored documents with bounded connected-resource observations. Typed fields and exact
+passages retain distinct references; live results are transient and reauthorized.
+**349 API / 43 browser / build**, final 3 browser checks passed. This preview is mock;
+real MCP/provider and combined AI quality acceptance remain deferred.
+Completed RF1-RF4 source is on `checkpoint/rf1-rf4-local`; new work is on
+`rf5/cross-source-journey`. See [RF5 results](docs/RF5_RESULTS.md) and
+[the single roadmap](docs/IMPLEMENTATION_PLAN.md).
 
-The M3.1 interface is implemented: Home/Assistant, topic-based source selection,
-Search, People, Content, Graph, and administration. Graph includes progressive
-exploration, relationship evidence, and a **Canvas only** fullscreen view.
-The optional synthetic graph demo has 38 canonical entities, 76 cited occurrences,
-and 105 relationships across two explicitly labeled source documents.
+Linkmind is being shaped as a **unified company knowledge repository with intelligent
+search and an AI assistant**. It retains selected uploaded/synchronized knowledge,
+organizes it lightly and answers employee questions using relevant stored and live
+source evidence, with citations and freshness context.
 
-Latest recorded validation: **33 API tests**, **20 browser workflows**, and the
-TypeScript/Vite production build passed. These checks establish deterministic
-behavior and permissions; live-model quality is tracked separately. See
-[Graph validation](docs/GRAPH_EXPLORER_UPDATE.md) and the
-[historical knowledge-layer results](docs/M2_M3_VALIDATION.md).
+## Direction update — 2026-11-14
 
-## Run locally
+The agreed target is lightweight ingestion: **retain → parse/map → index → available**.
+Readable text and structured source records do not require complete Sonnet extraction
+or a knowledge graph. Entity/claim/relationship enrichment becomes optional/default off;
+lightweight links and the graph support discovery. Selected connector scopes persist in
+the repository; current operational questions can use live MCP/native tools.
 
-Install Docker Desktop with its Linux engine. From the repository root:
+Inputs already provide readable text/extractable PDFs; OCR/conversion is upstream and
+outside the core. Detailed enterprise access design, native authoring, managed Spaces
+and advanced graph/conflict workflows are deferred; current security boundaries remain.
+
+**RF1 is implemented and validated locally: 191 API tests, 29 browser workflows and
+frontend build passed.** Ordinary uploads and
+revisions now finish without automatic extraction. Source text is available before semantic
+indexing completes; optional enrichment remains explicit. Existing main/previews are
+unchanged; live connectors/sync/routing are not implemented. Initial RF1 acceptance used mock.
+The subsequently confirmed **Sonnet preview** now runs at port 5189 using the original
+shared USD 10 budget. Its Lantern summary passed with citations and semantic verification;
+the follow-up API suite passed 215 tests. See [AI preview details](docs/RF1_AI_PREVIEW.md).
+The new RF1 preview is at <http://127.0.0.1:5189>; see [results](docs/RF1_RESULTS.md). See [scope](docs/PROJECT_SCOPE.md),
+[architecture](docs/ARCHITECTURE_M2_M3.md) and the [single roadmap](docs/IMPLEMENTATION_PLAN.md).
+
+**RF2 is also complete locally:** the new [Documents preview](http://127.0.0.1:5191/content/documents)
+supports graph-independent content/metadata discovery, explicit project/team organization,
+source catalog, original evidence and revisions. **231 API tests, 32 browser workflows
+and frontend build passed**; final RF2 checks passed after presentation polish.
+It is mock, incurs no paid usage, and leaves RF1 Sonnet/main untouched. See
+[RF2 delivery and limits](docs/RF2_RESULTS.md). Arabic/answer-quality enhancements remain RF3.
+
+## Current local checkpoint
+
+Existing code provides uploads, immutable versions and passage evidence, hybrid search,
+cited chat/follow-ups, selected-source overviews, a bounded React Flow graph explorer,
+generated entity pages, basic conflict/identity review and model usage/test-spend controls.
+The interface is English and runs locally with Docker Compose and demo identities.
+
+M3.1 UI/Graph/canvas is user-approved. F1.1 search-readiness separation and F1.2/F1.3
+repairs/staged enrichment are implemented locally; main-data cutover is pending.
+Current-source code and existing previews differ in schema/build. Latest recorded Lantern
+real-model extraction acceptance failed verifier alignment while source text stayed
+searchable; this is not acceptance of the new architecture or a zero-failure promise.
+
+Dated evidence: [F1.1](docs/F1_1_RESULTS.md), [F1.3](docs/F1_3_RESULTS.md),
+[Northstar testing](docs/COMPANY_TESTING.md), [persona](docs/ASSISTANT_PERSONA.md),
+[Graph](docs/GRAPH_EXPLORER_UPDATE.md), [latest Lantern result](docs/LANTERN_IDENTIFIER_REPAIR_RESULTS.md).
+Old test counts/budget figures are historical, not fresh observations.
+
+## Plan, not automatic implementation
+
+| Stage | Intended result |
+| --- | --- |
+| RF1 — complete locally | Source-only ingestion default; explicit optional enrichment |
+| RF2 — complete locally | Repository metadata, source catalog and common evidence; live contract tested offline |
+| RF3 | Better retrieval and bounded intelligent source routing |
+| RF4 | One accepted read-only connector with live access and selected-scope sync |
+| RF5 | A complementary source and complete cross-source company journey |
+| RF6 | Measured quality/cost/load, production security and reviewed rollout |
+
+RF1/RF2 local acceptance is complete; RF3 is the next candidate only when requested. First connector and
+scope are still to be selected; prior Jira context does not exclude OneDrive/SharePoint.
+Keep current data/working capabilities; no graph completion or rich editor prerequisite.
+Detailed prior ambitions remain preserved, not silently deleted.
+
+## Run the existing code locally
+
+These commands run the current implementation, not the RF target. Do not rebuild/migrate
+valuable main or preview data without the reviewed backup/compatibility/rollback process.
+For a fresh local checkout with Docker Desktop's Linux engine:
 
 ```sh
 docker compose -f code/compose.yaml up -d --build --wait
 ```
 
-Open [Linkmind](http://127.0.0.1:5173). Database and uploaded files persist in
-local named volumes. Default mode recognizes the checked-in synthetic fixtures;
-arbitrary documents report unavailable extraction until a real provider is configured.
-Demo identities are for local testing. Hosted authentication is a later milestone.
+Open [Linkmind](http://127.0.0.1:5173). Database and original files persist in named
+volumes. Mock mode recognizes exact checked-in fixtures; arbitrary readable documents
+can be searched as text while AI enrichment is unavailable. Mock answers are labelled
+original excerpts. Demo identities must not be used for real employee hosted access.
 
-For real Bedrock processing, use the opt-in configuration in the
-[local runbook](code/README.md#bedrock-mode). It uses your local AWS profile;
-real model calls incur provider usage. Default CI uses mock mode and no AWS credentials.
+[Local runbook](code/README.md) contains exact isolated validation and opt-in Bedrock
+commands. Bedrock incurs charges and needs separately authorized scope; this documentation
+update authorizes no calls. Preserve the existing `northstar-sonnet-2026-11-12` USD 10
+cumulative ledger without cloning/reset/increase/unpause. No Gemma work is active.
 
 ## Repository map
 
 | Path | Contents |
 | --- | --- |
-| `code/apps/web` | React, TypeScript, Tailwind/Radix and React Flow interface |
-| `code/apps/api` | FastAPI, PostgreSQL/pgvector, evidence, retrieval and migrations |
-| `code/apps/worker` | Leased document-processing jobs |
-| `code/fixtures` | Recognized synthetic samples, benchmark and graph demo |
-| `code/e2e` | Playwright workflows and responsive validation |
-| `docs` | Architecture, scope, milestones and verified results |
-| `.github` | CI and issue/pull-request templates |
+| `code/apps/web` | React/TypeScript and shared UI/theme/React Flow |
+| `code/apps/api` | FastAPI, PostgreSQL/pgvector, parsing, evidence and retrieval |
+| `code/apps/worker` | Existing leased processing jobs |
+| `code/fixtures` | Labelled synthetic source content and benchmark fixtures |
+| `code/e2e` | Isolated browser workflows |
+| `docs` | Active scope/architecture/roadmap, dated evidence and reference snapshots |
+| `.github` | CI and contribution templates |
 
-## Next milestones
-
-| Milestone | Outcome |
-| --- | --- |
-| **M3.2** | Reliable document processing, original-source mappings and safe reprocessing |
-| M3.3 | Better retrieval and conservative entity resolution |
-| M3.4 | Verified multi-hop answers with evidence for every connection |
-| M4.1 | One approved read-only Jira integration with original references |
-| M4.2 | Persistent sync, freshness, deletion and permission reconciliation |
-
-M3.2 remains **one milestone with two checkpoints**: diagnosis/baseline, then
-implementation/validation. Read the [M3.2 plan](docs/M3_2_PLAN.md) and the
-[complete roadmap](docs/IMPLEMENTATION_PLAN.md). Jira, named saved graph collections,
-additional sources, hosted deployment and Arabic remain future work.
-
-## Development and verification
-
-Read [CONTRIBUTING](CONTRIBUTING.md), [agent guidance](AGENTS.md), and
-[frontend rules](docs/FRONTEND_RULES.md) before editing. Run destructive test
-workflows only against the named disposable mock environment described in the
-[runbook](code/README.md#validate). CI builds the frontend and runs API/browser
-regressions in its own isolated Compose project.
-
-Preserve server-side permissions, immutable source revisions, exact evidence and
-honest unavailable states. Never commit credentials, local AWS configuration,
-uploaded company documents, database exports, or generated dependency folders.
+Read [CONTRIBUTING](CONTRIBUTING.md), [agent guidance](AGENTS.md) and
+[frontend rules](docs/FRONTEND_RULES.md). Preserve server-side permissions, originals,
+revision/citation history and truthful unavailable states. Never commit credentials,
+company uploads, private raw model responses or database dumps.
 
 The [original specification](COMPANY_BRAIN_CODEX_MASTER_SPEC.md) and
-[original engineering instructions](docs/reference/AGENTS.original.md) are retained
-for history; current scope and explicit user decisions take precedence.
+[original instructions](docs/reference/AGENTS.original.md) are historical. For the
+changes and review coverage see [restructure review](docs/RESTRUCTURE_REVIEW_2026_11_14.md).

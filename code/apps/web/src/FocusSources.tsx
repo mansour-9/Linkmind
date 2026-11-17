@@ -5,12 +5,12 @@ import { useSession } from "./session";
 import { Button, Feedback, Sheet, sourceLocation } from "./ui";
 import type { Passage } from "./contracts";
 
-export type FocusDocument = { document_id: string; version_id: string; filename: string; visibility: string; uploaded_at: string };
+export type FocusDocument = { document_id: string; version_id: string; filename: string; visibility: string; uploaded_at: string; dataset_id?: string|null };
 type Match = FocusDocument & { excerpt?: string; locator?: Record<string, unknown> };
 const MAX_SOURCES = 30;
 
-export function FocusSources({ value, onChange, disabled, conversation }: {
-  value: string[]; onChange: (ids: string[]) => void; disabled: boolean; conversation: boolean;
+export function FocusSources({ value, onChange, disabled, conversation, explicitOnly=false, allLabel="All sources" }: {
+  value: string[]; onChange: (ids: string[]) => void; disabled: boolean; conversation: boolean; explicitOnly?:boolean; allLabel?:string;
 }) {
   const { service } = useSession();
   const [open, setOpen] = useState(false);
@@ -31,7 +31,7 @@ export function FocusSources({ value, onChange, disabled, conversation }: {
         service.json<FocusDocument[]>("/documents?" + new URLSearchParams({ q: query, limit: "20" })),
       ]);
       const found = new Map<string, Match>();
-      for (const p of passages) if (!found.has(p.document_id)) found.set(p.document_id, { document_id: p.document_id, version_id: p.version_id, filename: p.filename, visibility: "", uploaded_at: "", excerpt: p.text, locator: p.locator });
+      for (const p of passages) if (!found.has(p.document_id)) found.set(p.document_id, { document_id: p.document_id, version_id: p.version_id, filename: p.filename, visibility: "", uploaded_at: "", excerpt: p.text, locator: p.locator, dataset_id:p.dataset_id });
       for (const p of filenames) if (!found.has(p.document_id)) found.set(p.document_id, p);
       return [...found.values()];
     },
@@ -41,9 +41,9 @@ export function FocusSources({ value, onChange, disabled, conversation }: {
   function toggle(id: string) { setDraft(current => current.includes(id) ? current.filter(x => x !== id) : current.length < MAX_SOURCES ? [...current, id] : current); }
   const names = selected.isSuccess ? selected.data : [];
   return <div className="focus-sources">
-    <div className="focus-toolbar"><span className="scope-status"><Library size={16} />{value.length ? "Selected sources" : "All sources"}</span>
+    <div className="focus-toolbar"><span className="scope-status"><Library size={16} />{value.length ? "Selected sources" : explicitOnly ? "No stored documents selected" : allLabel}</span>
       <Button ref={trigger} variant="ghost" className="focus-trigger" disabled={disabled} onClick={showPicker}><SlidersHorizontal size={15} />Focus sources</Button>
-      {!!value.length && <Button variant="ghost" className="scope-clear" disabled={disabled} onClick={() => onChange([])}>Use all sources</Button>}
+      {!!value.length && <Button variant="ghost" className="scope-clear" disabled={disabled} onClick={() => onChange([])}>{explicitOnly ? 'Clear stored selection' : 'Clear document selection'}</Button>}
     </div>
     {!!value.length && <div className="selected-source-chips" aria-label="Selected sources">{value.map(id => {
       const name = names.find(d => d.document_id === id)?.filename ?? (selected.isPending ? "Loading source…" : "Source unavailable");
@@ -62,13 +62,13 @@ export function FocusSources({ value, onChange, disabled, conversation }: {
           {results.isSuccess && !results.data.length && <div className="source-picker-empty"><Search size={26} /><h3>No matching sources</h3><p>Try a project name, person, or a few important words from the information you need.</p></div>}
           {results.isSuccess && results.data.map(doc => <label className={"source-picker-result" + (draft.includes(doc.document_id) ? " is-selected" : "")} key={doc.document_id}>
             <input type="checkbox" checked={draft.includes(doc.document_id)} disabled={!draft.includes(doc.document_id) && draft.length >= MAX_SOURCES} onChange={() => toggle(doc.document_id)} aria-label={"Select " + doc.filename} />
-            <span className="picker-file-icon"><FileText size={18} /></span><span className="picker-result-text"><strong>{doc.filename}</strong>
+            <span className="picker-file-icon"><FileText size={18} /></span><span className="picker-result-text"><strong>{doc.filename}</strong>{doc.dataset_id&&<small>Demo dataset · included only when selected</small>}
               {doc.excerpt ? <><small className="match-label">Content match · {sourceLocation(doc.locator)}</small><span className="picker-excerpt" dir="auto">{doc.excerpt}</span></> : <small>{query ? "Filename match" : (doc.visibility === "private" ? "Only me" : "My organization")}</small>}
             </span>
           </label>)}
         </div>
         {!query && results.isSuccess && <div className="picker-pagination"><Button variant="ghost" disabled={offset === 0 || results.isFetching} onClick={() => setOffset(Math.max(0, offset - 20))}>Previous</Button><span>Page {offset / 20 + 1}</span><Button variant="ghost" disabled={results.data.length < 20 || results.isFetching} onClick={() => setOffset(offset + 20)}>Next</Button></div>}
-        <footer className="source-picker-footer"><p>{draft.length ? `${draft.length} selected · up to ${MAX_SOURCES}` : "All sources will be searched"}{conversation && <small>Changing sources starts a new conversation.</small>}</p><div><Button variant="ghost" onClick={() => apply([])}>Use all sources</Button><Button onClick={() => apply(draft)}>{draft.length ? "Apply selection" : "Done"}</Button></div></footer>
+        <footer className="source-picker-footer"><p>{draft.length ? `${draft.length} selected · up to ${MAX_SOURCES}` : explicitOnly ? "Only explicitly selected documents are used" : "Let Linkmind choose relevant sources"}{conversation && <small>Changing sources starts a new conversation.</small>}</p><div><Button variant="ghost" onClick={() => apply([])}>{explicitOnly ? 'Clear stored selection' : 'Clear document selection'}</Button><Button onClick={() => apply(draft)}>{draft.length ? "Apply selection" : "Done"}</Button></div></footer>
       </div>
     </Sheet>
   </div>;

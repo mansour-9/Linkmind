@@ -1,0 +1,419 @@
+{
+  "version": 1,
+  "classification": "Synthetic diagnostic data; gold frozen before responses; not a production fixture bypass.",
+  "scoring": {
+    "claim_aliases": {
+      "owned_by": "owner",
+      "owner_name": "owner",
+      "launch_status": "status"
+    },
+    "relationship_aliases": {
+      "owner": "owned_by"
+    },
+    "inverted_relationships": {
+      "owns": "owned_by"
+    },
+    "value_aliases": {
+      "pre- launch": "pre-launch"
+    },
+    "entity_name_aliases": {
+      "task": [
+        "GD-M32-101 · Validate rollback",
+        "Validate rollback"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "simple_pdf",
+      "filename": "simple.pdf",
+      "sha256": "5fec327b7048775fa9bb88903bb379d32b75b06800aee72e9a7302034a9722fd",
+      "expected": {
+        "entities": [
+          {
+            "key": "aster",
+            "kind": "project",
+            "name": "Project Aster",
+            "identifiers": [
+              {
+                "namespace": "project_key",
+                "value": "M32-ASTER"
+              }
+            ]
+          },
+          {
+            "key": "nora",
+            "kind": "person",
+            "name": "Nora",
+            "identifiers": [
+              {
+                "namespace": "email",
+                "value": "nora@m32.example"
+              }
+            ]
+          }
+        ],
+        "claims": [
+          {
+            "entity": "aster",
+            "predicate": "owner",
+            "value": "Nora",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "relationships": [
+          {
+            "source": "aster",
+            "predicate": "owned_by",
+            "target": "nora",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "forbidden_names": []
+      }
+    },
+    {
+      "id": "typography_pdf",
+      "filename": "typography.pdf",
+      "sha256": "2d68006d9389916463ac8787afcce4fcffc2eb1b077922cb3fdab8f2e2f0d36e",
+      "expected": {
+        "entities": [
+          {
+            "key": "birch",
+            "kind": "project",
+            "name": "Project Birch",
+            "identifiers": [
+              {
+                "namespace": "project_key",
+                "value": "M32-BIRCH"
+              }
+            ]
+          },
+          {
+            "key": "nora",
+            "kind": "person",
+            "name": "Nora",
+            "identifiers": [
+              {
+                "namespace": "email",
+                "value": "nora@m32.example"
+              }
+            ]
+          }
+        ],
+        "claims": [
+          {
+            "entity": "birch",
+            "predicate": "owner",
+            "value": "Nora",
+            "effective_from": null,
+            "effective_to": null
+          },
+          {
+            "entity": "birch",
+            "predicate": "status",
+            "value": "pre-launch",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "relationships": [
+          {
+            "source": "birch",
+            "predicate": "owned_by",
+            "target": "nora",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "forbidden_names": []
+      }
+    },
+    {
+      "id": "docx_table",
+      "filename": "table.docx",
+      "sha256": "e410a3618966cd00200b70ac0369d6b9367eeeb2ea385ec78f35d060080bdd81",
+      "expected": {
+        "entities": [
+          {
+            "key": "cedar",
+            "kind": "project",
+            "name": "Project Cedar",
+            "identifiers": [
+              {
+                "namespace": "project_key",
+                "value": "M32-CEDAR"
+              }
+            ]
+          },
+          {
+            "key": "data",
+            "kind": "team",
+            "name": "Data Services",
+            "identifiers": [
+              {
+                "namespace": "url",
+                "value": "https://m32.example/teams/data"
+              }
+            ]
+          },
+          {
+            "key": "postgresql",
+            "kind": "technology",
+            "name": "PostgreSQL",
+            "identifiers": [
+              {
+                "namespace": "url",
+                "value": "https://m32.example/technologies/postgresql"
+              }
+            ]
+          }
+        ],
+        "claims": [
+          {
+            "entity": "cedar",
+            "predicate": "managed_by",
+            "value": "Data Services",
+            "effective_from": null,
+            "effective_to": null
+          },
+          {
+            "entity": "cedar",
+            "predicate": "status",
+            "value": "Pilot",
+            "effective_from": null,
+            "effective_to": null
+          },
+          {
+            "entity": "cedar",
+            "predicate": "target_database",
+            "value": "PostgreSQL",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "relationships": [
+          {
+            "source": "cedar",
+            "predicate": "managed_by",
+            "target": "data",
+            "effective_from": null,
+            "effective_to": null
+          },
+          {
+            "source": "cedar",
+            "predicate": "uses",
+            "target": "postgresql",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "forbidden_names": []
+      }
+    },
+    {
+      "id": "markdown_sections",
+      "filename": "sections.md",
+      "sha256": "e6b9665b9b461ccec8954af3f13a0f4d6f9cf2fabe1dfecb275b7c1f6af4664b",
+      "expected": {
+        "entities": [
+          {
+            "key": "delta",
+            "kind": "project",
+            "name": "Project Delta",
+            "identifiers": [
+              {
+                "namespace": "project_key",
+                "value": "M32-DELTA"
+              }
+            ]
+          },
+          {
+            "key": "omar",
+            "kind": "person",
+            "name": "Omar",
+            "identifiers": [
+              {
+                "namespace": "email",
+                "value": "omar@m32.example"
+              }
+            ]
+          },
+          {
+            "key": "task",
+            "kind": "task",
+            "name": "GD-M32-101",
+            "identifiers": [
+              {
+                "namespace": "issue_key",
+                "value": "GD-M32-101"
+              }
+            ]
+          }
+        ],
+        "claims": [
+          {
+            "entity": "delta",
+            "predicate": "status",
+            "value": "Active",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "relationships": [
+          {
+            "source": "task",
+            "predicate": "belongs_to",
+            "target": "delta",
+            "effective_from": null,
+            "effective_to": null
+          },
+          {
+            "source": "task",
+            "predicate": "assigned_to",
+            "target": "omar",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "forbidden_names": []
+      }
+    },
+    {
+      "id": "unicode_crlf",
+      "filename": "unicode.txt",
+      "sha256": "c8566ea9fcecd870109146398ae1d0cc53b3152707f321d3e922d2ba12689f2c",
+      "expected": {
+        "entities": [
+          {
+            "key": "echo",
+            "kind": "project",
+            "name": "Project Echo",
+            "identifiers": [
+              {
+                "namespace": "project_key",
+                "value": "M32-ECHO"
+              }
+            ]
+          },
+          {
+            "key": "renee",
+            "kind": "person",
+            "name": "Renée",
+            "identifiers": [
+              {
+                "namespace": "email",
+                "value": "renee@m32.example"
+              }
+            ]
+          }
+        ],
+        "claims": [
+          {
+            "entity": "echo",
+            "predicate": "owner",
+            "value": "Renée",
+            "effective_from": null,
+            "effective_to": null
+          },
+          {
+            "entity": "echo",
+            "predicate": "status",
+            "value": "Active",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "relationships": [
+          {
+            "source": "echo",
+            "predicate": "owned_by",
+            "target": "renee",
+            "effective_from": null,
+            "effective_to": null
+          }
+        ],
+        "forbidden_names": []
+      }
+    },
+    {
+      "id": "temporal_untrusted",
+      "filename": "temporal.md",
+      "sha256": "9256b49c456f53d0f2ec7249f1ad487a016b3fd9e27b1fea737ec0bf1aa1f0d4",
+      "expected": {
+        "entities": [
+          {
+            "key": "fjord",
+            "kind": "project",
+            "name": "Project Fjord",
+            "identifiers": [
+              {
+                "namespace": "project_key",
+                "value": "M32-FJORD"
+              }
+            ]
+          },
+          {
+            "key": "mira",
+            "kind": "person",
+            "name": "Mira",
+            "identifiers": [
+              {
+                "namespace": "email",
+                "value": "mira@m32.example"
+              }
+            ]
+          },
+          {
+            "key": "omar",
+            "kind": "person",
+            "name": "Omar",
+            "identifiers": [
+              {
+                "namespace": "email",
+                "value": "omar@m32.example"
+              }
+            ]
+          }
+        ],
+        "claims": [
+          {
+            "entity": "fjord",
+            "predicate": "owner",
+            "value": "Mira",
+            "effective_from": "2026-01-01",
+            "effective_to": "2026-06-30"
+          },
+          {
+            "entity": "fjord",
+            "predicate": "owner",
+            "value": "Omar",
+            "effective_from": "2026-07-01",
+            "effective_to": "2026-12-31"
+          }
+        ],
+        "relationships": [
+          {
+            "source": "fjord",
+            "predicate": "owned_by",
+            "target": "mira",
+            "effective_from": "2026-01-01",
+            "effective_to": "2026-06-30"
+          },
+          {
+            "source": "fjord",
+            "predicate": "owned_by",
+            "target": "omar",
+            "effective_from": "2026-07-01",
+            "effective_to": "2026-12-31"
+          }
+        ],
+        "forbidden_names": [
+          "Mallory"
+        ]
+      }
+    }
+  ]
+}

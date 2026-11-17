@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type Visibility } from "./api";
+import { api, type Visibility, type Job } from "./api";
 
 export const identities = [
   { token: "demo-amal", label: "Amal · Engineering" },
@@ -36,10 +36,10 @@ export function useGraph() {
   return useQuery({ queryKey: ["graph"], queryFn: service.graph, refetchInterval: 1800 });
 }
 
-export function useJobs() {
+export function useJobs(document?: string) {
   const { service } = useSession();
   return useQuery({
-    queryKey: ["jobs"], queryFn: service.jobs,
+    queryKey: document ? ["jobs", document] : ["jobs"], queryFn: () => document ? service.json<Job[]>("/sources?document_id=" + encodeURIComponent(document)) : service.jobs(),
     refetchInterval: (query) => query.state.data?.some((job) => ["queued", "processing"].includes(job.status)) ? 1000 : 5000,
   });
 }

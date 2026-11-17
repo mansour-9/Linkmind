@@ -1,0 +1,34 @@
+[
+  {
+    "filename": "Smart_Handover_Assistant_PRFAQ.pdf",
+    "status": "failed",
+    "error_code": "ValueError",
+    "error": "Evidence quote does not exist in its passage",
+    "stage": "failed",
+    "attempts": 1,
+    "checksum_matches": true,
+    "source_sha256": "f3d47523553b05cf921dcbbbbaa481781b9c5807b8186cb5c9a8bc1e50e53314",
+    "retained_passages": 3,
+    "reparsed_passages": 3,
+    "retained_matches_current_parser": true,
+    "page_count": 3,
+    "character_boundary_splits": 0,
+    "raw_model_response_retained": false
+  },
+  {
+    "filename": "Smart_Handover_Assistant_PRFAQ_Updated.pdf",
+    "status": "failed",
+    "error_code": "ValueError",
+    "error": "Evidence quote does not exist in its passage",
+    "stage": "failed",
+    "attempts": 1,
+    "checksum_matches": true,
+    "source_sha256": "28d901a0387448ae20790aa0fd8836e581f9951f9d751bff6e03813d258bd90f",
+    "retained_passages": 3,
+    "reparsed_passages": 3,
+    "retained_matches_current_parser": true,
+    "page_count": 3,
+    "character_boundary_splits": 0,
+    "raw_model_response_retained": false
+  }
+]

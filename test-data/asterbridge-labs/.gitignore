@@ -1,0 +1,9 @@
+# Keep authored catalog/generators; preserve all generated datasets and remote evidence locally.
+/*
+!/.gitignore
+!/README.md
+!/scripts/
+scripts/*
+!scripts/*.py
+!scripts/*.mjs
+!scripts/*.md

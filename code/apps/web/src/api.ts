@@ -1,3 +1,4 @@
+import type { Passage } from "./contracts";
 export type Visibility = "private" | "team";
 export type Job = {
   id: string;
@@ -5,8 +6,13 @@ export type Job = {
   filename: string;
   uploaded_at: string;
   visibility: Visibility;
-  status: "queued" | "processing" | "ready" | "extraction_unavailable" | "failed" | "cancelled";
+  status: "queued" | "processing" | "ready" | "extraction_unavailable" | "failed" | "cancelled" | "enrichment_staged_failed";
   document_id: string; stage: string; processed_at: string | null; can_manage: boolean;
+  search_ready_at: string | null; search_status: "ready" | "pending" | "failed" | "cancelled";
+  enrichment_requested: boolean;
+  enrichment_status: "not_requested" | "ready" | "queued" | "processing" | "unavailable" | "failed" | "cancelled" | "enrichment_staged_failed"; can_retry: boolean;
+  can_reprocess: boolean; staged_version_id: string | null; active_enrichment_version_id: string | null;
+  preserved_enrichment: boolean; staged_activation_state: "live" | "staged" | "rolled_back" | null;
   current_version_id: string | null; extraction_provider: string | null; embedding_status: string;
   entity_count: number; claim_count: number; relationship_count: number;
   attempts: number;
@@ -21,7 +27,8 @@ export type ExplorerGraph = Omit<GraphData, "nodes"> & { root: string; depth: nu
   truncated: boolean; visible_node_count: number; visible_edge_count: number; root_connection_count: number };
 export type ExplorerSearch = { nodes: ExplorerNode[]; total: number; offset: number; limit: number; has_more: boolean };
 export type EntityOverview = { entity: ExplorerNode; graph: ExplorerGraph } | null;
-export type Evidence = { id: string; filename: string; version_id: string; line_number: number; quote: string; locator?: Record<string, unknown> };
+export type Evidence = { id: string; filename: string; version_id: string; line_number: number; quote: string; locator?: Record<string, unknown>;
+  provenance?: { origin: 'stored' | 'live'; synthetic?:boolean; observed_at: string; source_updated_at: string | null; original_url?: string | null; fields?: {field:string;value:unknown}[]; coverage: { complete: boolean; description: string } } };
 export type EntityDetails = Entity & {
   claims: { id: string; predicate: string; value: string; chunk_id: string; line_number: number; quote: string; filename: string; locator?: Record<string, unknown> }[];
 };
@@ -34,12 +41,38 @@ export function api(token: string) {
     });
     if (!response.ok) {
       const error: { detail?: unknown } = await response.json().catch(() => ({}));
-      throw new Error(typeof error.detail === "string" ? error.detail : "Request failed (" + response.status + ").");
+      const detail = error.detail;
+      throw new Error(typeof detail === 'string' ? detail : detail && typeof detail === 'object' && 'message' in detail && typeof detail.message === 'string' ? detail.message : "Request failed (" + response.status + ").");
     }
     return response;
   }
   return {
+    async streamAnswer<T>(id:string,body:unknown,onActivity:(phase:string)=>void):Promise<T> {
+      const response=await request('/conversations/'+id+'/answers/stream',{method:'POST',body:JSON.stringify(body)});
+      if(!response.body)throw new Error('Streaming is unavailable. Check the conversation before retrying.');
+      const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='',answer:T|undefined;
+      try {
+        while(true){const {done,value}=await reader.read();buffer+=decoder.decode(value,{stream:!done});
+          let boundary:number;
+          while((boundary=buffer.indexOf('\n\n'))>=0){const block=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);
+            const kind=block.split('\n').find(line=>line.startsWith('event: '))?.slice(7);
+            const raw=block.split('\n').find(line=>line.startsWith('data: '))?.slice(6);
+            if(!raw)continue;const data=JSON.parse(raw);
+            if(kind==='activity')onActivity(data.phase);
+            if(kind==='error')throw new Error(data.message);
+            if(kind==='answer')answer=data;
+          }
+          if(done)break;
+        }
+      } finally {reader.releaseLock();}
+      if(!answer)throw new Error('The connection ended before an answer arrived. Check the conversation before retrying.');
+      return answer;
+    },
     json: <T,>(path: string, init?: RequestInit): Promise<T> => request(path, init).then((r) => r.json()),
+    async search(params: string): Promise<{ passages: Passage[]; semantic_status: string }> {
+      const response = await request("/search?" + params);
+      return { passages: await response.json(), semantic_status: response.headers.get("X-Linkmind-Semantic-Status") ?? "unavailable" };
+    },
     neighbors: (root: string) => request("/graph/neighborhood?root=" + root + "&limit=40").then((r): Promise<GraphData> => r.json()),
     me: () => request("/me").then((r): Promise<Viewer> => r.json()),
     jobs: () => request("/sources").then((r): Promise<Job[]> => r.json()),
@@ -63,6 +96,13 @@ export function api(token: string) {
       anchor.href = url;
       anchor.download = filename;
       anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    },
+    async companyFile(key: string, filename: string) {
+      const blob = await (await request("/demo/company/files/" + encodeURIComponent(key))).blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url; anchor.download = filename; anchor.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     },
   };

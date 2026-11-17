@@ -12,6 +12,12 @@ async function upload(request: APIRequestContext, name: string, visibility = "te
 }
 async function ready(request: APIRequestContext, id: string) {
  await expect.poll(async () => (await (await request.get("/api/v1/jobs/" + id, { headers: auth() })).json()).status, { timeout: 90000 }).toBe("ready");
+ const job = await (await request.get("/api/v1/jobs/" + id, { headers: auth() })).json();
+ // This legacy graph/review suite explicitly requests fixture enrichment.
+ if (!job.processed_at) {
+  expect((await request.post(`/api/v1/jobs/${id}/reprocess`, { headers: auth() })).status()).toBe(202);
+  await expect.poll(async () => (await (await request.get("/api/v1/jobs/" + id, { headers: auth() })).json()).enrichment_status, { timeout: 90000 }).toBe("ready");
+ }
 }
 async function identity(page: Page, token: string) {
  await page.getByRole("button", { name: "Profile and workspace", exact: true }).filter({ visible: true }).first().click();
@@ -35,21 +41,19 @@ test.beforeAll(async ({ request }) => {
 test("home → new chat → evidence → download → reload → identity isolation", async ({ page }) => {
  const errors: string[] = []; page.on("pageerror", e => errors.push(e.message));
  await page.setViewportSize({ width: 1440, height: 900 });
- await page.goto("/"); await expect(page.getByRole("heading", { name: "Ask Linkmind" })).toBeVisible();
+ await page.goto("/?scope="+charter.document_id); await expect(page.getByRole("heading", { name: "Ask Linkmind" })).toBeVisible();
  await page.getByLabel("Ask a question").fill("Who owns CB-ALPHA?");
  await page.getByRole("button", { name: "Send question" }).click();
  await expect(page).toHaveURL(/\/chat\//);
  await expect(page.locator(".answer-statement").first()).toBeVisible();
  await expect(page.getByLabel("Ask a question")).toHaveValue("");
- await page.getByText("Show work", { exact: false }).click();
- await expect(page.getByRole("heading", { name: "Cited evidence" })).toBeVisible();
- await page.screenshot({ path: "results/screens/1440-show-work.png", fullPage: true });
- await page.locator(".answer-statement").first().getByRole("button").first().click();
+ const preview=page.locator('.answer-statement').first().getByRole('button',{name:/Preview source:/}).first();
+ await preview.click();
  await expect(page.getByRole("dialog", { name: "Source evidence" })).toBeVisible();
  await expect(page.locator(".source-quote")).not.toBeEmpty();
  await page.screenshot({ path: "results/screens/1440-source-preview.png", fullPage: true });
  const download = page.waitForEvent("download"); await page.getByRole("button", { name: "Download original" }).click(); expect((await download).suggestedFilename()).toMatch(/\.md$/);
- await page.keyboard.press("Escape"); await expect(page.locator(".answer-statement").first().getByRole("button").first()).toBeFocused();
+ await page.keyboard.press("Escape"); await expect(preview).toBeFocused();
  await page.getByLabel("Ask a question").fill("What is the launch date?"); await page.getByLabel("Ask a question").press("Enter");
  await expect(page.locator(".chat-turn")).toHaveCount(2); await expect(page.locator(".pending-turn")).toHaveCount(0);
  await page.reload(); await expect(page.locator(".answer-statement").first()).toBeVisible();
@@ -60,39 +64,43 @@ test("home → new chat → evidence → download → reload → identity isolat
 
 test("failed submission keeps its conversation and draft, with an explicit retry", async ({ page }) => {
  let attempts = 0;
- await page.route("**/api/v1/conversations/*/answers", async route => { attempts++; if (attempts === 1) await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ detail: "Answer unavailable for transport regression." }) }); else await route.continue(); });
- await page.goto("/"); await page.getByLabel("Ask a question").fill("Who owns CB-ALPHA?"); await page.getByRole("button", { name: "Send question" }).click();
+ await page.route("**/api/v1/conversations/*/answers/stream", async route => { attempts++; if (attempts === 1) await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ detail: "Answer unavailable for transport regression." }) }); else await route.continue(); });
+ await page.goto("/?scope="+charter.document_id); await page.getByLabel("Ask a question").fill("Who owns CB-ALPHA?"); await page.getByRole("button", { name: "Send question" }).click();
  await expect(page).toHaveURL(/\/chat\//); const url = page.url();
  await expect(page.getByRole("alert")).toContainText("Answer unavailable"); await expect(page.getByLabel("Ask a question")).toHaveValue("Who owns CB-ALPHA?");
  await page.getByRole("button", { name: "Send question" }).click(); await expect(page.locator(".answer-statement").first()).toBeVisible(); expect(page.url()).toBe(url); expect(attempts).toBe(2);
 });
 
-test("topic discovery, multi-source selection, reload and clearing scope", async ({ page, request }) => {
- await page.goto("/"); await expect(page.getByText("All sources", { exact: true })).toBeVisible();
- await page.getByRole("button", { name: "Focus sources", exact: true }).click();
- await expect(page.getByLabel("Find sources by topic")).toBeFocused();
- await page.getByLabel("Find sources by topic").fill("CB-ALPHA"); await page.getByLabel("Find sources by topic").press("Enter");
- await expect(page.locator(".source-picker-result").filter({ hasText: "alpha-charter.md" })).toContainText("Content match");
- await expect(page.locator(".picker-excerpt").first()).not.toBeEmpty();
- await page.getByLabel("Select alpha-charter.md", { exact: true }).check(); await page.getByLabel("Select alpha-review.md", { exact: true }).check();
- await page.screenshot({ path: "results/screens/focus-sources-topic-search.png", fullPage: true });
- await page.getByRole("button", { name: "Apply selection", exact: true }).click();
- await expect(page.locator(".selected-source-chip")).toHaveCount(2);
- await page.getByLabel("Ask a question").fill("Who owns CB-ALPHA?"); await page.getByRole("button", { name: "Send question" }).click(); await expect(page.locator(".answer-statement").first()).toBeVisible();
- const id=page.url().split("/chat/")[1]; const history=await (await request.get("/api/v1/conversations/"+id,{headers:auth()})).json(); expect(new Set(history.document_ids)).toEqual(new Set([charter.document_id,review.document_id]));
- await page.reload(); await expect(page.locator(".selected-source-chip")).toHaveCount(2); await expect(page.locator(".selected-source-chips")).toContainText("alpha-charter.md");
- await page.getByLabel("Ask a question").fill("Keep my question"); await page.getByRole("button", { name: "Use all sources", exact: true }).click();
- await expect(page.getByRole("heading", { name: "Ask Linkmind" })).toBeVisible(); await expect(page.getByLabel("Ask a question")).toHaveValue("Keep my question"); await expect(page.locator(".selected-source-chip")).toHaveCount(0); await expect(page.getByText("All sources", { exact: true })).toBeVisible();
+test("document scope links preserve selected sources through chat and reload", async ({ page, request }) => {
+ await page.goto('/?scope='+charter.document_id+'&scope='+review.document_id);
+ await expect(page.getByRole('heading',{name:'Ask Linkmind'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Focus sources',exact:true})).toHaveCount(0);
+ await page.getByLabel('Ask a question').fill('Who owns CB-ALPHA?');
+ const createdRequest=page.waitForRequest(r=>r.url().endsWith('/api/v1/conversations')&&r.method()==='POST');
+ await page.getByRole('button',{name:'Send question'}).click();
+ expect(new Set((await createdRequest).postDataJSON().document_ids)).toEqual(new Set([charter.document_id,review.document_id]));
+ await expect(page.locator('.answer-statement').first()).toBeVisible();
+ const id=page.url().split('/chat/')[1];
+ const history=await (await request.get('/api/v1/conversations/'+id,{headers:auth()})).json();
+ expect(new Set(history.document_ids)).toEqual(new Set([charter.document_id,review.document_id]));
+ await page.reload();await expect(page.locator('.answer-statement').first()).toBeVisible();
+ await page.getByRole('link',{name:'New conversation',exact:true}).first().click();
+ await expect(page.getByRole('heading',{name:'Ask Linkmind'})).toBeVisible();
+ await expect(page.getByLabel('Ask a question')).toHaveValue('');
 });
 
-test("source picker keeps drafts private until apply and works on mobile", async ({ page }) => {
- await page.setViewportSize({width:390,height:900}); await page.goto("/chat/"+savedConversation);
- await expect(page.locator(".selected-source-chip")).toHaveCount(1);
- await page.getByLabel("Ask a question").fill("Draft stays intact"); await page.getByRole("button", {name:"Focus sources",exact:true}).click();
- await page.getByLabel("Select alpha-review.md",{exact:true}).check(); await page.keyboard.press("Escape");
- await expect(page.getByRole("button", {name:"Focus sources",exact:true})).toBeFocused(); await expect(page.locator(".selected-source-chip")).toHaveCount(1); await expect(page.getByLabel("Ask a question")).toHaveValue("Draft stays intact");
- await page.getByRole("button", {name:"Focus sources",exact:true}).click(); await page.getByLabel("Find sources by topic").fill("no-such-topic-928374"); await page.getByLabel("Find sources by topic").press("Enter"); await expect(page.getByRole("heading",{name:"No matching sources"})).toBeVisible();
- await page.screenshot({path:"results/screens/390-focus-sources-empty.png",fullPage:true}); await noOverflow(page); await page.keyboard.press("Escape");
+test("advanced source picker keeps unapplied drafts private and works on mobile", async ({ page }) => {
+ await page.setViewportSize({width:390,height:900});await page.goto('/ask/sources');
+ await page.getByLabel('Cross-source question').fill('Draft stays intact');
+ const focus=page.getByRole('button',{name:'Focus sources',exact:true});await focus.click();
+ await expect(page.getByLabel('Find sources by topic')).toBeFocused();
+ await page.getByLabel('Find sources by topic').fill('CB-ALPHA');await page.getByLabel('Find sources by topic').press('Enter');
+ await page.getByLabel('Select alpha-review.md',{exact:true}).check();await page.keyboard.press('Escape');
+ await expect(focus).toBeFocused();await expect(page.getByText('No stored documents selected',{exact:true})).toBeVisible();
+ await expect(page.getByLabel('Cross-source question')).toHaveValue('Draft stays intact');
+ await focus.click();await page.getByLabel('Find sources by topic').fill('no-such-topic-928374');await page.getByLabel('Find sources by topic').press('Enter');
+ await expect(page.getByRole('heading',{name:'No matching sources'})).toBeVisible();
+ await noOverflow(page);await page.keyboard.press('Escape');
 });
 
 test("legacy links preserve conversation, entity and graph parameters", async ({ page, request }) => {
@@ -132,6 +140,19 @@ test("graph demo loads, reuses uploads and connects shared people with real evid
  await page.screenshot({path:"results/screens/graph-demo-evidence.png",fullPage:true});
  await page.goto("/search?q=DEMO-ATLAS"); await expect(page.getByRole("region", { name: "Connected knowledge" })).toContainText("Project Atlas");
  for(const job of first.jobs) await request.delete("/api/v1/documents/"+job.document_id,{headers:auth()});
+});
+
+test("initial graph discovery preserves a query typed while loading", async ({page})=>{
+ let release!:()=>void;const loading=new Promise<void>(resolve=>{release=resolve;});
+ await page.route('**/api/v1/graph/search?**',async route=>{
+  if(!new URL(route.request().url()).searchParams.get('q'))await loading;
+  await route.continue();
+ });
+ try{
+  await page.goto('/graph');await page.getByLabel('Find an entity').fill('CB-ALPHA');release();
+  await expect(page.getByRole('button',{name:'Center graph on Project Alpha',exact:true})).toBeVisible();
+  await expect(page.getByLabel('Find an entity')).toHaveValue('CB-ALPHA');
+ }finally{release();}
 });
 
 test("canvas-only view fills the page and preserves the graph when exiting", async ({ page }) => {
@@ -180,9 +201,10 @@ test("workspace search shows connected knowledge and graph expands a focused nei
 
 
 test("upload, revision, source management, and processing remain usable", async ({ page, request }) => {
- await page.goto("/content/documents"); await page.getByRole("button", { name: "Add data source" }).click();
- await page.getByLabel("Choose file").setInputFiles({ name: "m31-ui-disposable.txt", mimeType: "text/plain", buffer: Buffer.from("UI disposable source for upload and revision validation.") });
- await page.getByRole("combobox", { name: "Access", exact: true }).selectOption("private"); await page.getByRole("button", { name: "Upload file", exact: true }).click(); await expect(page.getByRole("dialog")).toHaveCount(0);
+ await page.goto("/content/documents"); await page.getByRole("button", { name: "Add document", exact:true }).click();
+ await page.getByLabel("Upload documents").setInputFiles({ name: "m31-ui-disposable.txt", mimeType: "text/plain", buffer: Buffer.from("UI disposable source for upload and revision validation.") });
+ await expect(page.getByRole('dialog')).toContainText('Ready for search and answers');await page.keyboard.press('Escape');
+ await page.goto('/admin/sources');
  const row = page.locator(".upload-list li").filter({ has: page.getByText("m31-ui-disposable.txt", { exact: true }) }); await expect(row).toBeVisible(); await row.locator("summary").filter({ hasText: "Manage source" }).click();
  await row.getByRole("button", { name: "New revision" }).click(); await page.getByLabel("New file").setInputFiles(path.resolve("../fixtures/benchmark/alpha-charter.md")); await page.getByRole("button", { name: "Upload revision", exact: true }).click(); await expect(page.getByRole("dialog")).toHaveCount(0);
  await page.goto("/admin/processing"); await expect(page.locator(".process-card").first()).toBeVisible(); await page.locator(".process-card").first().getByRole("button", { name: "Processing details" }).click(); await expect(page.getByRole("dialog", { name: "Processing details" })).toBeVisible(); await page.keyboard.press("Escape");
@@ -216,8 +238,8 @@ test("safe Markdown handles tables and code without executing source HTML", asyn
 
 test("keyboard composition prevents duplicate submissions and new conversation resets the draft", async ({ page }) => {
  let requests = 0;
- await page.route("**/api/v1/conversations/*/answers", async route => { requests++; await new Promise(resolve => setTimeout(resolve, 300)); await route.continue(); });
- await page.goto("/"); const input = page.getByLabel("Ask a question");
+ await page.route("**/api/v1/conversations/*/answers/stream", async route => { requests++; await new Promise(resolve => setTimeout(resolve, 300)); await route.continue(); });
+ await page.goto("/?scope="+charter.document_id); const input = page.getByLabel("Ask a question");
  await input.fill("Who owns CB-ALPHA?"); await input.press("Shift+Enter"); await input.press("A"); expect(requests).toBe(0); await expect(input).toHaveValue("Who owns CB-ALPHA?\nA");
  await input.press("Enter"); await page.keyboard.press("Enter"); await expect(page.locator(".answer-statement").first()).toBeVisible(); expect(requests).toBe(1);
  await page.getByRole("link", { name: "New conversation", exact: true }).first().click(); await expect(page.getByRole("heading", { name: "Ask Linkmind" })).toBeVisible();

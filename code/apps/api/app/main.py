@@ -1,25 +1,47 @@
 import hashlib
 import json
 import os
+import asyncio
+from threading import Event
+from datetime import date
 from pathlib import PurePosixPath
 from typing import Annotated, Literal
 from uuid import UUID,uuid4
-from fastapi import Depends,FastAPI,File,Form,HTTPException,UploadFile,Query
-from fastapi.responses import FileResponse,JSONResponse
+from fastapi import Depends,FastAPI,File,Form,HTTPException,UploadFile,Query,Response,Request
+from fastapi.responses import FileResponse,JSONResponse,StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials,HTTPBearer
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel,Field
 from app.artifacts import MAX_BYTES,resolve,save
 from app.db import engine,sql
 from app.fixture_provider import FIXTURES
 from app.parsers import validate_file,SUPPORTED
-from app.retrieval import ACCESS,CURRENT,PASSAGES,search,dependencies_allowed
+from app.retrieval import ACCESS,CURRENT,PASSAGES,search,dependencies_allowed,selected_context
 from app.providers import answer,configured,ProviderUnavailable
+from app import source_discovery,chat_trace,source_policy
+from app import repository
+from app.source_evidence import local_evidence
+from app.query_limits import question_limits,QueryLimitReached
+from app.query_language import explain
 
 if os.environ.get("COMPANY_BRAIN_LOCAL_DEMO")!="1":
     raise RuntimeError("Local demo authentication must be explicitly enabled. Hosted authentication is not yet implemented.")
+
 app=FastAPI(title="Company Brain",version="0.3.0",openapi_url="/api/v1/openapi.json",docs_url="/api/v1/docs",redoc_url=None)
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request:Request,exc:RequestValidationError):
+    if request.url.path.startswith(('/api/v1/connections','/api/v1/source-answers')):
+        # Never echo accidentally submitted credentials or credential-bearing URLs.
+        return JSONResponse(status_code=422,content={'detail':[
+            {'loc':list(item['loc']),'type':item['type'],'msg':item['msg']} for item in exc.errors()]})
+    from fastapi.exception_handlers import request_validation_exception_handler
+    return await request_validation_exception_handler(request,exc)
 PREFIX="/api/v1"
-ANSWER_VALIDATION_VERSION="grounded-v3"
+# Explicit opt-in for the isolated local preview; does not apply to the production path.
+LOCAL_PREVIEW = os.environ.get("COMPANY_BRAIN_COMPANY_PREVIEW") == "1"
+PREVIEW_SECRET = os.environ.get("COMPANY_BRAIN_PREVIEW_SECRET", "")
+ANSWER_VALIDATION_VERSION="grounded-v19-simple-linked-chat"
 DEMO_USERS={f"demo-{name}":UUID(f"00000000-0000-4000-8000-00000000010{i}") for i,name in enumerate(["amal","omar","nour"],1)}
 bearer=HTTPBearer(auto_error=False)
 
@@ -32,25 +54,37 @@ class Viewer(BaseModel):
     def access(self):
         return dict(org=self.organization_id,viewer=self.id)
 
-def authenticate(credentials:Annotated[HTTPAuthorizationCredentials|None,Depends(bearer)]):
+def authenticate(credentials:Annotated[HTTPAuthorizationCredentials|None,Depends(bearer)],request:Request=None):
     token=credentials.credentials if credentials else ""
     if token not in DEMO_USERS:
         raise HTTPException(401,"Choose a local demo identity.",headers={"WWW-Authenticate":"Bearer"})
     with engine.connect() as conn:
         user=sql(conn,"""SELECT u.*,o.name AS organization FROM users u
             JOIN organizations o ON o.id=u.organization_id WHERE u.id=:id""",id=DEMO_USERS[token]).mappings().one()
-    return Viewer(**user)
+    viewer=Viewer(**user)
+    if request is not None:
+        from app.connectors import refresh_request
+        refresh_request(viewer,request)
+    return viewer
 Identity=Annotated[Viewer,Depends(authenticate)]
+from app.connectors import install as install_connectors
+install_connectors(app,Identity)
+from app.source_answers import install as install_source_answers
+install_source_answers(app,Identity)
 
 @app.middleware("http")
-async def headers(request,call_next):
+async def headers(request:Request,call_next):
+    if LOCAL_PREVIEW and request.url.path.startswith(PREFIX) and request.headers.get("X-Preview-Proxy") != PREVIEW_SECRET:
+        return JSONResponse({"detail":"The preview API is available only through the loopback proxy."},status_code=403)
     if request.method=="POST" and (request.url.path.endswith("/upload") or request.url.path.endswith("/revisions")):
         length=request.headers.get("content-length","")
         if not length.isascii() or not length.isdecimal():
             return JSONResponse({"detail":"Upload requires a content length."},status_code=411)
         if len(length)>10 or int(length)>MAX_BYTES+16384:
             return JSONResponse({"detail":"Upload exceeds the 20 MiB file limit."},status_code=413)
-    response=await call_next(request)
+    from app.connector_transport import request_limits
+    with request_limits(seconds=85 if '/conversations/' in request.url.path else 35):
+        response=await call_next(request)
     response.headers["Cache-Control"]="no-store"
     return response
 
@@ -62,12 +96,35 @@ def health():
 @app.get(PREFIX+"/me")
 def me(viewer:Identity): return viewer
 
-JOB_QUERY="""SELECT j.*,v.document_id,v.filename,v.created_at AS uploaded_at,v.processed_at,
-  v.embedding_status,v.extraction_provider,d.visibility,d.current_version_id,
+
+@app.get(PREFIX+"/runtime")
+def runtime_status(viewer:Identity):
+    from app.inference_budget import status
+    return dict(provider="bedrock" if configured() else "mock",budget=status() if viewer.role=="admin" else None)
+
+JOB_QUERY="""SELECT j.*,v.document_id,v.filename,v.created_at AS uploaded_at,v.processed_at,v.search_ready_at,
+  CASE WHEN v.search_ready_at IS NOT NULL THEN 'ready'
+       WHEN j.status IN ('failed','extraction_unavailable') THEN 'failed'
+       WHEN j.status='cancelled' THEN 'cancelled' ELSE 'pending' END AS search_status,
+  CASE WHEN j.staged_version_id IS NOT NULL AND j.status IN ('queued','processing','enrichment_staged_failed') THEN j.status
+       WHEN v.processed_at IS NOT NULL THEN 'ready'
+       WHEN NOT j.enrichment_requested THEN 'not_requested'
+       WHEN j.status='ready' THEN 'ready'
+       WHEN j.status='extraction_unavailable' THEN 'unavailable' ELSE j.status END AS enrichment_status,
+  v.embedding_status,v.extraction_provider,d.visibility,d.current_version_id,v.active_enrichment_version_id,
+  (j.staged_version_id IS NOT NULL AND j.status<>'ready' AND v.processed_at IS NOT NULL AND d.current_version_id=v.id) AS preserved_enrichment,
+  (SELECT activation_state FROM document_versions WHERE id=j.staged_version_id) AS staged_activation_state,
   (d.owner_id=:viewer OR :operator) AS can_manage,
-  (SELECT count(*) FROM entities e WHERE e.version_id=v.id) AS entity_count,
-  (SELECT count(*) FROM claims c WHERE c.version_id=v.id) AS claim_count,
-  (SELECT count(*) FROM relationships r WHERE r.version_id=v.id) AS relationship_count
+  EXISTS(SELECT 1 FROM connected_resources cr WHERE cr.document_id=d.id) AS connected_source,
+  (j.status IN ('failed','extraction_unavailable','enrichment_staged_failed')
+    AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id
+      AND newer.source_version_id IS NULL AND (newer.created_at,newer.id)>(v.created_at,v.id))) AS can_retry,
+  (v.search_ready_at IS NOT NULL AND d.current_version_id=v.id AND j.status NOT IN ('queued','processing','cancelled')
+    AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id
+      AND newer.source_version_id IS NULL AND (newer.created_at,newer.id)>(v.created_at,v.id))) AS can_reprocess,
+  (SELECT count(*) FROM live_entities e WHERE e.version_id=v.id) AS entity_count,
+  (SELECT count(*) FROM live_claims c WHERE c.version_id=v.id) AS claim_count,
+  (SELECT count(*) FROM live_relationships r WHERE r.version_id=v.id) AS relationship_count
   FROM processing_jobs j JOIN document_versions v ON v.id=j.version_id JOIN documents d ON d.id=v.document_id"""
 def job_params(viewer):
     return {**viewer.access(),"operator":viewer.role in {"admin","reviewer"}}
@@ -81,6 +138,8 @@ def owned_document(conn,viewer,id):
     if not row: raise HTTPException(404,"Document not found.")
     if row.owner_id!=viewer.id and viewer.role!="admin":
         raise HTTPException(403,"Only the document owner or an authorized administrator can change it.")
+    if sql(conn,'SELECT 1 FROM connected_resources WHERE document_id=:id',id=id).scalar():
+        raise HTTPException(409,"Manage this resource through its connection. Source access and revisions are controlled by the original system.")
     return row
 def audit(conn,viewer,action,id):
     sql(conn,"INSERT INTO audit_events(id,organization_id,actor_id,action,resource_id) VALUES(:id,:org,:user,:action,:resource)",
@@ -94,7 +153,7 @@ def graph_demo_jobs(conn,viewer):
         checksum=hashlib.sha256(content).hexdigest()
         row=sql(conn,JOB_QUERY+f""" WHERE {ACCESS} AND d.visibility='team' AND v.checksum=:checksum
             AND (d.current_version_id=v.id OR d.current_version_id IS NULL)
-            AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id
+            AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id AND newer.source_version_id IS NULL
                 AND (newer.created_at,newer.id)>(v.created_at,v.id))
             ORDER BY (j.status='ready') DESC,j.created_at LIMIT 1""",**job_params(viewer),checksum=checksum).mappings().first()
         jobs.append(dict(row) if row else None)
@@ -104,13 +163,13 @@ def graph_demo_jobs(conn,viewer):
 def graph_demo_status(conn,viewer):
     from app.graph_demo import MANIFEST
     jobs=graph_demo_jobs(conn,viewer)
-    versions=[job["version_id"] for job in jobs if job and job["status"]=="ready" and job["current_version_id"]==job["version_id"] and job["extraction_provider"]=="graph-demo-fixture"]
+    versions=[job["version_id"] for job in jobs if job and (job["status"]=="ready" or job["preserved_enrichment"]) and job["current_version_id"]==job["version_id"] and job["extraction_provider"]=="graph-demo-fixture"]
     counts=dict(entity_count=0,entity_occurrence_count=0,relationship_count=0)
     if versions:
         counts=dict(sql(conn,"""SELECT count(DISTINCT canonical_id) AS entity_count,
             count(*) AS entity_occurrence_count,
-            (SELECT count(*) FROM relationships WHERE version_id=ANY(:versions)) AS relationship_count
-            FROM entities WHERE version_id=ANY(:versions)""",versions=versions).mappings().one())
+            (SELECT count(*) FROM live_relationships WHERE version_id=ANY(:versions)) AS relationship_count
+            FROM live_entities WHERE version_id=ANY(:versions)""",versions=versions).mappings().one())
     ready=len(versions)==2 and all(counts[key]==MANIFEST[key] for key in counts)
     return {**counts,"ready":ready,"source_count":len(versions),"jobs":jobs}
 
@@ -127,6 +186,7 @@ def graph_dataset(viewer:Identity):
 
 @app.post(PREFIX+"/demo/graph-dataset/load",status_code=202)
 def load_graph_dataset(viewer:Identity):
+    with engine.connect() as conn:source_policy.require_demo_loading(conn)
     from app.graph_demo import MANIFEST,ROOT
     with engine.begin() as conn:
         # Serialize this fixed dataset per organization; normal upload behavior is unchanged.
@@ -138,7 +198,7 @@ def load_graph_dataset(viewer:Identity):
             content=(ROOT/item["filename"]).read_bytes(); checksum=hashlib.sha256(content).hexdigest(); did=uuid4()
             sql(conn,"""INSERT INTO documents(id,organization_id,owner_id,filename,visibility)
                 VALUES(:id,:org,:owner,:filename,'team')""",id=did,org=viewer.organization_id,owner=viewer.id,filename=item["filename"])
-            add_version(conn,viewer,did,item["filename"],content,checksum)
+            add_version(conn,viewer,did,item["filename"],content,checksum,enrichment_requested=True)
         return graph_demo_status(conn,viewer)
 
 
@@ -146,6 +206,80 @@ def load_graph_dataset(viewer:Identity):
 def graph_dataset_status(viewer:Identity):
     with engine.connect() as conn:
         return graph_demo_status(conn,viewer)
+
+
+@app.get(PREFIX+"/demo/company")
+def company_dataset(viewer:Identity):
+    from app.company_demo import MANIFEST
+    from app.inference_budget import status
+    visible=[item for item in MANIFEST["fixtures"] if item["visibility"]=="team" or viewer.role=="admin"]
+    keys={item["key"] for item in visible}
+    return dict(name=MANIFEST["name"],description=MANIFEST["description"],synthetic=True,
+        can_load=viewer.role=="admin" and source_policy.demo_loading_allowed(),provider="bedrock" if configured() else "mock",
+        budget=status() if viewer.role=="admin" else None,
+        files=[{key:item[key] for key in ("key","filename","title","visibility","revision_of")} for item in visible],
+        questions=[item for item in MANIFEST["questions"] if set(item["sources"]).issubset(keys)])
+
+
+def company_jobs(conn,viewer):
+    from app.company_demo import MANIFEST
+    result=[]
+    for item in MANIFEST["fixtures"]:
+        if item["revision_of"] or item["visibility"]=="private" and viewer.role!="admin":
+            continue
+        row=sql(conn,JOB_QUERY+f""" WHERE {ACCESS}
+            AND EXISTS(SELECT 1 FROM document_versions original WHERE original.document_id=d.id AND original.checksum=:checksum)
+            AND NOT EXISTS(SELECT 1 FROM document_versions newer WHERE newer.document_id=d.id AND newer.source_version_id IS NULL
+                AND (newer.created_at,newer.id)>(v.created_at,v.id))
+            ORDER BY v.created_at DESC LIMIT 1""",**job_params(viewer),checksum=item["sha256"]).mappings().first()
+        result.append({**dict(row),"fixture_key":item["key"]} if row else None)
+    return result
+
+
+def company_status(conn,viewer):
+    jobs=company_jobs(conn,viewer)
+    return dict(jobs=jobs,total=len(jobs),search_ready=sum(bool(j and j["search_status"]=="ready" and j["version_id"]==j["current_version_id"]) for j in jobs),
+        enriched=sum(bool(j and (j["enrichment_status"]=="ready" or j["preserved_enrichment"]) and j["version_id"]==j["current_version_id"]) for j in jobs))
+
+
+@app.get(PREFIX+"/demo/company/status")
+def company_dataset_status(viewer:Identity):
+    with engine.connect() as conn:
+        return company_status(conn,viewer)
+
+
+@app.post(PREFIX+"/demo/company/load",status_code=202)
+def load_company_dataset(viewer:Identity):
+    with engine.connect() as conn:source_policy.require_demo_loading(conn)
+    from app.company_demo import MANIFEST,ROOT
+    if viewer.role!="admin":
+        raise HTTPException(403,"Only the local demo administrator can load the fictional company.")
+    with engine.begin() as conn:
+        sql(conn,"SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",key=f"{viewer.organization_id}:northstar-company-v1")
+        initial=[item for item in MANIFEST["fixtures"] if not item["revision_of"]]
+        for item,existing in zip(initial,company_jobs(conn,viewer)):
+            if existing:
+                continue
+            content=(ROOT/item["filename"]).read_bytes()
+            if hashlib.sha256(content).hexdigest()!=item["sha256"]:
+                raise HTTPException(409,"The fictional dataset changed; rebuild its manifest before loading.")
+            did=uuid4()
+            sql(conn,"""INSERT INTO documents(id,organization_id,owner_id,filename,visibility)
+                VALUES(:id,:org,:owner,:name,:visibility)""",id=did,org=viewer.organization_id,
+                owner=viewer.id,name=item["filename"],visibility=item["visibility"])
+            add_version(conn,viewer,did,item["filename"],content,item["sha256"],enrichment_requested=True)
+        return company_status(conn,viewer)
+
+
+@app.get(PREFIX+"/demo/company/files/{key}")
+def company_file(key:str,viewer:Identity):
+    from app.company_demo import MANIFEST,ROOT
+    item=next((item for item in MANIFEST["fixtures"] if item["key"]==key),None)
+    if key=="your-addition":
+        return FileResponse(ROOT/"your-addition.txt",filename="your-addition.txt",media_type="text/plain")
+    if item is None or item["visibility"]=="private" and viewer.role!="admin":
+        raise HTTPException(404,"Demo file not found.")
+    return FileResponse(ROOT/item["filename"],filename=item["filename"],media_type="text/markdown")
 
 
 @app.get(PREFIX+"/demo/fixtures/{name}")
@@ -168,20 +302,21 @@ def read_upload(file):
     except (ValueError,UnicodeError) as exc: raise HTTPException(422,str(exc)) from None
     return filename,content,hashlib.sha256(content).hexdigest()
 
-def add_version(conn,viewer,document,filename,content,checksum):
+def add_version(conn,viewer,document,filename,content,checksum,*,enrichment_requested=False):
+    from app.fixture_provenance import dataset_for
     vid,jid=uuid4(),uuid4()
     artifact=save(viewer.organization_id,checksum,content)
-    sql(conn,"""INSERT INTO document_versions(id,organization_id,document_id,filename,checksum,byte_count,artifact_key)
-        VALUES(:id,:org,:doc,:filename,:checksum,:size,:artifact)""",
-        id=vid,org=viewer.organization_id,doc=document,filename=filename,checksum=checksum,size=len(content),artifact=artifact)
-    sql(conn,"""INSERT INTO processing_jobs(id,organization_id,version_id,owner_id,checksum)
-        VALUES(:id,:org,:version,:owner,:checksum)""",
-        id=jid,org=viewer.organization_id,version=vid,owner=viewer.id,checksum=checksum)
+    sql(conn,"""INSERT INTO document_versions(id,organization_id,document_id,filename,checksum,byte_count,artifact_key,created_at,dataset_id)
+        VALUES(:id,:org,:doc,:filename,:checksum,:size,:artifact,clock_timestamp(),:dataset)""",
+        id=vid,org=viewer.organization_id,doc=document,filename=filename,checksum=checksum,size=len(content),artifact=artifact,dataset=dataset_for(checksum))
+    sql(conn,"""INSERT INTO processing_jobs(id,organization_id,version_id,owner_id,checksum,enrichment_requested)
+        VALUES(:id,:org,:version,:owner,:checksum,:enrich)""",
+        id=jid,org=viewer.organization_id,version=vid,owner=viewer.id,checksum=checksum,enrich=enrichment_requested)
     return find_job(conn,viewer,jid)
 
 @app.post(PREFIX+"/sources/upload",status_code=202)
 def upload(viewer:Identity,file:Annotated[UploadFile,File()],
-           visibility:Annotated[Literal["private","team"],Form()]="private"):
+           visibility:Annotated[Literal["private","team"],Form()]="team"):
     filename,content,checksum=read_upload(file)
     with engine.begin() as conn:
         sql(conn,"SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",key=f"{viewer.organization_id}:{viewer.id}:{checksum}")
@@ -210,34 +345,147 @@ def document_catalog(viewer:Identity,q:str=Query(default="",max_length=500),
         where+=" AND v.filename ILIKE :pattern"
         params["pattern"]="%"+q.strip().replace("%", "\\%").replace("_", "\\_")+"%"
     with engine.connect() as conn:
-        return [dict(row) for row in sql(conn,f"""SELECT d.id AS document_id,v.id AS version_id,
-            v.filename,v.created_at AS uploaded_at,d.visibility
+        return [dict(row) for row in sql(conn,f"""SELECT d.id AS document_id,v.id AS version_id,v.dataset_id,
+            v.filename,v.created_at AS uploaded_at,d.visibility,v.search_ready_at,v.embedding_status
             FROM documents d JOIN document_versions v ON v.id=d.current_version_id
             WHERE {where} ORDER BY v.created_at DESC,d.id LIMIT :limit OFFSET :offset""",
             **params).mappings()]
 
 @app.get(PREFIX+"/sources")
 @app.get(PREFIX+"/processing")
-def sources(viewer:Identity):
+def sources(viewer:Identity,document_id:UUID|None=None):
     with engine.connect() as conn:
-        return [dict(r) for r in sql(conn,JOB_QUERY+f" WHERE {ACCESS} ORDER BY v.created_at DESC LIMIT 200",
-                                    **job_params(viewer)).mappings()]
+        return [dict(r) for r in sql(conn,JOB_QUERY+f" WHERE {ACCESS}"+(' AND d.id=:document' if document_id else '')+" ORDER BY v.created_at DESC LIMIT 200",
+                                    **job_params(viewer),document=document_id).mappings()]
+
+
+@app.get(PREFIX+"/repository/resources")
+def repository_resources(viewer:Identity,q:str=Query('',max_length=500),
+    source_instance_id:UUID|None=None,format:Literal['pdf','docx','md','txt']|None=None,
+    project_id:UUID|None=None,team_id:UUID|None=None,after:date|None=None,before:date|None=None,
+    limit:int=Query(20,ge=1,le=40),offset:int=Query(0,ge=0,le=100000)):
+    try:
+        filters=repository.ResourceFilters(source_instance_id=source_instance_id,format=format,project_id=project_id,
+            team_id=team_id,after=after,before=before).model_dump(exclude_none=True)
+    except ValueError:
+        raise HTTPException(422,'Uploaded after must not be later than uploaded before.') from None
+    with engine.connect() as conn:
+        return repository.resources(conn,viewer,query=q,filters=filters,limit=limit,offset=offset)
+
+
+@app.get(PREFIX+"/repository/sources")
+def repository_sources(viewer:Identity):
+    with engine.connect() as conn:
+        return repository.source_catalog(conn,viewer)
+
+
+@app.get(PREFIX+"/repository/groups")
+def repository_groups(viewer:Identity,kind:Literal['project','team']|None=None,
+    q:str=Query('',max_length=120),limit:int=Query(100,ge=1,le=100),offset:int=Query(0,ge=0,le=100000)):
+    with engine.connect() as conn:
+        return repository.groups(conn,viewer,kind=kind,query=q,limit=limit,offset=offset)
+
+
+@app.post(PREFIX+"/repository/groups",status_code=201)
+def create_repository_group(body:repository.GroupCreate,viewer:Identity):
+    with engine.begin() as conn:
+        # Identical names deliberately do not merge identities.
+        id=uuid4()
+        sql(conn,"""INSERT INTO repository_groups(id,organization_id,kind,name,created_by)
+            VALUES(:id,:org,:kind,:name,:actor)""",id=id,org=viewer.organization_id,kind=body.kind,name=body.name,actor=viewer.id)
+        audit(conn,viewer,'create_repository_group',id)
+        return dict(id=id,kind=body.kind,name=body.name,created_by_name=viewer.name,resource_count=0)
+
+
+@app.get(PREFIX+"/documents/{id}/metadata")
+def document_metadata(id:UUID,viewer:Identity):
+    with engine.connect() as conn:
+        row=sql(conn,f"""SELECT {repository.FIELDS} {repository.JOINS}
+            WHERE {ACCESS} AND {source_discovery.CATALOG_VERSION} AND d.id=:document""",
+            **viewer.access(),admin=viewer.role=='admin',document=id).mappings().first()
+    if not row: raise HTTPException(404,'Document not found.')
+    return dict(row)
+
+
+@app.patch(PREFIX+"/documents/{id}/metadata")
+def update_document_metadata(id:UUID,body:repository.MetadataChange,viewer:Identity):
+    with engine.begin() as conn:
+        doc=owned_document(conn,viewer,id)
+        if doc.metadata_revision!=body.expected_revision:
+            raise HTTPException(409,'Document details changed. Reload them before saving.')
+        for kind,group_id in (('project',body.project_id),('team',body.team_id)):
+            if group_id and not sql(conn,f"""SELECT 1 FROM repository_groups g
+                WHERE {repository.GROUP_ACCESS} AND g.id=:id AND g.kind=:kind""",
+                **viewer.access(),id=group_id,kind=kind).first():
+                raise HTTPException(404,'Project or team is not available.')
+        sql(conn,"""UPDATE documents SET title=:title,project_id=:project,team_id=:team,
+            metadata_revision=metadata_revision+1,metadata_updated_at=clock_timestamp(),metadata_updated_by=:actor
+            WHERE id=:id""",id=id,title=body.title,project=body.project_id,team=body.team_id,actor=viewer.id)
+        audit(conn,viewer,'update_document_metadata',id)
+    return document_metadata(id,viewer)
+
+
+@app.get(PREFIX+"/documents/{id}/versions")
+def document_versions(id:UUID,viewer:Identity,limit:int=Query(20,ge=1,le=40),offset:int=Query(0,ge=0,le=100000)):
+    with engine.connect() as conn:
+        if not sql(conn,f'SELECT 1 FROM documents d WHERE {ACCESS} AND d.id=:id',**viewer.access(),id=id).first():
+            raise HTTPException(404,'Document not found.')
+        return repository.versions(conn,viewer,id,limit=limit,offset=offset)
 @app.get(PREFIX+"/jobs/{id}")
 def job(id:UUID,viewer:Identity):
     with engine.connect() as conn:
         result=find_job(conn,viewer,id)
         result["attempt_history"]=[dict(r) for r in sql(conn,"SELECT * FROM processing_attempts WHERE job_id=:id ORDER BY started_at",id=id).mappings()]
+        result["enrichment_history"]=[dict(r) for r in sql(conn,"""SELECT id,activation_state,created_at,verified_at,processed_at,
+            extraction_provider FROM document_versions WHERE source_version_id=:source ORDER BY created_at DESC,id DESC LIMIT 20""",
+            source=result["version_id"]).mappings()]
         return result
+
+
+def queue_staged_enrichment(conn,viewer,job):
+    from app.enrichment_staging import create
+    if not job["can_manage"]:
+        raise HTTPException(403,"Reprocessing requires source ownership or an operational role.")
+    if not job["can_reprocess"]:
+        raise HTTPException(409,"Only the latest search-ready source can be reprocessed when no job is pending.")
+    candidate=create(conn,job)
+    sql(conn,"""UPDATE processing_jobs SET staged_version_id=:candidate,enrichment_requested=true,status='queued',stage='queued_enrichment',
+        attempts=0,available_at=clock_timestamp(),finished_at=NULL,error=NULL,error_code=NULL,lease_token=NULL,lease_until=NULL
+        WHERE id=:id""",id=job["id"],candidate=candidate)
+    audit(conn,viewer,"stage_enrichment",job["id"])
+    return find_job(conn,viewer,job["id"])
+
+
+@app.post(PREFIX+"/jobs/{id}/reprocess",status_code=202)
+def reprocess(id:UUID,viewer:Identity):
+    with engine.connect() as conn:
+        if sql(conn,'''SELECT 1 FROM processing_jobs j JOIN document_versions v ON v.id=j.version_id
+            JOIN connected_resources cr ON cr.document_id=v.document_id WHERE j.id=:id''',id=id).scalar():
+            raise HTTPException(409,'Connected sources use source-only indexing; manage them through the connection.')
+    with engine.begin() as conn:
+        job=find_job(conn,viewer,id)
+        sql(conn,"SELECT id FROM documents WHERE id=:id FOR UPDATE",id=job["document_id"])
+        sql(conn,"SELECT id FROM processing_jobs WHERE id=:id FOR UPDATE",id=id)
+        return queue_staged_enrichment(conn,viewer,find_job(conn,viewer,id))
 
 @app.post(PREFIX+"/jobs/{id}/retry",status_code=202)
 def retry(id:UUID,viewer:Identity):
     with engine.begin() as conn:
+        # Match the worker/revision lock order and read job status after locking.
+        job=find_job(conn,viewer,id)
+        sql(conn,"SELECT id FROM documents WHERE id=:id FOR UPDATE",id=job["document_id"])
+        sql(conn,"SELECT id FROM processing_jobs WHERE id=:id FOR UPDATE",id=id)
         job=find_job(conn,viewer,id)
         if not job["can_manage"]: raise HTTPException(403,"Retry requires source ownership or an operational role.")
-        sql(conn,"SELECT id FROM processing_jobs WHERE id=:id FOR UPDATE",id=id)
         if job["status"] in {"queued","processing"}: raise HTTPException(409,"This job is already pending.")
         if job["status"]=="cancelled": raise HTTPException(409,"Cancelled jobs cannot be retried.")
+        if job["status"]=="enrichment_staged_failed":
+            return queue_staged_enrichment(conn,viewer,job)
         if job["processed_at"] or job["status"]=="ready": raise HTTPException(409,"Published versions are immutable. Upload a revision to reprocess.")
+        if sql(conn,"""SELECT 1 FROM document_versions v JOIN document_versions newer ON newer.document_id=v.document_id
+            AND newer.source_version_id IS NULL AND (newer.created_at,newer.id)>(v.created_at,v.id) WHERE v.id=:version LIMIT 1""",
+            version=job["version_id"]).first():
+            raise HTTPException(409,"This revision was superseded. Retry the latest revision instead.")
         sql(conn,"""UPDATE processing_jobs SET status='queued',stage='queued',attempts=0,
            available_at=now(),error=NULL,error_code=NULL,lease_token=NULL WHERE id=:id""",id=id)
         audit(conn,viewer,"retry",id)
@@ -265,15 +513,20 @@ def change_access(id:UUID,body:AccessChange,viewer:Identity):
     return {"status":"updated"}
 @app.delete(PREFIX+"/documents/{id}")
 def delete(id:UUID,viewer:Identity):
+    from app.enrichment_staging import rollback
     with engine.begin() as conn:
         owned_document(conn,viewer,id)
+        candidates=sql(conn,"""SELECT j.staged_version_id FROM processing_jobs j JOIN document_versions v ON v.id=j.version_id
+            WHERE v.document_id=:id AND j.status IN ('queued','processing') FOR UPDATE OF j""",id=id).scalars().all()
+        for candidate in candidates:
+            rollback(conn,candidate)
         sql(conn,"UPDATE documents SET deleted_at=now(),current_version_id=NULL WHERE id=:id",id=id)
         sql(conn,"""UPDATE processing_jobs SET status='cancelled',lease_token=NULL WHERE version_id IN
             (SELECT id FROM document_versions WHERE document_id=:id) AND status IN ('queued','processing')""",id=id)
         audit(conn,viewer,"delete",id)
     return {"status":"deleted"}
 
-ENTITY_JOIN="FROM entities e JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id"
+ENTITY_JOIN="FROM live_entities e JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id"
 def entity_detail(conn,viewer,id):
     occurrence=sql(conn,f"SELECT e.canonical_id {ENTITY_JOIN} WHERE {ACCESS} AND e.id=:id",
                    **viewer.access(),id=id).scalar_one_or_none()
@@ -288,15 +541,15 @@ def entity_detail(conn,viewer,id):
         ORDER BY v.created_at DESC,e.id LIMIT 1""",**viewer.access(),id=id).mappings().first()
     if not row: raise HTTPException(404,"Entity not found.")
     claims=sql(conn,f"""SELECT c.*,k.line_number,k.locator,k.text AS quote,v.filename
-        {ENTITY_JOIN} JOIN claims c ON c.entity_id=e.id JOIN chunks k ON k.id=c.chunk_id
+        {ENTITY_JOIN} JOIN live_claims c ON c.entity_id=e.id JOIN chunks k ON k.id=c.chunk_id
         WHERE {CURRENT} AND e.canonical_id=:id ORDER BY v.created_at,c.id""",**viewer.access(),id=row.id).mappings().all()
     result={**dict(row),"claims":[]}
     result["sources"]=[dict(x) for x in sql(conn,f"""SELECT DISTINCT v.id AS version_id,v.filename,
-       v.created_at,(d.current_version_id=v.id) AS current FROM entities e
+       v.created_at,(d.current_version_id=v.id) AS current FROM live_entities e
        JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id
        WHERE {ACCESS} AND e.canonical_id=:id ORDER BY v.created_at DESC""",**viewer.access(),id=row.id).mappings()]
     result["entity_evidence"]=[dict(x) for x in sql(conn,f"""SELECT ee.chunk_id,ee.quote,k.locator,v.filename,
-       v.id AS version_id FROM entity_evidence ee JOIN entities e ON e.id=ee.entity_id
+       v.id AS version_id FROM entity_evidence ee JOIN live_entities e ON e.id=ee.entity_id
        JOIN chunks k ON k.id=ee.chunk_id JOIN document_versions v ON v.id=e.version_id
        JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND e.canonical_id=:id""",
        **viewer.access(),id=row.id).mappings()]
@@ -360,11 +613,11 @@ def graph(viewer:Identity,root:UUID|None=None,q:str=Query("",max_length=200),kin
         with engine.connect() as conn: entity_detail_id=entity_detail(conn,viewer,root)["id"]
         params["root"]=entity_detail_id
         condition=f""" AND e.canonical_id IN (
-          SELECT :root UNION SELECT t.canonical_id FROM relationships r JOIN entities s ON s.id=r.source_id
-          JOIN entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
+          SELECT :root UNION SELECT t.canonical_id FROM live_relationships r JOIN live_entities s ON s.id=r.source_id
+          JOIN live_entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
           JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND s.canonical_id=:root
-          UNION SELECT s.canonical_id FROM relationships r JOIN entities s ON s.id=r.source_id
-          JOIN entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
+          UNION SELECT s.canonical_id FROM live_relationships r JOIN live_entities s ON s.id=r.source_id
+          JOIN live_entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
           JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND t.canonical_id=:root)"""
     with engine.begin() as conn:
         sql(conn,"SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
@@ -374,7 +627,7 @@ def graph(viewer:Identity,root:UUID|None=None,q:str=Query("",max_length=200),kin
              ORDER BY e.canonical_id,v.created_at DESC LIMIT :limit""",**params).mappings().all()
         ids=[r.id for r in nodes]
         edges=sql(conn,f"""SELECT r.id,s.canonical_id AS source,t.canonical_id AS target,r.predicate AS label,r.effective_from,r.effective_to,r.chunk_id
-             FROM relationships r JOIN entities s ON s.id=r.source_id JOIN entities t ON t.id=r.target_id
+             FROM live_relationships r JOIN live_entities s ON s.id=r.source_id JOIN live_entities t ON t.id=r.target_id
              JOIN document_versions v ON v.id=r.version_id JOIN documents d ON d.id=v.document_id
              WHERE {CURRENT} AND s.canonical_id=ANY(:ids) AND t.canonical_id=ANY(:ids) ORDER BY r.id""",
              **viewer.access(),ids=ids).mappings() if ids else []
@@ -383,13 +636,38 @@ def graph(viewer:Identity,root:UUID|None=None,q:str=Query("",max_length=200),kin
 
 @app.get(PREFIX+"/evidence/{id}")
 def evidence(id:UUID,viewer:Identity):
+    from app.connectors import refresh_access
     with engine.connect() as conn:
-        row=sql(conn,f"""SELECT k.id,k.line_number,k.locator,k.text AS quote,v.id AS version_id,v.filename
+        document=sql(conn,'SELECT v.document_id FROM chunks k JOIN document_versions v ON v.id=k.version_id WHERE k.id=:id',id=id).scalar()
+    if document: refresh_access(viewer,[document])
+    with engine.connect() as conn:
+        row=sql(conn,f"""SELECT k.id,k.line_number,k.locator,k.text AS quote,v.id AS version_id,v.filename,v.dataset_id,
+            d.organization_id,d.source_instance_id,d.native_id,v.created_at AS uploaded_at
             {PASSAGES} WHERE {ACCESS} AND k.id=:id""",**viewer.access(),id=id).mappings().first()
+        external=sql(conn,'''SELECT r.*,s.kind FROM connected_revisions r JOIN source_instances s ON s.id=r.connection_id
+            WHERE r.version_id=(SELECT version_id FROM chunks WHERE id=:id) ORDER BY r.observed_at DESC LIMIT 1''',id=id).mappings().first() if row else None
     if not row: raise HTTPException(404,"Evidence not found.")
-    return dict(row)
+    result=dict(row)
+    provenance=local_evidence(row).model_dump(mode='json')
+    if external:
+        provenance.update(original_url=external.original_url,source_revision=external.source_revision,
+            synthetic=bool(external.payload.get('synthetic')),
+            source_updated_at=external.source_updated_at.isoformat(),observed_at=external.observed_at.isoformat())
+        provenance['identity']['resource_type']='issue' if external.kind=='jira' else 'page' if external.kind=='confluence' else 'document'
+        for dependency in provenance['access_dependencies']:
+            dependency['resource_type']=provenance['identity']['resource_type']
+        if external.fields:
+            provenance.update(excerpt=None,fields=external.fields)
+    result['provenance']=provenance
+    for key in ('organization_id','native_id','source_instance_id','uploaded_at'):
+        result.pop(key)
+    return result
 @app.get(PREFIX+"/documents/{id}/download")
 def download(id:UUID,viewer:Identity):
+    from app.connectors import refresh_access
+    with engine.connect() as conn:
+        document=sql(conn,'SELECT document_id FROM document_versions WHERE id=:id',id=id).scalar()
+    if document: refresh_access(viewer,[document])
     with engine.connect() as conn:
         row=sql(conn,f"""SELECT v.artifact_key,v.filename FROM document_versions v JOIN documents d ON d.id=v.document_id
             WHERE {ACCESS} AND v.id=:id""",**viewer.access(),id=id).mappings().first()
@@ -398,20 +676,28 @@ def download(id:UUID,viewer:Identity):
     if not path.is_file(): raise HTTPException(503,"Original file is temporarily unavailable.")
     return FileResponse(path,filename=row.filename,media_type="application/octet-stream")
 @app.get(PREFIX+"/search")
-def enterprise_search(viewer:Identity,q:str=Query(...,min_length=1,max_length=500),
+def enterprise_search(viewer:Identity,response:Response,q:str=Query(...,min_length=1,max_length=500),
     document_id:UUID|None=None,kind:str|None=None,after:str|None=None,before:str|None=None,
-    limit:int=Query(20,ge=1,le=40),offset:int=Query(0,ge=0,le=200)):
+    limit:int=Query(20,ge=1,le=40),offset:int=Query(0,ge=0,le=200),
+    source_instance_id:UUID|None=None,format:Literal['pdf','docx','md','txt']|None=None,
+    project_id:UUID|None=None,team_id:UUID|None=None):
     from datetime import date
     try:
         filters={"kind":kind,"after":date.fromisoformat(after) if after else None,"before":date.fromisoformat(before) if before else None}
+        filters.update(repository.ResourceFilters(source_instance_id=source_instance_id,format=format,project_id=project_id,
+            team_id=team_id,after=filters['after'],before=filters['before']).model_dump(exclude_none=True))
     except ValueError:
         raise HTTPException(422,"Date filters must use YYYY-MM-DD.") from None
-    try: return search(viewer,q,[document_id] if document_id else None,filters=filters,limit=limit,offset=offset)
+    try:
+        diagnostics={}
+        results=search(viewer,q,[document_id] if document_id else None,filters=filters,limit=limit,offset=offset,diagnostics=diagnostics)
+        response.headers["X-Linkmind-Semantic-Status"]=diagnostics.get("semantic_status","unavailable")
+        return results
     except Exception as exc:
         raise HTTPException(503,"Search could not complete. Check Bedrock embedding access or retry.") from exc
 
 CONFLICT_QUERY=f"""WITH authorized_claims AS (
- SELECT c.id,c.value,c.chunk_id,c.predicate {ENTITY_JOIN} JOIN claims c ON c.entity_id=e.id WHERE {CURRENT}
+ SELECT c.id,c.value,c.chunk_id,c.predicate {ENTITY_JOIN} JOIN live_claims c ON c.entity_id=e.id WHERE {CURRENT}
 ) SELECT f.*,l.value AS left_value,r.value AS right_value,l.chunk_id AS left_chunk_id,r.chunk_id AS right_chunk_id
  FROM conflicts f JOIN authorized_claims l ON l.id=f.left_claim_id JOIN authorized_claims r ON r.id=f.right_claim_id
  WHERE f.organization_id=:org"""
@@ -463,81 +749,195 @@ def review_history(id:UUID,viewer:Identity):
             raise HTTPException(404,"Conflict not found.")
         return [dict(r) for r in sql(conn,"SELECT action,rationale,created_at FROM review_actions WHERE conflict_id=:id ORDER BY created_at",id=id).mappings()]
 
+@app.get(PREFIX+"/chat/source-options")
+def chat_source_options(viewer:Identity):
+    with engine.connect() as conn:policy=source_policy.default(conn,viewer)
+    return dict(default_policy=policy,policies=['auto','live','stored','combined'])
+
+@app.get(PREFIX+"/test-environment")
+def test_environment(viewer:Identity):
+    with engine.connect() as conn:source_policy.require_demo_loading(conn)
+    return dict(isolated=True,provider='mock',connector_network=False)
+
 class NewConversation(BaseModel):
     title:str=Field(default="New conversation",max_length=120)
     document_ids:list[UUID]=Field(default_factory=list,max_length=30)
+    source_policy:Literal["live","stored","combined","auto"]|None=None
 def conversation(conn,viewer,id):
-    row=sql(conn,"SELECT * FROM conversations WHERE id=:id AND organization_id=:org AND user_id=:viewer",
+    row=sql(conn,"SELECT * FROM conversations WHERE id=:id AND organization_id=:org AND user_id=:viewer AND archived_at IS NULL",
             **viewer.access(),id=id).mappings().first()
     if not row: raise HTTPException(404,"Conversation not found.")
     return row
 @app.post(PREFIX+"/conversations",status_code=201)
 def create_conversation(body:NewConversation,viewer:Identity):
     with engine.begin() as conn:
+        policy=body.source_policy or source_policy.default(conn,viewer,body.document_ids)
+        if policy=="live" and body.document_ids:raise HTTPException(422,"Live Only cannot include stored documents.")
         for id in body.document_ids:
             if not sql(conn,f"SELECT d.id FROM documents d WHERE {ACCESS} AND d.id=:id",**viewer.access(),id=id).first():
                 raise HTTPException(404,"Selected source not found.")
         id=uuid4()
-        sql(conn,"""INSERT INTO conversations(id,organization_id,user_id,title,document_ids)
-            VALUES(:id,:org,:user,:title,CAST(:documents AS jsonb))""",id=id,org=viewer.organization_id,user=viewer.id,
-            title=body.title,documents=json.dumps([str(x) for x in body.document_ids]))
+        sql(conn,"""INSERT INTO conversations(id,organization_id,user_id,title,document_ids,source_policy)
+            VALUES(:id,:org,:user,:title,CAST(:documents AS jsonb),:policy)""",id=id,org=viewer.organization_id,user=viewer.id,
+            title=body.title,documents=json.dumps([str(x) for x in body.document_ids]),policy=policy)
         return dict(conversation(conn,viewer,id))
 @app.get(PREFIX+"/conversations")
 def conversations(viewer:Identity):
     with engine.connect() as conn:
-        return [dict(r) for r in sql(conn,"SELECT * FROM conversations WHERE organization_id=:org AND user_id=:viewer ORDER BY created_at DESC LIMIT 100",**viewer.access()).mappings()]
+        return [dict(r) for r in sql(conn,"SELECT * FROM conversations WHERE organization_id=:org AND user_id=:viewer AND archived_at IS NULL ORDER BY created_at DESC LIMIT 100",**viewer.access()).mappings()]
 @app.get(PREFIX+"/conversations/{id}")
 def history(id:UUID,viewer:Identity):
+    from app import chat_agent
+    live_cache={}
+    from app.chat_attachments import accessible
     with engine.connect() as conn:
         row=conversation(conn,viewer,id)
+        output=dict(row)
+        visible=[]
+        for document in output.get("attachment_document_ids",[]):
+            try:visible.extend(accessible(conn,viewer,[document]))
+            except HTTPException:pass
+        output["attachments"]=visible
+        output["attachment_document_ids"]=[d["document_id"] for d in visible]
         turns=[]
-        for turn in sql(conn,"SELECT * FROM conversation_turns WHERE conversation_id=:id ORDER BY created_at",id=id).mappings():
-            allowed=turn.validation_version==ANSWER_VALIDATION_VERSION and dependencies_allowed(conn,viewer,turn.dependency_ids)
+        for turn in sql(conn,"SELECT * FROM conversation_turns WHERE conversation_id=:id ORDER BY created_at,id",id=id).mappings():
+            allowed=(source_policy.compatible(row.source_policy,turn.response,turn.dependency_ids) and turn.validation_version==ANSWER_VALIDATION_VERSION and dependencies_allowed(conn,viewer,turn.dependency_ids,turn.response.get("enrichment_dependencies",[]),turn.response.get('historical_dependencies',[]))
+                and source_discovery.allowed(conn,viewer,turn.response.get("source_matches",[]))
+                and chat_agent.allowed(viewer,turn.response.get('live_dependencies',[]),engine,live_cache))
             turns.append(dict(id=turn.id,question=turn.question,response=turn.response if allowed else None,
                 suppressed=not allowed,created_at=turn.created_at))
-        return {**dict(row),"turns":turns}
+        return {**output,"turns":turns}
 class Question(BaseModel):
     question:str=Field(min_length=2,max_length=2000)
+    source_document_id:UUID|None=None
+    attachment_document_ids:list[UUID]=Field(default_factory=list,max_length=30)
 @app.post(PREFIX+"/conversations/{id}/answers")
 def ask(id:UUID,body:Question,viewer:Identity):
+    if chat_trace.active():return _ask(id,body,viewer)
+    with chat_trace.session():return _ask(id,body,viewer)
+
+@app.post(PREFIX+"/conversations/{id}/answers/stream")
+async def stream_answer(id:UUID,body:Question,viewer:Identity,request:Request):
+    with engine.connect() as conn:conversation(conn,viewer,id)
+    async def events():
+        queue=asyncio.Queue();cancelled=Event();loop=asyncio.get_running_loop()
+        def emit(kind,data):loop.call_soon_threadsafe(queue.put_nowait,(kind,data))
+        def work():
+            try:
+                with chat_trace.session(emit,cancelled):
+                    emit('activity',dict(phase='finding_sources'))
+                    result=ask(id,body,viewer)
+                    if not cancelled.is_set():emit('answer',result)
+            except HTTPException as exc:emit('error',dict(message=exc.detail if isinstance(exc.detail,str) else exc.detail.get('message','Answer unavailable.'),status=exc.status_code))
+            except Exception:emit('error',dict(message='Answer unavailable. Check the conversation before retrying.'))
+            finally:emit('done',{})
+        worker=asyncio.create_task(asyncio.to_thread(work))
+        try:
+            while True:
+                if await request.is_disconnected():cancelled.set();break
+                try:kind,data=await asyncio.wait_for(queue.get(),timeout=1)
+                except asyncio.TimeoutError:
+                    yield ': keepalive\n\n';continue
+                yield 'event: '+kind+'\ndata: '+json.dumps(data,default=str)+'\n\n'
+                if kind=='done':break
+        finally:
+            cancelled.set()
+            # The worker drains any already-billed stream to account for usage.
+            if not worker.done():worker.add_done_callback(lambda task:task.exception() if not task.cancelled() else None)
+    return StreamingResponse(events(),media_type='text/event-stream',headers={'Cache-Control':'no-cache','X-Accel-Buffering':'no'})
+
+@app.get(PREFIX+"/conversations/{id}/diagnostics")
+def chat_diagnostics(id:UUID,viewer:Identity):
+    if viewer.role not in {'admin','reviewer'}:raise HTTPException(403,'Diagnostics require a reviewer role.')
+    with engine.connect() as conn:
+        conversation(conn,viewer,id)
+        return [dict(id=r.id,question=r.question,diagnostics=r.response.get('diagnostics',{})) for r in sql(conn,'SELECT id,question,response FROM conversation_turns WHERE conversation_id=:id ORDER BY created_at',id=id).mappings()]
+
+def _ask(id,body,viewer):
+    from app import chat_agent
+    from app.conversational import response as conversational_response
+    from app.inference_budget import BudgetStopped
     previous=[]
+    live_cache={}
+    chat_trace.checkpoint()
+    # Explicit fresh topics do not need remote reauthorization of unrelated turns.
+    need_previous=True
+    if os.getenv('LINKMIND_CHAT_POLISH')=='1':
+        from app.conversation_routing import followup
+        import re
+        explicit=bool(re.search(r'\b[A-Z][A-Z0-9_]{2,30}\b|\bprojects?\b|المشاريع',body.question))
+        reference=bool(re.search(r'support this|original source|هذه|السابق|هذا الرد',body.question,re.I))
+        need_previous=not explicit or followup(body.question) or reference
+    from app.chat_attachments import accessible
     with engine.connect() as conn:
         row=conversation(conn,viewer,id)
-        for turn in sql(conn,"SELECT question,response,dependency_ids FROM conversation_turns WHERE conversation_id=:id AND validation_version=:policy ORDER BY created_at DESC LIMIT 3",id=id,policy=ANSWER_VALIDATION_VERSION).mappings():
-            if dependencies_allowed(conn,viewer,turn.dependency_ids):
+        if body.attachment_document_ids and row.source_policy!="auto":
+            raise HTTPException(422,"Start a new chat to attach documents.")
+        accessible(conn,viewer,body.attachment_document_ids,ready=True)
+        attachments=[]
+        for document in row.attachment_document_ids:
+            try:attachments.extend(d["document_id"] for d in accessible(conn,viewer,[document],ready=True))
+            except HTTPException:pass
+        attachments=list(dict.fromkeys(attachments+[str(x) for x in body.attachment_document_ids]))[-30:]
+        for turn in sql(conn,"SELECT question,response,dependency_ids FROM conversation_turns WHERE conversation_id=:id AND validation_version=:policy ORDER BY created_at DESC,id DESC LIMIT 3",id=id,policy=ANSWER_VALIDATION_VERSION).mappings():
+            if not need_previous:break
+            if row.source_policy=="auto":
+                # Resolve only user-authored topics/identifiers. Old answer bodies
+                # never enter synthesis; new source reads enforce current access.
+                previous.append(dict(question=turn.question,response=dict(topic=turn.response.get('topic',{}))))
+                continue
+            if (source_policy.compatible(row.source_policy,turn.response,turn.dependency_ids) and dependencies_allowed(conn,viewer,turn.dependency_ids,turn.response.get("enrichment_dependencies",[]),turn.response.get('historical_dependencies',[]))
+                    and source_discovery.allowed(conn,viewer,turn.response.get("source_matches",[]))
+                    and chat_agent.allowed(viewer,turn.response.get('live_dependencies',[]),engine,live_cache)):
                 previous.append(dict(turn))
     try:
-        evidence=search(viewer,body.question,row.document_ids)
-        # Reuse only current, permission-checked passages for follow-up references.
-        prior_passages=previous[0]["response"].get("evidence",[]) if previous else []
-        byid={p["id"]:p for p in evidence+prior_passages[:4]}
-        evidence=list(byid.values())
-        payload=[dict(id=p["id"],text=p["text"],filename=p["filename"],locator=p["locator"],entities=p.get("entities",[])) for p in evidence]
-        context_dependencies=sorted({p["id"] for p in evidence}.union(*(set(t["dependency_ids"]) for t in previous)))
-        def authorize_context():
+        with question_limits() as limits:
+            if row.source_policy=="auto":
+                limits.max_model_calls=2
+                limits.max_planner_calls=0
+            if row.source_policy=="legacy":raise HTTPException(409,"This chat used the previous mixed-source policy. Start a new conversation and choose Live Only, Stored knowledge, or Combined.")
+            if row.source_policy=="live" and body.source_document_id:raise HTTPException(422,"Choose Stored knowledge in a new conversation to use an uploaded document.")
+            with source_policy.scope(row.source_policy,selected=bool(row.document_ids)):
+                if row.source_policy=="auto":
+                    from app.auto_agent import response as auto_response
+                    response,dependencies=auto_response(viewer,body.question,previous,engine,search,configured,row.document_ids,attachments)
+                else:
+                    response,dependencies=conversational_response(viewer,body.question,previous,row.document_ids,
+                        engine,search,answer,configured,body.source_document_id)
             with engine.connect() as conn:
-                if not dependencies_allowed(conn,viewer,context_dependencies):
-                    raise HTTPException(409,"Source access or versions changed. Ask again.")
-        authorize_context()
-        result=answer(body.question,payload,dict(org=viewer.organization_id,user=viewer.id),
-            history=[{"question":t["question"],"statements":t["response"].get("statements",[])} for t in reversed(previous)],authorize=authorize_context)
+                source_policy.annotate(conn,response)
+            source_policy.enforce(row.source_policy,response,dependencies)
+            limits.checkpoint()
     except HTTPException:
         raise
+    except BudgetStopped as exc:
+        raise HTTPException(503,str(exc)) from exc
+    except QueryLimitReached as exc:
+        raise HTTPException(503,dict(code=exc.code,message=explain(body.question,'limit'))) from exc
     except Exception as exc:
         code=getattr(exc,"response",{}).get("Error",{}).get("Code",type(exc).__name__)
         if code=="ThrottlingException":
             raise HTTPException(429,"Bedrock is temporarily rate limited. Please wait and retry.",headers={"Retry-After":"10"}) from exc
         raise HTTPException(503,"Answer unavailable ("+code+"). No unverified answer was saved. Retry or check the provider.") from exc
-    dependencies=context_dependencies
-    response={**result.model_dump(),"evidence":evidence,"provider":"bedrock" if configured() else "mock-extractive"}
+    if row.source_policy=='auto':
+        from app.auto_agent import assert_live
+        assert_live(viewer,response.get('live_dependencies',[]),engine)
+    elif not chat_agent.allowed(viewer,response.get('live_dependencies',[]),engine):
+        raise HTTPException(409,'Connected source access or revision changed.')
+    chat_trace.checkpoint()
+    if chat_trace.active():response['diagnostics']=chat_trace.active().summary()
     with engine.begin() as conn:
         conversation(conn,viewer,id)
-        if not dependencies_allowed(conn,viewer,dependencies):
+        accessible(conn,viewer,body.attachment_document_ids,ready=True)
+        if row.source_policy=="auto":
+            sql(conn,"UPDATE conversations SET attachment_document_ids=CAST(:attachments AS jsonb) WHERE id=:id",id=id,attachments=json.dumps(attachments))
+        if (not dependencies_allowed(conn,viewer,dependencies,response.get("enrichment_dependencies",[]),response.get('historical_dependencies',[]))
+                or not source_discovery.allowed(conn,viewer,response.get("source_matches",[]))):
             raise HTTPException(409,"Source access or versions changed. Ask again using current evidence.")
-        sql(conn,"""INSERT INTO conversation_turns(id,organization_id,conversation_id,question,response,dependency_ids,validation_version)
-            VALUES(:id,:org,:conversation,:question,CAST(:response AS jsonb),CAST(:dependencies AS jsonb),:policy)""",
+        sql(conn,"""INSERT INTO conversation_turns(id,organization_id,conversation_id,question,response,dependency_ids,validation_version,created_at)
+            VALUES(:id,:org,:conversation,:question,CAST(:response AS jsonb),CAST(:dependencies AS jsonb),:policy,clock_timestamp())""",
             id=uuid4(),org=viewer.organization_id,conversation=id,question=body.question,
-            response=json.dumps(response,default=str),dependencies=json.dumps(dependencies),policy=ANSWER_VALIDATION_VERSION)
+            response=json.dumps(chat_agent.retained_response(response),default=str),dependencies=json.dumps(dependencies),policy=ANSWER_VALIDATION_VERSION)
     return response
 
 @app.get(PREFIX+"/usage")

@@ -1,60 +1,101 @@
-# Jira knowledge and original references — discussion record, 2026-11-12
+# Connected Sources and Jira — Supporting Architecture Contract
 
-## Confirmed request
+2026-11-15 update: the user requested Jira, Confluence, OneDrive and SharePoint in
+the RF4 planning scope, with convenient MCP options investigated. See the
+[RF4 plan and provider documentation](RF4_PLAN.md) for the verified Atlassian Rovo /
+Microsoft Work IQ options and proposed native-API sync paths. Delivery is staged and
+each source keeps separate scope/permission/lifecycle acceptance. The prior first-source
+choice below is historical; exact resources and app authorization remain open.
 
-The user confirmed **Jira** as the first external source. They want collected
-knowledge to remain available through Graph, Search and Chat, with references to
-the original information. They also requested a canvas-only Graph view.
-The user intends to share another chat before finalizing the next tasks.
+Updated **2026-11-14**. Supports RF2–RF5 in the [single roadmap](IMPLEMENTATION_PLAN.md).
+This is planning only: no application connector, external connection, sync or import
+was configured. Old Jira → Confluence → GitLab ordering is superseded as a mandatory
+sequence; the first connector/scope is open, with Jira as the previous candidate.
 
-## Current behavior
+## Purpose
 
-- Uploaded documents, immutable versions, passages, entities and relationships are
-  persisted in the database; the graph is a view of that knowledge.
-- Chat, Search and Graph already open authorized stored evidence and original
-  uploaded-file downloads. The same source permissions apply across these views.
-- Graph URLs retain root, selection and filters. A named saved collection or saved
-  canvas layout is not implemented; extra node expansions and dragged positions
-  are session state. Saving a view is different from saving the underlying facts.
-- A live Jira connector, original Jira links in evidence, and persistent Jira sync
-  are **not implemented**. Codex's connected Jira access is not app authentication.
+Linkmind retains selected uploaded/synchronized company knowledge and combines it with
+relevant live evidence. Jira, OneDrive, SharePoint, Slack, GitLab, Confluence and other
+approved systems fit this model. Each source needs actual supported operations and its
+own lifecycle acceptance; listing it here is not a claim of delivered integration.
 
-## Proposed follow-up tasks, pending the additional chat
+## Current implementation
 
-These refine the existing milestone order; they do not mark later milestones
-complete or skip document-quality and authorization gates.
+Uploads, immutable revisions/passages, original downloads, source-only search/chat,
+optional graph/entity/review views and source evidence exist locally. RF1 current code
+now defaults ordinary uploads/revisions to source-only indexing, with explicit optional
+enrichment. Existing preview/main installations remain unchanged. No application Jira/MCP
+connector, external persistent sync or adaptive live source router exists. Codex's own
+connected accounts are not application credentials. Named saved graph views remain later.
 
-1. **M3.2–M3.3: reliable source evidence and cross-source identities.** Keep source
-   type, qualified source ID, original URL, source revision/update time, collection
-   time and evidence locator together. Continue retaining immutable source excerpts.
-   Never merge people or projects solely because their names match.
-2. **M4.1: one read-only Jira project.** Use the app's own approved connection and
-   map users to verified Jira access. Collect bounded issue data with issue key,
-   original issue URL, source timestamps and actual supporting passages. Preserve
-   unavailable/denied states. Do not introduce Jira write actions.
-3. **M4.1 evidence presentation across Chat, Search, Content and Graph.** A citation
-   opens the stored supporting excerpt with its source revision/date and an
-   **Open in Jira** action. Opening the current Jira page and viewing the retained
-   cited version are distinct actions: later edits must not rewrite old evidence.
-   The same evidence model supports uploaded files and future connectors.
-4. **M4.2: persistent collection and synchronization.** Save authorized records,
-   process revisions idempotently, reconcile deletions and permission changes,
-   and show freshness and sync errors. Revoked evidence must stop contributing to
-   every dependent answer, result and relationship under the agreed access policy.
-5. **Optional saved views/collections.** Name a topic such as “Project Atlas,” save
-   its root/filters and optionally selected sources/layout, and reopen it against
-   current authorized knowledge. This bookmark must not copy facts or freeze access.
-   A historical snapshot/export is a separate feature with explicit revision dates.
+## Shared connector behavior
 
-## Suggested acceptance example
+- Verify app-owned authorization/credentials, source instance identity, approved scopes
+  and actual MCP/native API capabilities before implementation. Bulk collection may use
+  a different transport from live tools; MCP does not guarantee sync/history support.
+- Store tasks/messages/documents as appropriate original records plus searchable text/
+  fields, provenance and immutable source revisions/observations. No routine Sonnet
+  entity/claim/relationship extraction, graph generation or conflict scan on sync.
+- Live Only: authorized scoped reads; no automatic shared index/graph updates.
+- Live + Sync: authorized live reads plus durable selected-scope collection/indexing.
+- Not Connected: no source calls or cached fallback that bypasses the mode/access policy.
+- Configure at a practical folder/project/channel/repository scope. A connection does
+  not imply importing everything. Expose health and last successful collection.
+- Enforce existing source/tenant boundaries before model use and on evidence/history/
+  cache delivery. Full enterprise groups/Space delegation design is deferred, not source
+  safety. Privileged sync credentials do not authorize every employee to read all records.
 
-An authorized user collects an approved Jira issue and uploads a related design
-document. Chat, Search and Graph each expose the actual supporting passages and
-their source labels. A Jira citation opens its retained excerpt and original issue
-URL; a file citation downloads the matching version. Updating the Jira issue makes
-its new revision visible without duplicating identities or rewriting the previous
-source. Another user without Jira access cannot retrieve its facts or evidence.
+## Routing and common evidence
 
-No Jira account, credentials, project, live import or sync was configured as part
-of the canvas-only UI task. Confirm the exact project/scope and integrate the
-additional user chat before starting the connector implementation.
+Use the configured source catalog and question meaning/time/scope. Policies and reports
+normally use stored evidence; current issue status/assignee/blockers use the relevant
+live source. Historical requests require actual dated history; absent history is a limit,
+not permission to infer the past from today's response. Combine sources when needed.
+
+An evidence item preserves organization/source-instance/resource-type/native-ID, original
+URL, source revision/update marker when available, observed time, support and coverage.
+Support may be a retained excerpt/locator or actual structured field/value. Do not invent
+verbatim text for JSON fields. Preserve existing uploaded citation IDs and reauthorize
+all answer dependencies. An issue reference is not proof of completion; assignee is not
+project owner; similarity alone does not establish a shared identity.
+
+Use bounded direct tools for clear requests and bounded planning for compound questions.
+Do not search all connectors by default. No agent per connector, new graph database or
+event platform is required. Managed Spaces/native authoring are not prerequisites.
+
+## Persistent collection and refresh
+
+Use the existing worker pattern with idempotent resource/version identity, pagination,
+cursors/checkpoints, resume, bounded retries/backoff and source rate limits. Reconcile
+changes/deletions/access even without employee queries. A missing search hit does not
+prove deletion. Avoid unchanged embeddings and whole-corpus processing.
+
+A live response can answer immediately and request a deduplicated refresh only within
+approved sync scopes. Partial/user-filtered payloads cannot replace complete records,
+erase omitted fields or overwrite newer state. Refetch when completeness/version/access
+cannot be established. Separate source-updated, observed and explicit effective times.
+
+Mode/scope removal stops collection and excludes disallowed material from active use;
+historical retention does not grant current access. During outage, dated last-known
+fallback is allowed only while access remains reliably valid; authorization uncertainty
+forbids it. Live Only citations/history never become shared knowledge automatically.
+
+## First connector and acceptance
+
+Proposed default: prove one useful source end to end, then a complementary document or
+project source. Jira remains a prior candidate; OneDrive/SharePoint is a core document-source
+class, not blocked behind Confluence/GitLab. Select exact source/scopes/access before work.
+
+For Jira, demonstrate a current issue whose stored status is older: retrieve actual live
+fields, cite the issue and observed time, then refresh once if Live + Sync. Separately
+prove selected-scope persistence/restart/update history without mandatory extraction.
+For a document source, prove selected folder collection, changed versions, original links,
+searchable text, unchanged-content reuse and permission/deletion reconciliation.
+
+Live and sync gates are separate. Test two distinct access profiles, expiry/denial,
+rate limits/outage, partial pagination, schema errors, injected instructions, duplicated/
+reordered updates, missed cycles, revocation/deletion and mode changes. Unavailable source
+features must be documented, not simulated. A single API response is not full acceptance.
+
+Actual source access, paid model acceptance and rollout each require their own concrete
+authorization. This documentation task configures no credentials, imports or services.

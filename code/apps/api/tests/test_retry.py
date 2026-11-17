@@ -19,8 +19,8 @@ def test_worker_retries_rollback_publication(monkeypatch):
             sql(conn,"INSERT INTO documents(id,organization_id,owner_id,filename,visibility) VALUES(:id,:org,:owner,'retry.md','private')",id=did,org=org,owner=owner)
             sql(conn,"""INSERT INTO document_versions(id,organization_id,document_id,filename,checksum,byte_count,artifact_key)
                 VALUES(:id,:org,:doc,'retry.md',:checksum,:size,:artifact)""",id=vid,org=org,doc=did,checksum=checksum,size=len(content),artifact=artifact)
-            sql(conn,"""INSERT INTO processing_jobs(id,organization_id,version_id,owner_id,checksum,available_at)
-                VALUES(:id,:org,:version,:owner,:checksum,now()-interval '100 days')""",id=jid,org=org,version=vid,owner=owner,checksum=checksum)
+            sql(conn,"""INSERT INTO processing_jobs(id,organization_id,version_id,owner_id,checksum,available_at,enrichment_requested)
+                VALUES(:id,:org,:version,:owner,:checksum,now()-interval '100 days',true)""",id=jid,org=org,version=vid,owner=owner,checksum=checksum)
             class TestEngine:
                 @contextmanager
                 def begin(self):
@@ -40,7 +40,9 @@ def test_worker_retries_rollback_publication(monkeypatch):
                 assert tuple(row)==("failed" if attempt==3 else "queued",attempt)
                 assert sql(conn,"SELECT count(*) FROM canonical_entities").scalar()==count
                 assert sql(conn,"SELECT count(*) FROM entities WHERE version_id=:id",id=vid).scalar()==0
-                assert sql(conn,"SELECT current_version_id FROM documents WHERE id=:id",id=did).scalar() is None
+                # Enrichment rolls back, while valid source search publication survives.
+                assert sql(conn,"SELECT current_version_id FROM documents WHERE id=:id",id=did).scalar()==vid
+                assert sql(conn,"SELECT search_ready_at FROM document_versions WHERE id=:id",id=vid).scalar()
                 sql(conn,"UPDATE processing_jobs SET available_at=now()-interval '100 days' WHERE id=:id",id=jid)
         finally:
             tx.rollback()

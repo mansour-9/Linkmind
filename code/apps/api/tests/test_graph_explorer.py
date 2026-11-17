@@ -32,9 +32,12 @@ def test_explorer_search_neighborhood_overview_and_filters():
         assert len(deep["nodes"])<=80 and len(deep["edges"])<=120
         assert deep["root"]==root
         overview=call("/graph/overview?q=Project+Alpha")
-        assert overview[0]==200 and overview[1]["graph"]["root"]==root
+        # Several fixtures legitimately share a name without sharing an identity.
+        assert overview[0]==200 and overview[1]["entity"]["name"]=="Project Alpha"
+        assert overview[1]["graph"]["root"]==overview[1]["entity"]["id"]
         identifier_overview=call("/graph/overview?q=CB-ALPHA")
         assert identifier_overview[0]==200 and identifier_overview[1]["entity"]["kind"]=="project"
+        assert identifier_overview[1]["graph"]["root"]==root
         assert call("/graph/overview?q=who+owns+the+migration")[1] is None
         assert call("/graph/search?q=%25_")[0]==200
         assert call("/graph/explore?root="+root+"&kind=unknown")[0]==422

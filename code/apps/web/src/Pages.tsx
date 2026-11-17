@@ -3,8 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { ArrowDownToLine, ArrowRight, Clock3, Database, FileText, Network, Plus, ShieldCheck, UploadCloud } from "lucide-react";
 import { useGraph, useIngest, useJobs, useSession, useViewer } from "./session";
 
-import { Button, Feedback, jobLabels, PageHeading, SearchField, Sheet, StatusBadge } from "./ui";
+import { Button, Feedback, jobLabels, PageHeading, SearchField, Sheet, ReadinessBadge } from "./ui";
 import { SourceControls } from "./SourceControls";
+import { CompanyDemo } from "./CompanyDemo";
 import type { Entity, Job, Visibility } from "./api";
 
 const uploadDate = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
@@ -13,22 +14,22 @@ export function Sources() {
   const { token, service } = useSession();
   const location = useLocation();
   const [filter, setFilter] = useState("");
-  const jobs = useJobs();
+  const jobs = useJobs(new URLSearchParams(location.search).get('document_id') ?? undefined);
   const ingest = useIngest();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [visibility, setVisibility] = useState<Visibility>("private");
+  const [visibility, setVisibility] = useState<Visibility>("team");
   const [downloadError, setDownloadError] = useState("");
   const addButton = useRef<HTMLButtonElement>(null);
   const visible = jobs.isSuccess ? jobs.data : [];
   const filtered = visible.filter(j => j.filename.toLowerCase().includes(filter.toLowerCase()));
   const queued = visible.filter((job) => job.status === "queued").length;
-  const ready = visible.filter((job) => job.status === "ready").length;
+  const ready = visible.filter((job) => job.search_status === "ready" && job.current_version_id === job.version_id).length;
 
   function openUpload() {
     ingest.reset();
     setFile(null);
-    setVisibility("private");
+    setVisibility("team");
     setOpen(true);
   }
   function submit(event: FormEvent) {
@@ -46,7 +47,7 @@ export function Sources() {
       action={<Button ref={addButton} onClick={openUpload}><Plus size={18} /> Add data source</Button>} />
     {jobs.isSuccess && <div className="source-summary" aria-label="Upload summary">
       <span><strong>{visible.length}</strong> uploads</span>
-      <span><strong>{ready}</strong> ready</span>
+      <span><strong>{ready}</strong> search ready</span>
       <span><strong>{queued}</strong> queued</span>
     </div>}
     <SearchField className="library-search source-search" aria-label="Find a document" placeholder="Find a document…" value={filter} onChange={e => setFilter(e.target.value)} />
@@ -58,14 +59,14 @@ export function Sources() {
         {jobs.isSuccess && !visible.length && <div className="panel-padding"><p className="muted">No uploads are visible in this workspace.</p></div>}
         {visible.length > 0 && !filtered.length && <Feedback>No documents match your search.</Feedback>}
         {visible.length > 0 && <ul className="upload-list">
-          {filtered.map((job) => <li key={job.id}>
+          {filtered.map((job) => <li key={job.id} data-source-id={job.document_id}>
             <span className="tile-icon"><FileText size={18} /></span>
             <div className="file-details"><strong>{job.filename}</strong>
               <small>{job.visibility === "private" ? "Only me · owner access" : "My organization"}</small>{job.error && <details className="source-error"><summary>View processing error</summary><p>{job.error}</p><Link className="text-action" to="/admin/processing">Open Processing</Link></details>}
               <time className="job-date" dateTime={job.uploaded_at}>Uploaded {uploadDate.format(new Date(job.uploaded_at))}</time>
               <details className="source-management"><summary>Manage source</summary><SourceControls job={job} /></details>
             </div>
-            <div className="source-state"><StatusBadge status={job.status} /><small>{job.current_version_id === job.version_id ? "Current revision" : job.processed_at ? "Historical revision" : "Not published"}</small></div>
+            <div className="source-state"><ReadinessBadge job={job} /><small>{job.current_version_id === job.version_id ? "Current revision" : job.search_ready_at ? "Historical revision" : "Not published"}</small></div>
             <Button variant="ghost" className="icon-button" aria-label={"Download " + job.filename}
               onClick={() => void download(job)}><ArrowDownToLine size={17} /></Button>
           </li>)}
@@ -74,14 +75,14 @@ export function Sources() {
       <details className="sample-documents"><summary>Try sample documents <span>Demo data</span></summary><section className="panel-padding" aria-labelledby="sample-title">
         <span className="tile-icon tile-teal"><UploadCloud size={21} /></span>
         <h2 className="mt-3" id="sample-title">Sample documents</h2>
-        <p className="muted mt-2">Use demo documents to explore graph relationships and verify access.</p>
+        <p className="muted mt-2">Use demo documents to try search and verify access. Optional enrichment adds graph relationships.</p>
         <div className="mt-4 flex flex-col items-start gap-2">
           <Button variant="outline" disabled={ingest.isPending}
             onClick={() => ingest.mutate({ sample: "cloud-migration", visibility: "team" })}>Load Cloud Migration sample</Button>
           {token === "demo-amal" && <Button variant="outline" disabled={ingest.isPending}
             onClick={() => ingest.mutate({ sample: "private-review", visibility: "private" })}>Load restricted sample</Button>}
         </div>
-      </section></details>
+      </section><CompanyDemo /></details>
     </div>
     <div className="mt-4 space-y-2">
       {!open && ingest.isPending && <Feedback>Uploading document…</Feedback>}
@@ -94,9 +95,7 @@ export function Sources() {
       <form className="upload-form" onSubmit={submit}>
         <label>File<input aria-label="Choose file" type="file" accept=".pdf,.docx,.txt,.md" required
           onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
-        <label>Access<select value={visibility} onChange={(event) => setVisibility(event.target.value as Visibility)}>
-          <option value="private">Only me</option><option value="team">My organization</option>
-        </select></label>
+        <p className="muted">New documents are shared with your organization.</p>
         {ingest.isError && <Feedback error>{ingest.error.message}</Feedback>}
         <Button type="submit" disabled={!file || ingest.isPending}><UploadCloud size={18} />
           {ingest.isPending ? "Uploading…" : "Upload file"}</Button>
@@ -109,6 +108,7 @@ export function SettingsPage() {
   const viewer = useViewer();
   return <div className="page">
     <PageHeading title="Settings" description="Your active workspace, identity, and access." />
+    {viewer.data?.role==='admin'&&<section className="panel settings-panel"><div className="panel-heading"><Database size={20}/><h2>Sources & MCP Connections</h2></div><div className="panel-padding"><p>Configure approved sources, authentication, scopes and synchronization.</p><Button variant="outline" asChild><Link to="/admin/connections">Manage sources and connections</Link></Button></div></section>}
     {viewer.isPending && <Feedback>Loading settings…</Feedback>}
     {viewer.isError && <Feedback error>Workspace settings could not be loaded. <Button variant="outline" onClick={() => void viewer.refetch()}>Retry</Button></Feedback>}
     {viewer.isSuccess && <section className="panel settings-panel">

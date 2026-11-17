@@ -54,14 +54,14 @@ def test_bedrock_mode_graph_fixture_never_calls_models(monkeypatch):
         try:
             sql(conn,"INSERT INTO documents(id,organization_id,owner_id,filename,visibility) VALUES(:id,:org,:owner,:filename,'team')",id=did,org=org,owner=owner,filename=fixture['filename'])
             sql(conn,"INSERT INTO document_versions(id,organization_id,document_id,filename,checksum,byte_count,artifact_key) VALUES(:id,:org,:doc,:filename,:checksum,:size,:artifact)",id=vid,org=org,doc=did,filename=fixture['filename'],checksum=checksum,size=len(content),artifact=artifact)
-            sql(conn,"INSERT INTO processing_jobs(id,organization_id,version_id,owner_id,checksum,available_at) VALUES(:id,:org,:version,:owner,:checksum,now()-interval '100 days')",id=jid,org=org,version=vid,owner=owner,checksum=checksum)
+            sql(conn,"INSERT INTO processing_jobs(id,organization_id,version_id,owner_id,checksum,available_at,enrichment_requested) VALUES(:id,:org,:version,:owner,:checksum,now()-interval '100 days',true)",id=jid,org=org,version=vid,owner=owner,checksum=checksum)
             class TestEngine:
                 @contextmanager
                 def begin(self):
                     with conn.begin_nested(): yield conn
             def forbidden(*args,**kwargs): pytest.fail('Synthetic graph demo attempted a paid model call')
             monkeypatch.setattr(processing,'engine',TestEngine());monkeypatch.setattr(processing,'configured',lambda:True)
-            monkeypatch.setattr(processing,'extract_bedrock',forbidden);monkeypatch.setattr(processing,'embed',forbidden)
+            monkeypatch.setattr(processing,'extract_bedrock_batches',forbidden);monkeypatch.setattr(processing,'embed',forbidden)
             import app.conflict_detection as conflicts
             monkeypatch.setattr(conflicts,'assess',forbidden)
             before=sql(conn,'SELECT count(*) FROM ai_usage').scalar_one()

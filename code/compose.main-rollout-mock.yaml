@@ -1,0 +1,17 @@
+# Reviewed main-cutover option only. Apply LAST, after backup/rehearsal and approval.
+# It does not provision AWS resources or create/copy a model-test budget.
+services:
+  migrate:
+    image: ${BRAIN_BACKEND_IMAGE:?Set the reviewed F1.3 backend image}
+  api:
+    image: ${BRAIN_BACKEND_IMAGE:?Set the reviewed F1.3 backend image}
+    environment:
+      AI_PROVIDER: mock
+      BEDROCK_BUDGET_RUN: ""
+  worker:
+    image: ${BRAIN_BACKEND_IMAGE:?Set the reviewed F1.3 backend image}
+    environment:
+      AI_PROVIDER: mock
+      BEDROCK_BUDGET_RUN: ""
+  web:
+    image: ${BRAIN_FRONTEND_IMAGE:?Set the reviewed F1.3 frontend image}

@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-12",
+  "api_tests": {
+    "passed": 83,
+    "failed": 0,
+    "environment": "linkmind-company-mock"
+  },
+  "browser_workflows": {
+    "passed": 25,
+    "failed": 0,
+    "provider": "mock",
+    "screens": [
+      1440,
+      1024,
+      390,
+      1920
+    ]
+  },
+  "frontend_build": "passed in Docker",
+  "mock_corpus": {
+    "initial_documents": 24,
+    "questions": 15,
+    "enriched": 24
+  },
+  "sonnet_status": "partial; expired-session interruption; worker stopped; login confirmation pending",
+  "known_token_cost_usd": 0.16085728,
+  "held_reservation_usd": 0.0562848,
+  "limit_usd": 10.0,
+  "paid_questions_completed": 0,
+  "main_app_changed": false,
+  "f11_existing_preview_changed": false
+}

@@ -1,0 +1,14 @@
+services:
+  api:
+    image: linkmind-source-policy-backend:local
+    environment:
+      LINKMIND_TEST_ENVIRONMENT: '0'
+      LINKMIND_ALLOW_DEMO_DATASETS: '0'
+      LINKMIND_CHAT_AGENT: '1'
+      LINKMIND_CHAT_POLISH: '1'
+  worker:
+    image: linkmind-source-policy-backend:local
+  web:
+    image: linkmind-source-policy-web:local
+    ports: !override
+      - '127.0.0.1:5197:5173'

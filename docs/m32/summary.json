@@ -1,0 +1,135 @@
+{
+  "status": "completed",
+  "total_attempts": 17,
+  "unused_attempt_allowance": 7,
+  "estimated_usd": "0.1266584400",
+  "all_usage_accounted": true,
+  "models": {
+    "google.gemma-4-31b": {
+      "cases": 6,
+      "statuses": {
+        "schema_failure": 6
+      },
+      "schema_valid": 0,
+      "exact_citations_valid": 0,
+      "passed_existing_gates": 0,
+      "verifier_reported_unsupported": 0,
+      "gold_direction_errors": 0,
+      "accepted_output_gold_metrics": {
+        "entities": {
+          "fn": 15,
+          "precision": null,
+          "recall": 0.0
+        },
+        "identifiers": {
+          "fn": 15,
+          "precision": null,
+          "recall": 0.0
+        },
+        "claims": {
+          "fn": 11,
+          "precision": null,
+          "recall": 0.0
+        },
+        "relationships": {
+          "fn": 9,
+          "precision": null,
+          "recall": 0.0
+        }
+      },
+      "cost": {
+        "extraction": {
+          "attempts": 6,
+          "input_tokens": 9301,
+          "output_tokens": 3496,
+          "estimated_usd": "0.0027005400",
+          "median_latency_ms": 5288.5
+        },
+        "verification": {
+          "attempts": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "estimated_usd": "0",
+          "median_latency_ms": null
+        }
+      },
+      "pipeline_estimated_usd": "0.0027005400",
+      "estimated_cost_per_matched_gold_claim_or_relationship": null,
+      "schema_failure_detail": "All six returned fenced JSON; no fences stripped and no failed outputs admitted."
+    },
+    "us.anthropic.claude-sonnet-4-6": {
+      "cases": 6,
+      "statuses": {
+        "accepted_first_pass": 5,
+        "evidence_failure": 1
+      },
+      "schema_valid": 6,
+      "exact_citations_valid": 5,
+      "passed_existing_gates": 5,
+      "verifier_reported_unsupported": 0,
+      "gold_direction_errors": 1,
+      "accepted_output_gold_metrics": {
+        "entities": {
+          "tp": 13,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1.0,
+          "recall": 0.8666666666666667
+        },
+        "identifiers": {
+          "tp": 13,
+          "fp": 0,
+          "fn": 2,
+          "precision": 1.0,
+          "recall": 0.8666666666666667
+        },
+        "claims": {
+          "tp": 8,
+          "fp": 1,
+          "fn": 3,
+          "precision": 0.8888888888888888,
+          "recall": 0.7272727272727273
+        },
+        "relationships": {
+          "tp": 6,
+          "fp": 2,
+          "fn": 3,
+          "precision": 0.75,
+          "recall": 0.6666666666666666
+        }
+      },
+      "cost": {
+        "extraction": {
+          "attempts": 6,
+          "input_tokens": 19687,
+          "output_tokens": 2684,
+          "estimated_usd": "0.1092531000",
+          "median_latency_ms": 2856.5
+        },
+        "verification": {
+          "attempts": 5,
+          "input_tokens": 3981,
+          "output_tokens": 95,
+          "estimated_usd": "0.0147048000",
+          "median_latency_ms": 848
+        }
+      },
+      "pipeline_estimated_usd": "0.1239579000",
+      "estimated_cost_per_matched_gold_claim_or_relationship": "0.008854135714285714285714285714",
+      "schema_failure_detail": null
+    }
+  },
+  "recommendation": "Keep the current production model. Gemma is not a drop-in replacement under this tested strict-output integration; repair and grounding gaps also need attention in the Sonnet pipeline.",
+  "limitations": [
+    "Six paired synthetic cases are a pilot, not statistical model equivalence or full Chat/retrieval quality.",
+    "Gold metrics use frozen literal/alias tuples; additional source-supported paraphrases require separate adjudication.",
+    "Common Sonnet verification can be biased; gold matching and explicit source review remain separate.",
+    "Sonnet uses native constrained output; Gemma uses a schema in the same prompt with strict local validation. No silent output repair.",
+    "Costs are token estimates at verified list rates, not an AWS bill.",
+    "Schema-failed Gemma content precision/recall is not assessed. Zero accepted-output recall describes integration yield, not intrinsic factual quality.",
+    "Frozen tuple metrics count representations: a supported target_database edge is a literal mismatch for expected uses; no post-response alias changes were made.",
+    "One reversed assigned_to edge passed common verification. Gold/manual source review is required alongside the model judge.",
+    "A cost-per-matched-record denominator can count a claim and relationship for the same source fact; it is not semantic-fact deduplication.",
+    "No repair/retry runs or extra requests consumed the seven unused verifier slots."
+  ]
+}

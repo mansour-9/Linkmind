@@ -1,0 +1,2085 @@
+{
+  "name": "Northstar Labs",
+  "description": "Fictional company: 24 initial documents, five projects, people, policies, disagreement and an owner-only budget.",
+  "synthetic": true,
+  "fixtures": [
+    {
+      "key": "atlas-charter",
+      "filename": "atlas-charter.md",
+      "title": "Atlas charter",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Atlas",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-ATLAS"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Lina Faris",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "lina@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "team",
+          "kind": "team",
+          "name": "Platform",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/atlas"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Lina Faris",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "launch_date",
+          "value": "2026-12-03",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "project",
+          "predicate": "managed_by",
+          "target_key": "team",
+          "line": 4
+        }
+      ],
+      "sha256": "69e7e22acf67bcc5ebb4690c7c0ab75c2e95f93ba400f8ef7253ad044f6556fb"
+    },
+    {
+      "key": "atlas-handover",
+      "filename": "atlas-handover.md",
+      "title": "Atlas handover",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Atlas",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-ATLAS"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Lina Faris",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "lina@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "task",
+          "kind": "task",
+          "name": "Validate Atlas handover",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "issue_key",
+              "value": "NS-ATLAS-01"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Lina Faris",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "task",
+          "predicate": "deadline",
+          "value": "2026-12-03",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "task",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "task",
+          "predicate": "assigned_to",
+          "target_key": "owner",
+          "line": 4
+        }
+      ],
+      "sha256": "9ad84a428bfdfde029820c8b22d526abe7c3c05c24e22d28864c329f96d22bd2"
+    },
+    {
+      "key": "atlas-decision",
+      "filename": "atlas-decision.md",
+      "title": "Atlas decision",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Atlas",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-ATLAS"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Lina Faris",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "lina@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "decision",
+          "kind": "decision",
+          "name": "Atlas database decision",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/decisions/atlas-d1"
+            }
+          ]
+        },
+        {
+          "key": "database",
+          "kind": "technology",
+          "name": "PostgreSQL",
+          "line": 5,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/technology/postgresql"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Lina Faris",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "decision",
+          "predicate": "decision",
+          "value": "Use PostgreSQL for NS-ATLAS",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "decision",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "project",
+          "predicate": "uses",
+          "target_key": "database",
+          "line": 5
+        }
+      ],
+      "sha256": "344173c1cdb2107b732e2efc821a187f19b61aaf458cd84b8804df9de3838826"
+    },
+    {
+      "key": "atlas-status",
+      "filename": "atlas-status.md",
+      "title": "Atlas status",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Atlas",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-ATLAS"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Lina Faris",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "lina@northstar.example"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Lina Faris",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "status",
+          "value": "Pilot in progress",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        }
+      ],
+      "sha256": "ad112da34165bda42ae7361fa70ec1697c8564d06977a7ea6f6bdef468be70f7"
+    },
+    {
+      "key": "beacon-charter",
+      "filename": "beacon-charter.md",
+      "title": "Beacon charter",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Beacon",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-BEACON"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Omar Nasser",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "omar@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "team",
+          "kind": "team",
+          "name": "Customer Success",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/beacon"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Omar Nasser",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "launch_date",
+          "value": "2026-12-10",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "project",
+          "predicate": "managed_by",
+          "target_key": "team",
+          "line": 4
+        }
+      ],
+      "sha256": "94b8291ec0b4161d964dfd534def11f98739ecbf9c2f15e588c030ac1867bbb2"
+    },
+    {
+      "key": "beacon-handover",
+      "filename": "beacon-handover.md",
+      "title": "Beacon handover",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Beacon",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-BEACON"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Omar Nasser",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "omar@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "task",
+          "kind": "task",
+          "name": "Validate Beacon handover",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "issue_key",
+              "value": "NS-BEACON-01"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Omar Nasser",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "task",
+          "predicate": "deadline",
+          "value": "2026-12-10",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "task",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "task",
+          "predicate": "assigned_to",
+          "target_key": "owner",
+          "line": 4
+        }
+      ],
+      "sha256": "62d9a7a2cfd7d1018a29bfaca32e735b89dd5a36bd1955f4a4fcd4ef8c329702"
+    },
+    {
+      "key": "beacon-decision",
+      "filename": "beacon-decision.md",
+      "title": "Beacon decision",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Beacon",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-BEACON"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Omar Nasser",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "omar@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "decision",
+          "kind": "decision",
+          "name": "Beacon database decision",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/decisions/beacon-d1"
+            }
+          ]
+        },
+        {
+          "key": "database",
+          "kind": "technology",
+          "name": "PostgreSQL",
+          "line": 5,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/technology/postgresql"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Omar Nasser",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "decision",
+          "predicate": "decision",
+          "value": "Use PostgreSQL for NS-BEACON",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "decision",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "project",
+          "predicate": "uses",
+          "target_key": "database",
+          "line": 5
+        }
+      ],
+      "sha256": "2d7bc3482511f9ec8f4a77579b0b1008c7e7f27cc67964aff042e28e51a92a1c"
+    },
+    {
+      "key": "beacon-status",
+      "filename": "beacon-status.md",
+      "title": "Beacon status",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Beacon",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-BEACON"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Lina Faris",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "lina@northstar.example"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Lina Faris",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "status",
+          "value": "Pilot in progress",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        }
+      ],
+      "sha256": "5e1f873a52ec856efe188deed1d9bd6a3eef0d25fb60ac021d7c3d85ccaf0e37"
+    },
+    {
+      "key": "cedar-charter",
+      "filename": "cedar-charter.md",
+      "title": "Cedar charter",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Cedar",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-CEDAR"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Maya Hassan",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "maya@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "team",
+          "kind": "team",
+          "name": "Data",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/cedar"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Maya Hassan",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "launch_date",
+          "value": "2026-12-17",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "project",
+          "predicate": "managed_by",
+          "target_key": "team",
+          "line": 4
+        }
+      ],
+      "sha256": "7681f0c6696e69f5f1c21908cf5298f747fc64d50820160300bb7b9818f8441d"
+    },
+    {
+      "key": "cedar-handover",
+      "filename": "cedar-handover.md",
+      "title": "Cedar handover",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Cedar",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-CEDAR"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Maya Hassan",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "maya@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "task",
+          "kind": "task",
+          "name": "Validate Cedar handover",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "issue_key",
+              "value": "NS-CEDAR-01"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Maya Hassan",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "task",
+          "predicate": "deadline",
+          "value": "2026-12-17",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "task",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "task",
+          "predicate": "assigned_to",
+          "target_key": "owner",
+          "line": 4
+        }
+      ],
+      "sha256": "b94c621ff308df67a41f58fff7373538de744aa3d03fc35696cc9ecf3d575148"
+    },
+    {
+      "key": "cedar-decision",
+      "filename": "cedar-decision.md",
+      "title": "Cedar decision",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Cedar",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-CEDAR"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Maya Hassan",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "maya@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "decision",
+          "kind": "decision",
+          "name": "Cedar database decision",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/decisions/cedar-d1"
+            }
+          ]
+        },
+        {
+          "key": "database",
+          "kind": "technology",
+          "name": "PostgreSQL",
+          "line": 5,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/technology/postgresql"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Maya Hassan",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "decision",
+          "predicate": "decision",
+          "value": "Use PostgreSQL for NS-CEDAR",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "decision",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "project",
+          "predicate": "uses",
+          "target_key": "database",
+          "line": 5
+        }
+      ],
+      "sha256": "7859db45adee067d73c37609556860529d08ee591246b014997cb9df8ec5df9c"
+    },
+    {
+      "key": "cedar-status",
+      "filename": "cedar-status.md",
+      "title": "Cedar status",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Cedar",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-CEDAR"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Maya Hassan",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "maya@northstar.example"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Maya Hassan",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "status",
+          "value": "Pilot in progress",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        }
+      ],
+      "sha256": "d0c7edb2cc8af3381bcd89a9b5ae12b2d189b5d01be54fc85895f348e8119acb"
+    },
+    {
+      "key": "delta-charter",
+      "filename": "delta-charter.md",
+      "title": "Delta charter",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Delta",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-DELTA"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Samir Haddad",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "samir@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "team",
+          "kind": "team",
+          "name": "Operations",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/delta"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Samir Haddad",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "launch_date",
+          "value": "2027-01-07",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "project",
+          "predicate": "managed_by",
+          "target_key": "team",
+          "line": 4
+        }
+      ],
+      "sha256": "5c93b4e22af7bc15b5160b4c1c1df9fb1893ee7531cae833aa6e5b44a34feb24"
+    },
+    {
+      "key": "delta-handover",
+      "filename": "delta-handover.md",
+      "title": "Delta handover",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Delta",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-DELTA"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Samir Haddad",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "samir@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "task",
+          "kind": "task",
+          "name": "Validate Delta handover",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "issue_key",
+              "value": "NS-DELTA-01"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Samir Haddad",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "task",
+          "predicate": "deadline",
+          "value": "2027-01-07",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "task",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "task",
+          "predicate": "assigned_to",
+          "target_key": "owner",
+          "line": 4
+        }
+      ],
+      "sha256": "8d631db7ac03c7f0137272c887bf34c8db3432a8a7a2be2a6f5dc17c3367720e"
+    },
+    {
+      "key": "delta-decision",
+      "filename": "delta-decision.md",
+      "title": "Delta decision",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Delta",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-DELTA"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Samir Haddad",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "samir@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "decision",
+          "kind": "decision",
+          "name": "Delta database decision",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/decisions/delta-d1"
+            }
+          ]
+        },
+        {
+          "key": "database",
+          "kind": "technology",
+          "name": "PostgreSQL",
+          "line": 5,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/technology/postgresql"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Samir Haddad",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "decision",
+          "predicate": "decision",
+          "value": "Use PostgreSQL for NS-DELTA",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "decision",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "project",
+          "predicate": "uses",
+          "target_key": "database",
+          "line": 5
+        }
+      ],
+      "sha256": "30214281c7cf8db5ddf5e3585e6927938444801941781cc5f4c316c92ab2ff9c"
+    },
+    {
+      "key": "delta-status",
+      "filename": "delta-status.md",
+      "title": "Delta status",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Delta",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-DELTA"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Samir Haddad",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "samir@northstar.example"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Samir Haddad",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "status",
+          "value": "Pilot in progress",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        }
+      ],
+      "sha256": "e1d270320f8a09b887807b48c12b6d275f9c6b52b3a2e463279210f2ff93006f"
+    },
+    {
+      "key": "ember-charter",
+      "filename": "ember-charter.md",
+      "title": "Ember charter",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Ember",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-EMBER"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Noor Saleh",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "noor@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "team",
+          "kind": "team",
+          "name": "Security",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/ember"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Noor Saleh",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "launch_date",
+          "value": "2027-01-14",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "project",
+          "predicate": "managed_by",
+          "target_key": "team",
+          "line": 4
+        }
+      ],
+      "sha256": "52799bc8ed87897bc2d30ce2d9e03ce5bfa91e239b0806f530dbd7d05f7599ad"
+    },
+    {
+      "key": "ember-handover",
+      "filename": "ember-handover.md",
+      "title": "Ember handover",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Ember",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-EMBER"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Noor Saleh",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "noor@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "task",
+          "kind": "task",
+          "name": "Validate Ember handover",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "issue_key",
+              "value": "NS-EMBER-01"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Noor Saleh",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "task",
+          "predicate": "deadline",
+          "value": "2027-01-14",
+          "line": 5,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "task",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "task",
+          "predicate": "assigned_to",
+          "target_key": "owner",
+          "line": 4
+        }
+      ],
+      "sha256": "03b6562fdef564c072539e3793eb55e9960c7e6842e9ec956b0949592828ad9e"
+    },
+    {
+      "key": "ember-decision",
+      "filename": "ember-decision.md",
+      "title": "Ember decision",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Ember",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-EMBER"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Noor Saleh",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "noor@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "decision",
+          "kind": "decision",
+          "name": "Ember database decision",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/decisions/ember-d1"
+            }
+          ]
+        },
+        {
+          "key": "database",
+          "kind": "technology",
+          "name": "PostgreSQL",
+          "line": 5,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/technology/postgresql"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Noor Saleh",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "decision",
+          "predicate": "decision",
+          "value": "Use PostgreSQL for NS-EMBER",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "decision",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 4
+        },
+        {
+          "source_key": "project",
+          "predicate": "uses",
+          "target_key": "database",
+          "line": 5
+        }
+      ],
+      "sha256": "aaf548feda95a44e5604d1604094b12aa7a03812218ce051442d9a1484421e5a"
+    },
+    {
+      "key": "ember-status",
+      "filename": "ember-status.md",
+      "title": "Ember status",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Ember",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-EMBER"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Noor Saleh",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "noor@northstar.example"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "owner",
+          "value": "Noor Saleh",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        },
+        {
+          "entity_key": "project",
+          "predicate": "status",
+          "value": "Pilot in progress",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "project",
+          "predicate": "owned_by",
+          "target_key": "owner",
+          "line": 3
+        }
+      ],
+      "sha256": "dc9de9e7a675d582fa82decc35d556b0f7e4d4f1303505caace78da5878192cc"
+    },
+    {
+      "key": "company-onboarding",
+      "filename": "company-onboarding.md",
+      "title": "Employee onboarding",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "guide",
+          "kind": "document",
+          "name": "Northstar onboarding guide",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/policies/onboarding"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "guide",
+          "predicate": "requirements",
+          "value": "Manager introduction, equipment check and security training",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [],
+      "sha256": "53de125a905f692cd5eaa251f06f0bcd2b8399f91655ce8ae55c4e279f61fea4"
+    },
+    {
+      "key": "company-leave-policy",
+      "filename": "company-leave-policy.md",
+      "title": "Leave policy / سياسة الإجازات",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "policy",
+          "kind": "document",
+          "name": "Northstar leave policy",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/policies/leave"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "policy",
+          "predicate": "annual_leave",
+          "value": "25 working days",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [],
+      "sha256": "86dc32efb1e09378ecdd62f2c951486a78c4f0586f5c8c7f58228b5f0283ed61"
+    },
+    {
+      "key": "company-people",
+      "filename": "company-people.md",
+      "title": "People and teams",
+      "visibility": "team",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "lina",
+          "kind": "person",
+          "name": "Lina Faris",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "lina@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "atlas",
+          "kind": "team",
+          "name": "Platform",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/atlas"
+            }
+          ]
+        },
+        {
+          "key": "omar",
+          "kind": "person",
+          "name": "Omar Nasser",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "omar@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "beacon",
+          "kind": "team",
+          "name": "Customer Success",
+          "line": 4,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/beacon"
+            }
+          ]
+        },
+        {
+          "key": "maya",
+          "kind": "person",
+          "name": "Maya Hassan",
+          "line": 5,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "maya@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "cedar",
+          "kind": "team",
+          "name": "Data",
+          "line": 5,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/cedar"
+            }
+          ]
+        },
+        {
+          "key": "samir",
+          "kind": "person",
+          "name": "Samir Haddad",
+          "line": 6,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "samir@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "delta",
+          "kind": "team",
+          "name": "Operations",
+          "line": 6,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/delta"
+            }
+          ]
+        },
+        {
+          "key": "noor",
+          "kind": "person",
+          "name": "Noor Saleh",
+          "line": 7,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "noor@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "ember",
+          "kind": "team",
+          "name": "Security",
+          "line": 7,
+          "identifiers": [
+            {
+              "namespace": "url",
+              "value": "https://northstar.example/teams/ember"
+            }
+          ]
+        }
+      ],
+      "claims": [],
+      "relationships": [
+        {
+          "source_key": "lina",
+          "predicate": "leads",
+          "target_key": "atlas",
+          "line": 3
+        },
+        {
+          "source_key": "omar",
+          "predicate": "leads",
+          "target_key": "beacon",
+          "line": 4
+        },
+        {
+          "source_key": "maya",
+          "predicate": "leads",
+          "target_key": "cedar",
+          "line": 5
+        },
+        {
+          "source_key": "samir",
+          "predicate": "leads",
+          "target_key": "delta",
+          "line": 6
+        },
+        {
+          "source_key": "noor",
+          "predicate": "leads",
+          "target_key": "ember",
+          "line": 7
+        }
+      ],
+      "sha256": "fe7efad0216a7afe498201b7b1a6b3fd237728bdd65cb0f1da3c1f70dcd64501"
+    },
+    {
+      "key": "ember-private-budget",
+      "filename": "ember-private-budget.md",
+      "title": "Ember confidential budget",
+      "visibility": "private",
+      "revision_of": null,
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Ember",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-EMBER"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "project",
+          "predicate": "budget",
+          "value": "USD 42000",
+          "line": 3,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [],
+      "sha256": "10231a5a0ef4aba986f5f1fa6d35c6c26cae82718c994e45f19f7ae45ba7009a"
+    },
+    {
+      "key": "atlas-handover-revision",
+      "filename": "atlas-handover-revision.md",
+      "title": "Atlas revised handover",
+      "visibility": "team",
+      "revision_of": "atlas-handover",
+      "entities": [
+        {
+          "key": "project",
+          "kind": "project",
+          "name": "Project Atlas",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "project_key",
+              "value": "NS-ATLAS"
+            }
+          ]
+        },
+        {
+          "key": "owner",
+          "kind": "person",
+          "name": "Lina Faris",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "email",
+              "value": "lina@northstar.example"
+            }
+          ]
+        },
+        {
+          "key": "task",
+          "kind": "task",
+          "name": "Validate Atlas handover",
+          "line": 3,
+          "identifiers": [
+            {
+              "namespace": "issue_key",
+              "value": "NS-ATLAS-01"
+            }
+          ]
+        }
+      ],
+      "claims": [
+        {
+          "entity_key": "task",
+          "predicate": "deadline",
+          "value": "2026-12-08",
+          "line": 4,
+          "asserted_by": null,
+          "effective_from": null,
+          "effective_to": null
+        }
+      ],
+      "relationships": [
+        {
+          "source_key": "task",
+          "predicate": "assigned_to",
+          "target_key": "owner",
+          "line": 3
+        },
+        {
+          "source_key": "task",
+          "predicate": "part_of",
+          "target_key": "project",
+          "line": 3
+        }
+      ],
+      "sha256": "ba7fdbb9d2058f88830f77b4c71578e5492fe34d5163969c518016a63ec4dd5d"
+    }
+  ],
+  "questions": [
+    {
+      "question": "Who owns NS-ATLAS?",
+      "expected": "Lina Faris",
+      "sources": [
+        "atlas-charter"
+      ]
+    },
+    {
+      "question": "When does NS-CEDAR plan to launch?",
+      "expected": "2026-12-17",
+      "sources": [
+        "cedar-charter"
+      ]
+    },
+    {
+      "question": "Who is assigned to NS-DELTA-01?",
+      "expected": "Samir Haddad",
+      "sources": [
+        "delta-handover"
+      ]
+    },
+    {
+      "question": "What is the deadline for NS-EMBER-01?",
+      "expected": "2027-01-14",
+      "sources": [
+        "ember-handover"
+      ]
+    },
+    {
+      "question": "Which database does NS-ATLAS use?",
+      "expected": "PostgreSQL",
+      "sources": [
+        "atlas-decision"
+      ]
+    },
+    {
+      "question": "What is the status of NS-CEDAR?",
+      "expected": "Pilot in progress",
+      "sources": [
+        "cedar-status"
+      ]
+    },
+    {
+      "question": "Do the NS-BEACON sources agree about its owner?",
+      "expected": "The charter says Omar Nasser; the status note says Lina Faris. Ownership is unresolved.",
+      "sources": [
+        "beacon-charter",
+        "beacon-status"
+      ]
+    },
+    {
+      "question": "Who leads the Security team?",
+      "expected": "Noor Saleh",
+      "sources": [
+        "company-people"
+      ]
+    },
+    {
+      "question": "How much annual leave does Northstar provide?",
+      "expected": "25 working days",
+      "sources": [
+        "company-leave-policy"
+      ]
+    },
+    {
+      "question": "كم عدد أيام الإجازة السنوية؟",
+      "expected": "25 يوم عمل",
+      "sources": [
+        "company-leave-policy"
+      ]
+    },
+    {
+      "question": "What must a new employee complete during onboarding?",
+      "expected": "Manager introduction, equipment check and security training",
+      "sources": [
+        "company-onboarding"
+      ]
+    },
+    {
+      "question": "What is this document about?",
+      "expected": "A cited overview of the selected handover, including its owner and checklist",
+      "sources": [
+        "atlas-handover"
+      ],
+      "mode": "selected-document"
+    },
+    {
+      "question": "What is the private NS-EMBER budget?",
+      "expected": "USD 42000 for Amal; unavailable to Omar",
+      "sources": [
+        "ember-private-budget"
+      ],
+      "mode": "permissions"
+    },
+    {
+      "question": "What changed after the Atlas handover revision?",
+      "expected": "Task deadline changes from 2026-12-03 to 2026-12-08; old evidence remains historical",
+      "sources": [
+        "atlas-handover"
+      ],
+      "mode": "revision"
+    },
+    {
+      "question": "What is Northstar's approved acquisition date?",
+      "expected": "Insufficient evidence; no acquisition date is given",
+      "sources": [
+        "company-onboarding"
+      ],
+      "mode": "missing-evidence"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "us-east-1": {
+    "us.anthropic.claude-sonnet-4-6": {
+      "currency": "USD",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrockFoundationModels/current/us-east-1/index.json",
+      "published": "2026-11-09T22:43:12Z",
+      "dimensions": [
+        {
+          "sku": "KPFGPZJ8VWMREGAV",
+          "unit": "1M tokens",
+          "usage": "USE1-MP:USE1_InputTokenCount-Units",
+          "effective": "2026-09-01T00:00:00Z"
+        },
+        {
+          "sku": "GMB9AQ5DYNAGYZEC",
+          "unit": "1M tokens",
+          "usage": "USE1-MP:USE1_OutputTokenCount-Units",
+          "effective": "2026-09-01T00:00:00Z"
+        }
+      ],
+      "input": 3.3,
+      "effective_date": "2026-09-01",
+      "output": 16.5
+    },
+    "amazon.titan-embed-text-v2:0": {
+      "currency": "USD",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/current/us-east-1/index.json",
+      "published": "2026-11-11T01:30:37Z",
+      "dimensions": [
+        {
+          "sku": "EDNQYEHQ3XQ8N7EY",
+          "unit": "1K tokens",
+          "usage": "USE1-TitanEmbeddingV2-Text-input-tokens",
+          "effective": "2026-11-01T00:00:00Z"
+        }
+      ],
+      "input": 0.02,
+      "effective_date": "2026-11-01",
+      "output": 0.0
+    }
+  }
+}

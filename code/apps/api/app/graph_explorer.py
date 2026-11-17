@@ -11,7 +11,7 @@ from sqlalchemy import bindparam, text
 from app.db import sql
 from app.retrieval import CURRENT
 
-ENTITY_JOIN = "FROM entities e JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id"
+ENTITY_JOIN = "FROM live_entities e JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id"
 ENTITY_ORDER = "ORDER BY e.canonical_id,v.created_at DESC,e.id"
 KINDS = {"project", "person", "team", "task", "decision", "technology", "system", "event", "document"}
 
@@ -57,7 +57,7 @@ def neighbor_counts(conn, viewer, ids, kind=None, relationship=None):
         return counts
     predicate_filter = " AND r.predicate=:relationship" if relationship else ""
     rows = execute_ids(conn, """SELECT s.canonical_id AS source,t.canonical_id AS target,s.kind AS source_kind,t.kind AS target_kind
-        FROM relationships r JOIN entities s ON s.id=r.source_id JOIN entities t ON t.id=r.target_id
+        FROM live_relationships r JOIN live_entities s ON s.id=r.source_id JOIN live_entities t ON t.id=r.target_id
         JOIN document_versions v ON v.id=r.version_id JOIN documents d ON d.id=v.document_id
         WHERE """ + CURRENT + " AND (s.canonical_id IN :ids OR t.canonical_id IN :ids)" + predicate_filter,
         ids, **viewer.access(), relationship=relationship).mappings().all()
@@ -95,7 +95,7 @@ def search(conn, viewer, query, kind=None, offset=0, limit=8):
 
 
 def relationship_types(conn, viewer):
-    rows = sql(conn, """SELECT DISTINCT r.predicate FROM relationships r
+    rows = sql(conn, """SELECT DISTINCT r.predicate FROM live_relationships r
         JOIN document_versions v ON v.id=r.version_id JOIN documents d ON d.id=v.document_id
         WHERE """ + CURRENT + " ORDER BY r.predicate", **viewer.access()).scalars().all()
     return list(rows)
@@ -107,7 +107,7 @@ def frontier_rows(conn, viewer, frontier, params, row_budget):
     statement = f"""SELECT r.id,s.canonical_id AS source,t.canonical_id AS target,
         r.predicate AS label,r.effective_from,r.effective_to,r.chunk_id,
         CASE WHEN s.canonical_id IN :ids THEN t.kind ELSE s.kind END AS other_kind
-        FROM relationships r JOIN entities s ON s.id=r.source_id JOIN entities t ON t.id=r.target_id
+        FROM live_relationships r JOIN live_entities s ON s.id=r.source_id JOIN live_entities t ON t.id=r.target_id
         JOIN document_versions v ON v.id=r.version_id JOIN documents d ON d.id=v.document_id
         WHERE {CURRENT} AND (s.canonical_id IN :ids OR t.canonical_id IN :ids)
         {params['edge_filter']} ORDER BY r.id LIMIT :row_budget"""
@@ -139,8 +139,8 @@ def explore(conn, viewer, root, depth=1, kind=None, relationship=None, offset=0,
             if relationship:
                 neighbor_filter += " AND r.predicate=:relationship"
             neighbors = sql(conn, f"""SELECT DISTINCT other.canonical_id AS neighbor
-                FROM relationships r JOIN entities s ON s.id=r.source_id JOIN entities t ON t.id=r.target_id
-                JOIN entities other ON other.id=(CASE WHEN s.canonical_id=:root THEN t.id ELSE s.id END)
+                FROM live_relationships r JOIN live_entities s ON s.id=r.source_id JOIN live_entities t ON t.id=r.target_id
+                JOIN live_entities other ON other.id=(CASE WHEN s.canonical_id=:root THEN t.id ELSE s.id END)
                 JOIN document_versions v ON v.id=r.version_id JOIN documents d ON d.id=v.document_id
                 WHERE {CURRENT} AND (s.canonical_id=:root OR t.canonical_id=:root)
                 {neighbor_filter} ORDER BY other.canonical_id LIMIT :limit OFFSET :offset""",
