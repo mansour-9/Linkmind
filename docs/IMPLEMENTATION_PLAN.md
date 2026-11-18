@@ -1,5 +1,11 @@
 # Linkmind — Main Implementation Roadmap
 
+2026-11-18 Company Knowledge Base MVP is implemented in the isolated `5212` preview.
+The Admin controls a unified sync run and schedule. Manual Documents and synchronized
+Company Knowledge share storage and indexing infrastructure with separate enforced
+corpora. Chat uses live MCP plus manual TXT/PDF only. Employee accounts and shared
+source grants remain future work. See [implementation and connector readiness](KNOWLEDGE_SYNC_RESULTS.md).
+
 2026-11-17 latest demo delivery supersedes ordinary-chat verification complexity:
 5197 now uses one generation, relevant source links and basic native status checks,
 with topic-aware follow-ups and bounded retrieval. 444 API passed/2 skipped, five

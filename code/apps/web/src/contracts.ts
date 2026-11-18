@@ -1,12 +1,14 @@
 import type { EntityDetails } from "./api";
 
 export type Passage = { id: string; filename: string; text: string; version_id: string; document_id: string; locator: Record<string, unknown>;
+  record_id?: string; source_title?: string | null;
   live?: {connection_id:string;native_id:string;generation:number;revision:string}; original_url?:string; observed_at?:string; source_updated_at?:string;
   source_key?:string; source_application?:string; origin?:string; synthetic?:boolean; dataset_id?:string|null;
   embedding_status?: string; semantic_status?: "ready" | "failed" | "unavailable" | "not_requested" };
 export type ClaimEvidence = { chunk_id: string; quote: string; filename: string; locator: Record<string, unknown>; version_id: string };
 export type WikiPage = Omit<EntityDetails, "claims"> & {
-  sources: { version_id: string; filename: string; created_at: string; current: boolean }[];
+  sources: { version_id: string; filename: string; created_at: string; current: boolean;
+    document_id: string; title: string | null; content_domain: string }[];
   uncertain_matches: number; entity_evidence: ClaimEvidence[];
   claims: (EntityDetails["claims"][number] & { evidence: ClaimEvidence[]; provider: string })[];
 };

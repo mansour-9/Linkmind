@@ -9,6 +9,7 @@ from pydantic import BaseModel,ConfigDict,Field,model_validator
 
 from app.db import engine,sql
 from app import connectors,retrieval,providers,source_answer_provider
+from app import content_domains as domains
 from app.connector_transport import SourceFailure,ReadLimits,active as active_reads
 from app.query_limits import question_limits,QueryLimitReached
 from app.query_language import historical_question,operational_question,normalize,explain
@@ -60,18 +61,21 @@ class AccessCheck(BaseModel):
 
 def available(viewer):
     with engine.connect() as conn:
-        return [dict(r) for r in sql(conn,'''SELECT c.id,s.name,s.kind,c.mode,c.health,c.config->>'execution' AS execution,
+        rows=sql(conn,'''SELECT c.id,s.name,s.kind,c.mode,c.health,c.config,c.config->>'execution' AS execution,
             c.config->>'scope_id' AS scope FROM source_connections c JOIN source_instances s ON s.id=c.id
             WHERE c.organization_id=:org AND c.owner_id=:viewer AND c.removed_at IS NULL AND c.mode<>'disconnected'
-            ORDER BY s.name,c.id LIMIT 50''',**viewer.access()).mappings()]
+            ORDER BY s.name,c.id LIMIT 50''',**viewer.access()).mappings()
+        return [{k:v for k,v in r.items() if k!='config'} for r in rows if not domains.enabled() or domains.live_mcp(r.config)]
 
 
 def allowed(viewer,checks):
     with engine.connect() as conn:
+        if domains.enabled() and not retrieval.manual_passages_allowed(conn,viewer,checks.passage_ids):return False
         if not retrieval.dependencies_allowed(conn,viewer,[str(p) for p in checks.passage_ids],[],[d.model_dump(mode='json') for d in checks.historical_dependencies]):return False
     limits=active_reads() or ReadLimits(max_calls=12,seconds=20)
     for dependency in checks.live:
         with engine.connect() as conn:row=connectors.owned(conn,viewer,dependency.connection_id)
+        if domains.enabled() and not domains.live_mcp(row.config):return False
         if row.generation!=dependency.generation or row.mode=='disconnected':return False
         current=connectors.Provider(row.config,limits,row.id).authorize(dependency.native_id)
         revision=current.get('eTag') if isinstance(current,dict) else getattr(current,'revision',None)
@@ -91,8 +95,11 @@ def past_only(question):
         r'\b(yesterday|last week|last month|as of|what was)\b|امس|الاسبوع الماضي|الشهر الماضي|سابقا',text)))
 
 
-def stored_sources(passages):
+def stored_sources(passages, *, manual=False):
     result=[];seen=set()
+    if manual:
+        return [dict(reference_id=p['id'],document_id=str(p['document_id']),name=p['filename'],kind='passage',
+            text=p['text'],fields=[],origin='stored',locator=p['locator'],revision_role=p.get('revision_role','current')) for p in passages]
     with engine.connect() as conn:
         revisions={str(r.version_id):r for r in sql(conn,'''SELECT DISTINCT ON(v.id) v.id AS version_id,v.created_at AS received_at,
             v.dataset_id,r.source_revision,r.original_url,r.source_updated_at,r.observed_at,r.fields,r.payload
@@ -139,15 +146,23 @@ def context(sources,limits):
 def ask(viewer,body):
     # Validate every selected owner/tenant boundary before any source read or model.
     with engine.connect() as conn:
-        for item in body.live_resources:connectors.owned(conn,viewer,item.connection_id)
+        for item in body.live_resources:
+            row=connectors.owned(conn,viewer,item.connection_id)
+            if domains.enabled() and not domains.live_mcp(row.config):raise HTTPException(404,'Live MCP source not found.')
+        if domains.enabled() and not retrieval.manual_ids_allowed(conn,viewer,body.document_ids,ready=True):
+            raise HTTPException(404,'Selected manual document not found.')
     try:
         with question_limits() as limits:
             retriever=QuestionRetriever(viewer,retrieval.search)
             passages=[];coverage=None;historical=[];outcomes=[];live_checks=[];sources=[]
             if body.document_ids:
-                if historical_question(body.question):passages,coverage,historical=retriever.history(body.document_ids,body.question)
+                if domains.enabled():
+                    limits.retrieve()
+                    passages,coverage,historical=retrieval.manual_context(viewer,body.document_ids,question=body.question,
+                        include_previous=historical_question(body.question))
+                elif historical_question(body.question):passages,coverage,historical=retriever.history(body.document_ids,body.question)
                 else:passages,coverage=retriever.context(body.document_ids,body.question)
-                sources=stored_sources(passages)
+                sources=stored_sources(passages,manual=domains.enabled())
             for selected in body.live_resources:
                 if past_only(body.question):
                     outcomes.append(dict(connection_id=str(selected.connection_id),code='history_unavailable',message='Live current state was not used as evidence of a past state. Select dated stored evidence.'))

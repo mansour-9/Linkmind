@@ -10,8 +10,9 @@ from app.source_policy import knowledge_clause,current as source_mode
 from app.repository import filter_clause
 from app.query_language import search_terms,people_question,CONCEPTS
 from app.query_limits import QueryLimitReached
+from app import content_domains as domains
 
-def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,offset=0,diagnostics=None):
+def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,offset=0,diagnostics=None,*,corpus=''):
     if source_mode()=="live":
         from fastapi import HTTPException
         raise HTTPException(409,"Stored retrieval is disabled in Live Only mode.")
@@ -19,9 +20,11 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
     if not query:
         return []
     from app.connectors import refresh_access
-    refresh_access(viewer,document_ids,query=query)
+    if corpus==domains.KNOWLEDGE:
+        refresh_access(viewer,document_ids,query=query,reuse_recent=True,source_instance_id=(filters or {}).get('source_instance_id'))
+    else:refresh_access(viewer,document_ids,query=query)
     params={**viewer.access(),"q":query,"pattern":"%"+query.replace("%","\\%").replace("_","\\_")+"%"}
-    where=CURRENT+knowledge_clause()
+    where=CURRENT+knowledge_clause()+corpus
     if document_ids:
         where+=" AND d.id=ANY(:documents)"
         params["documents"]=[UUID(str(x)) for x in document_ids]
@@ -107,7 +110,7 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
     # Recheck access after inference, before exposing passages.
     with engine.connect() as conn:
         rows=sql(conn,f"""SELECT k.id,k.text,k.locator,k.line_number,v.id AS version_id,
-            d.id AS document_id,v.filename,v.embedding_status,v.dataset_id,
+            d.id AS document_id,d.title AS source_title,v.filename,v.embedding_status,v.dataset_id,
             CASE WHEN v.processed_at IS NOT NULL AND EXISTS(SELECT 1 FROM live_entities ge
                 WHERE ge.version_id=v.id AND ge.organization_id=d.organization_id)
                 THEN coalesce(v.active_enrichment_version_id,v.id)::text END AS enrichment_version_id,
@@ -116,6 +119,39 @@ def search(viewer,query,document_ids=None,semantic=True,filters=None,limit=12,of
             {PASSAGES} WHERE {where} AND k.id=ANY(:ids)""",**params,ids=ids).mappings().all()
     return [{**dict(row),"id":str(row.id),"score":scores[row.id],"semantic_status":semantic_status}
             for row in sorted(rows,key=lambda r:ids.index(r.id))]
+
+def search_manual(viewer,query,document_ids=None,*,limit=6):
+    """Chat's stored corpus contains only current, authorized manual text."""
+    tokens=search_terms(query)
+    params=dict(**viewer.access(),terms=' OR '.join(tokens),pattern='%'+query.strip().replace('%','\\%').replace('_','\\_')+'%',limit=limit)
+    selected=''
+    if document_ids:
+        params['documents']=[UUID(str(item)) for item in document_ids]
+        selected=' AND d.id=ANY(:documents)'
+    with engine.connect() as conn:
+        rows=sql(conn,f"""SELECT k.id,k.text,k.locator,k.line_number,v.id AS version_id,
+            d.id AS document_id,v.filename,v.dataset_id,'[]'::jsonb AS entities
+            {PASSAGES} WHERE {CURRENT}{domains.CHAT_DOCUMENTS}{selected} AND v.search_ready_at IS NOT NULL
+            AND (k.search_simple@@websearch_to_tsquery('simple',:terms) OR d.title ILIKE :pattern OR v.filename ILIKE :pattern)
+            ORDER BY (v.filename ILIKE :pattern OR d.title ILIKE :pattern) DESC NULLS LAST,
+                     ts_rank_cd(k.search_simple,websearch_to_tsquery('simple',:terms)) DESC,k.line_number,k.id LIMIT :limit""",**params).mappings().all()
+    return [{**dict(row),'id':str(row.id)} for row in rows]
+
+
+def manual_ids_allowed(conn,viewer,ids,*,ready=False):
+    ids=list({UUID(str(item)) for item in ids})
+    if not ids:return True
+    return sql(conn,f"""SELECT count(DISTINCT d.id) FROM documents d JOIN document_versions v ON v.document_id=d.id
+        WHERE {ACCESS}{domains.CHAT_DOCUMENTS} AND d.id=ANY(:ids)
+        AND (NOT :ready OR (v.id=d.current_version_id AND v.search_ready_at IS NOT NULL))""",**viewer.access(),ids=ids,ready=ready).scalar_one()==len(ids)
+
+
+def manual_passages_allowed(conn,viewer,ids):
+    ids=list({UUID(str(item)) for item in ids})
+    if not ids:return True
+    return sql(conn,f"SELECT count(*) {PASSAGES} WHERE {ACCESS}{domains.CHAT_DOCUMENTS} AND k.id=ANY(:ids)",
+        **viewer.access(),ids=ids).scalar_one()==len(ids)
+
 
 def dependencies_allowed(conn,viewer,ids,generations=(),historical=()):
     if ids:
@@ -166,18 +202,22 @@ def historical_context(viewer,document_ids,limit=24,max_characters=20000,questio
     return _source_context(viewer,document_ids,limit,max_characters,question,True)
 
 
-def _source_context(viewer,document_ids,limit,max_characters,question,include_previous):
+def manual_context(viewer,document_ids,question=None,include_previous=False):
+    return _source_context(viewer,document_ids,24,20000,question,include_previous,domains.CHAT_DOCUMENTS)
+
+
+def _source_context(viewer,document_ids,limit,max_characters,question,include_previous,corpus=''):
     """Bounded original passages; role matches first and fair source/version coverage."""
     from fastapi import HTTPException
     ids=[UUID(str(id)) for id in dict.fromkeys(document_ids)]
     from app.connectors import refresh_access
-    refresh_access(viewer,ids)
+    if not corpus:refresh_access(viewer,ids)
     if not ids or len(ids)>30:
         raise ValueError("A document overview requires 1 to 30 selected sources.")
     with engine.connect() as conn:
-        allowed=sql(conn,f"SELECT count(*) FROM documents d WHERE {ACCESS} AND d.id=ANY(:ids)",
-            **viewer.access(),ids=ids).scalar_one()
-        if allowed!=len(ids):
+        allowed=manual_ids_allowed(conn,viewer,ids) if corpus else sql(conn,f"SELECT count(*) FROM documents d WHERE {ACCESS} AND d.id=ANY(:ids)",
+            **viewer.access(),ids=ids).scalar_one()==len(ids)
+        if not allowed:
             raise HTTPException(404,"A selected source is no longer available.")
         where=CURRENT+knowledge_clause()
         if include_previous:
@@ -195,7 +235,7 @@ def _source_context(viewer,document_ids,limit,max_characters,question,include_pr
                     CASE WHEN :has_question THEN k.search_simple@@websearch_to_tsquery('simple',:context_terms) ELSE false END DESC,
                     k.line_number,k.id) AS position,
                 count(*) OVER(PARTITION BY d.id,v.id) AS total
-            {PASSAGES} WHERE {where} AND d.id=ANY(:ids)
+            {PASSAGES} WHERE {where}{corpus} AND d.id=ANY(:ids)
         ) SELECT * FROM ranked WHERE position<=CASE WHEN :has_question THEN 24 ELSE 3 END OR position=total
             OR position%greatest(1,total/8)=0 ORDER BY document_id,version_id,position""",**viewer.access(),ids=ids,
             has_question=bool(question),context_terms=' OR '.join(CONCEPTS['people'] if question and people_question(question) else search_terms(question)) if question else '').mappings().all()

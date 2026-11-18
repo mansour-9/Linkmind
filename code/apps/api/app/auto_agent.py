@@ -5,12 +5,14 @@ from contextvars import copy_context
 from uuid import UUID
 from fastapi import HTTPException
 from app import providers,retrieval,connectors,source_answers,source_answer_provider,chat_agent,chat_trace,structured_chat
+from app import content_domains as domains
 from app.assistant_persona import local_reply
 from app.question_intent import intent
-from app.query_language import arabic
+from app.query_language import arabic, normalize
 from app.query_limits import active as question_limits
 from app.connector_transport import active as read_limits,SourceFailure
 from app.chat_retrieval import rank_hits,purpose
+from app.conversation_routing import followup
 
 
 def failure_code(exc):
@@ -24,6 +26,8 @@ def assert_live(viewer,dependencies,db):
         with db.connect() as conn:row=connectors.owned(conn,viewer,UUID(item['connection_id']))
         if row.mode=='disconnected' or row.generation!=item['generation']:
             raise HTTPException(409,'Connected source settings changed.')
+        if domains.enabled() and not domains.live_mcp(row.config):
+            raise HTTPException(409,'The source is outside the live MCP corpus.')
         try:current=connectors.Provider(row.config,read_limits(),row.id).authorize(item['native_id'])
         except SourceFailure as exc:
             raise HTTPException(503,dict(code=exc.code,message='A connected source could not be rechecked. No answer was published.')) from None
@@ -32,6 +36,25 @@ def assert_live(viewer,dependencies,db):
     with ThreadPoolExecutor(max_workers=3) as pool:
         jobs=[pool.submit(copy_context().run,check,item) for item in dependencies]
         for job in jobs:job.result()
+
+
+def handbook_question(question):
+    text=question.casefold()
+    if re.search(r'\b(?:jira|confluence|projects?|sprints?|issues?)\b|المشروع|جيرا|كونفلونس',text):return False
+    return bool(handbook_lookup(question)
+        or re.search(r'\b(?:notion|onedrive|sharepoint|handbook|polic(?:y|ies)|departments?|onboarding|leave|company|organization)\b|الشركة|الأقسام|الموظفين|الإجازة|سياسة',text)
+        or (not followup(question) and re.match(r'^(?:what is|what\x27s|tell me about)\s+\S',text)))
+
+
+def handbook_lookup(question):
+    text=normalize(question)
+    if re.search(r'\b(?:people operations|human resources|hr)\b|عمليات الموظفين|الموارد البشرية',text):
+        return 'people operations'
+    if re.search(r'\b(?:annual leave|paid time off|vacation allowance)\b|اجاز(?:ة|ه|تي|تنا|ات)\s+(?:ال)?سنوي',text):
+        return 'annual leave policy'
+    if re.search(r'\b(?:what (?:does|is) (?:our|the|this) company|(?:our|the) company (?:do|build)|company overview)\b|(?:وش|ايش|ماذا) (?:تسوي|تشتغل|تعمل|تقدم) الشركة|ما عمل الشركة|عن الشركة',text):
+        return 'company and teams'
+    return None
 
 
 def topic(question,previous,rows):
@@ -58,12 +81,14 @@ def question_kind(question):
     return purpose(question)
 
 
-def response(viewer,question,previous,db,search,configured,document_ids=None,attachments=()):
+def response(viewer,question,previous,db,search,configured,document_ids=None,attachments=(),*,policy='auto'):
     limits=question_limits();limits.max_model_calls=2;limits.max_planner_calls=0;limits.max_retrievals=4
     if intent(question) in {'greeting','help','social'}:
         return dict(statements=[],evidence=[],provider='system',insufficient_evidence=False,
             message=local_reply(question,intent(question),previous),retrieval_activity=[]),[]
     rows=chat_agent.connections(viewer,db)
+    if domains.enabled():
+        rows=[row for row in rows if domains.live_mcp(row['config']) and policy!='stored']
     current,explicit_keys=topic(question,previous,rows);kind=question_kind(question)
     files=list(document_ids or []);attached=list(attachments)
     file_only=bool(files) or bool(re.search(
@@ -83,6 +108,8 @@ def response(viewer,question,previous,db,search,configured,document_ids=None,att
         # A source read already checked remote permission. Recheck local ownership
         # and generations before synthesis; MCP is freshly checked once at delivery.
         with db.connect() as conn:
+            if domains.enabled() and not retrieval.manual_passages_allowed(conn,viewer,list(stored)):
+                raise HTTPException(409,'Document evidence is outside the manual corpus.')
             if not retrieval.dependencies_allowed(conn,viewer,list(stored)):
                 raise HTTPException(409,'Document access or revision changed.')
             for dep in live.values():
@@ -91,10 +118,15 @@ def response(viewer,question,previous,db,search,configured,document_ids=None,att
                     raise HTTPException(409,'Connected source settings changed.')
 
     def documents(text):
+        if policy=='live':return
         limits.retrieve()
-        found=search(viewer,text,document_ids=files or (attached if file_only else None),semantic=False,limit=6)
-        if (files or attached) and not found:found,_=retrieval.selected_context(viewer,files or attached,question=text)
-        for item in source_answers.stored_sources(found):
+        if domains.enabled():
+            found=retrieval.search_manual(viewer,text,document_ids=files or None)
+            if files and not found:found,_,_=retrieval.manual_context(viewer,files,question=text)
+        else:
+            found=search(viewer,text,document_ids=files or (attached if file_only else None),semantic=False,limit=6)
+            if (files or attached) and not found:found,_=retrieval.selected_context(viewer,files or attached,question=text)
+        for item in source_answers.stored_sources(found,manual=domains.enabled()):
             refs=[p for p in found if str(p['document_id'])==str(item['document_id'])]
             if item['kind']=='fields' and refs:item['reference_id']=refs[0]['id']
             units[item['reference_id']]=item
@@ -154,7 +186,8 @@ def response(viewer,question,previous,db,search,configured,document_ids=None,att
         relevant=[r for r in rows if r['kind']==source_kind and (source_kind!='jira' or not project or r['config']['scope_id']==project)]
         for row in relevant[:2]:
             try:
-                hits=rank_hits(text,connectors.Provider(row['config'],read_limits(),row['id']).search(text,limit=6))
+                hits=connectors.Provider(row['config'],read_limits(),row['id']).search(text,limit=6)
+                if source_kind!='notion':hits=rank_hits(text,hits)
                 jobs.extend((row,h['native_id'],h['title']) for h in hits[:count])
                 if not hits:outcomes.append(dict(name=row['name'],code='no_matches',resources=0))
             except (SourceFailure,HTTPException) as exc:outcomes.append(dict(name=row['name'],code=failure_code(exc),resources=0))
@@ -179,12 +212,17 @@ def response(viewer,question,previous,db,search,configured,document_ids=None,att
                     original_url=p['original_url'],source_revision=dep['revision'],observed_at=p['observed_at'],synthetic=False)
             query='project ownership register'
 
+    notion=any(row['kind']=='notion' for row in rows)
+    document_source='notion' if notion and not (project or target_keys) and handbook_question(question) else 'confluence'
     if files or attached:documents(question)
     if not file_only:
         if target_keys:fetch(exact(target_keys))
         else:
-            jobs=discover(query,count=1 if kind in {'release','status'} else 2)
+            jobs=discover((handbook_lookup(question) or question) if document_source=='notion' else query,document_source,
+                count=1 if kind in {'release','status'} else 2)
             if not jobs and project:jobs=discover(project,'jira',count=2)
+            if not jobs and notion and not project and document_source=='confluence':
+                jobs=discover(question,'notion',count=2)
             fetch(jobs)
         if kind in {'release','status'} and project and not target_keys:
             linked=sorted((k for k in discovered if k.startswith(project+'-')),key=lambda k:int(k.rsplit('-',1)[1]))
@@ -233,7 +271,7 @@ def response(viewer,question,previous,db,search,configured,document_ids=None,att
         followup=result['followup_query'][:200];before=set(units)
         keys=re.findall(r'\b[A-Z][A-Z0-9_]{1,30}-\d+\b',followup.upper())
         if keys:fetch(exact([k for k in keys if k in discovered]))
-        elif not file_only:fetch(discover(followup,count=2))
+        elif not file_only:fetch(discover(followup,document_source,count=2))
         else:documents(followup)
         if set(units)!=before:result,selected=synthesize()
     used=[p for ref,p in evidence.items() if ref in selected]

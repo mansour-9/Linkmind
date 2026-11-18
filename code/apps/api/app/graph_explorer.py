@@ -9,7 +9,10 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import bindparam, text
 from app.db import sql
-from app.retrieval import CURRENT
+from app.retrieval import CURRENT as SOURCE_CURRENT
+from app import content_domains as domains
+
+CURRENT = SOURCE_CURRENT + domains.knowledge()
 
 ENTITY_JOIN = "FROM live_entities e JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id"
 ENTITY_ORDER = "ORDER BY e.canonical_id,v.created_at DESC,e.id"
@@ -202,13 +205,11 @@ def overview(conn, viewer, query):
     name = entity["name"].casefold()
     # Exact entity/identifier matches are useful project/person summaries.
     # Broad questions must stay on ordinary passage search.
-    identifier_match = any(
-        sql(conn, f"""SELECT 1 {ENTITY_JOIN} WHERE {CURRENT} AND e.canonical_id=:id
+    identifier_match = sql(conn, f"""SELECT 1 {ENTITY_JOIN} WHERE {CURRENT} AND e.canonical_id=:id
             AND (lower(e.name)=lower(:query) OR EXISTS(
               SELECT 1 FROM entity_identifiers i WHERE i.organization_id=e.organization_id
               AND i.canonical_id=e.canonical_id AND lower(i.value)=lower(:query))) LIMIT 1""",
-            **viewer.access(), id=entity["id"], query=query).first()
-    )
+            **viewer.access(), id=entity["id"], query=query).scalar() is not None
     if not terms and not identifier_match:
         return None
     if terms and not identifier_match and not any(term in name or name in term for term in terms):

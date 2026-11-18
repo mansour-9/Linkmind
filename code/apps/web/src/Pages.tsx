@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowDownToLine, ArrowRight, Clock3, Database, FileText, Network, Plus, ShieldCheck, UploadCloud } from "lucide-react";
 import { useGraph, useIngest, useJobs, useSession, useViewer } from "./session";
@@ -12,6 +13,8 @@ const uploadDate = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
 
 export function Sources() {
   const { token, service } = useSession();
+  const runtime = useQuery({ queryKey: ["runtime"], queryFn: () => service.json<{ knowledge_base: boolean }>("/runtime") });
+  const legacy = runtime.data?.knowledge_base === false;
   const location = useLocation();
   const [filter, setFilter] = useState("");
   const jobs = useJobs(new URLSearchParams(location.search).get('document_id') ?? undefined);
@@ -44,7 +47,8 @@ export function Sources() {
   const currentJob = visible.find((job) => job.id === ingest.data?.id) ?? ingest.data;
   return <div className="page">
     <PageHeading title={location.pathname.startsWith("/content") ? "Documents" : "Data Sources"} description="Your sources, their access, and the knowledge they contribute."
-      action={<Button ref={addButton} onClick={openUpload}><Plus size={18} /> Add data source</Button>} />
+      action={legacy ? <Button ref={addButton} onClick={openUpload}><Plus size={18} /> Add data source</Button> :
+        <Button asChild><Link to="/content/documents"><Plus size={18} /> Open Documents</Link></Button>} />
     {jobs.isSuccess && <div className="source-summary" aria-label="Upload summary">
       <span><strong>{visible.length}</strong> uploads</span>
       <span><strong>{ready}</strong> search ready</span>
@@ -72,7 +76,7 @@ export function Sources() {
           </li>)}
         </ul>}
       </section>
-      <details className="sample-documents"><summary>Try sample documents <span>Demo data</span></summary><section className="panel-padding" aria-labelledby="sample-title">
+      {legacy && <details className="sample-documents"><summary>Try sample documents <span>Demo data</span></summary><section className="panel-padding" aria-labelledby="sample-title">
         <span className="tile-icon tile-teal"><UploadCloud size={21} /></span>
         <h2 className="mt-3" id="sample-title">Sample documents</h2>
         <p className="muted mt-2">Use demo documents to try search and verify access. Optional enrichment adds graph relationships.</p>
@@ -82,7 +86,7 @@ export function Sources() {
           {token === "demo-amal" && <Button variant="outline" disabled={ingest.isPending}
             onClick={() => ingest.mutate({ sample: "private-review", visibility: "private" })}>Load restricted sample</Button>}
         </div>
-      </section><CompanyDemo /></details>
+      </section><CompanyDemo /></details>}
     </div>
     <div className="mt-4 space-y-2">
       {!open && ingest.isPending && <Feedback>Uploading document…</Feedback>}

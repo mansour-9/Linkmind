@@ -21,14 +21,14 @@ export function FocusSources({ value, onChange, disabled, conversation, explicit
   const trigger = useRef<HTMLButtonElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
   const ids = [...value].sort();
-  const selected = useQuery({ queryKey: ["focus-documents", ids], queryFn: () => service.json<FocusDocument[]>("/documents?" + ids.map(id => "id=" + encodeURIComponent(id)).join("&")), enabled: !!ids.length, refetchInterval: ids.length ? 5000 : false });
+  const selected = useQuery({ queryKey: ["focus-documents", ids], queryFn: () => service.json<FocusDocument[]>("/documents?chat_eligible=true&" + ids.map(id => "id=" + encodeURIComponent(id)).join("&")), enabled: !!ids.length, refetchInterval: ids.length ? 5000 : false });
   const results = useQuery({ queryKey: ["focus-discovery", query, offset], enabled: open,
     queryFn: async (): Promise<Match[]> => {
-      if (!query) return service.json<FocusDocument[]>("/documents?limit=20&offset=" + offset);
+      if (!query) return service.json<FocusDocument[]>("/documents?chat_eligible=true&limit=20&offset=" + offset);
       // Search is submitted deliberately: typing must not trigger embedding calls on every keystroke.
       const [passages, filenames] = await Promise.all([
-        service.json<Passage[]>("/search?" + new URLSearchParams({ q: query, limit: "40" })),
-        service.json<FocusDocument[]>("/documents?" + new URLSearchParams({ q: query, limit: "20" })),
+        service.json<Passage[]>("/documents/search?" + new URLSearchParams({ q: query, limit: "40" })),
+        service.json<FocusDocument[]>("/documents?" + new URLSearchParams({ q: query, limit: "20", chat_eligible: "true" })),
       ]);
       const found = new Map<string, Match>();
       for (const p of passages) if (!found.has(p.document_id)) found.set(p.document_id, { document_id: p.document_id, version_id: p.version_id, filename: p.filename, visibility: "", uploaded_at: "", excerpt: p.text, locator: p.locator, dataset_id:p.dataset_id });

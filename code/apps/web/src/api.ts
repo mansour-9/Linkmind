@@ -28,6 +28,7 @@ export type ExplorerGraph = Omit<GraphData, "nodes"> & { root: string; depth: nu
 export type ExplorerSearch = { nodes: ExplorerNode[]; total: number; offset: number; limit: number; has_more: boolean };
 export type EntityOverview = { entity: ExplorerNode; graph: ExplorerGraph } | null;
 export type Evidence = { id: string; filename: string; version_id: string; line_number: number; quote: string; locator?: Record<string, unknown>;
+  record_id?: string; source_title?: string | null;
   provenance?: { origin: 'stored' | 'live'; synthetic?:boolean; observed_at: string; source_updated_at: string | null; original_url?: string | null; fields?: {field:string;value:unknown}[]; coverage: { complete: boolean; description: string } } };
 export type EntityDetails = Entity & {
   claims: { id: string; predicate: string; value: string; chunk_id: string; line_number: number; quote: string; filename: string; locator?: Record<string, unknown> }[];

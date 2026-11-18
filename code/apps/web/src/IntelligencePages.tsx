@@ -7,7 +7,7 @@ import { useJobs, useSession, useViewer } from "./session";
 import { Button, Feedback, PageHeading, SearchField, Sheet, ReadinessBadge } from "./ui";
 import type { Job, EntityOverview } from "./api";
 import { EntityOverviewCard } from "./GraphPanels";
-import { RepositoryFilters } from './Repository';
+import { RepositoryFilters } from "./Repository";
 
 import type { Conflict } from "./contracts";
 type Usage = { operation: string; provider: string; model: string; region: string; status: string; calls: number;
@@ -39,7 +39,13 @@ export function SearchPage() {
  const { service } = useSession();
  const [params, setParams] = useSearchParams();
  const q = params.get("q") ?? "";
- const jobs = useJobs();
+ const runtime = useQuery({ queryKey: ["runtime"],
+   queryFn: () => service.json<{ knowledge_base: boolean }>("/runtime") });
+ const legacy = runtime.data?.knowledge_base === false;
+ const sources = useQuery({ queryKey: ['knowledge-base', 'sources'], enabled: runtime.data?.knowledge_base === true,
+   queryFn: () => service.json<{ id: string; name: string }[]>('/knowledge-base/sources') });
+ const documents = useQuery({ queryKey: ["search-source-documents"], queryFn: service.jobs, enabled: legacy });
+ const sourceFilter = legacy ? "document_id" : "source_instance_id";
  const rawOffset = Number(params.get("offset") ?? "0");
  const offset = Number.isFinite(rawOffset) ? Math.min(200, Math.max(0, Math.floor(rawOffset / 20) * 20)) : 0;
  const resultQuery = new URLSearchParams(params); resultQuery.set("limit", "20"); resultQuery.set("offset", String(offset));
@@ -50,25 +56,30 @@ export function SearchPage() {
  const passages = results.data?.passages ?? [];
  const overview = useQuery({ queryKey: ["search-overview", q], queryFn: () => service.json<EntityOverview>("/graph/overview?q=" + encodeURIComponent(q)), enabled: !!q && !['document_id','kind','after','before','source_instance_id','format','project_id','team_id'].some(key => params.get(key)) && offset === 0 });
  const entity = useQuery({ queryKey: ["entity", overview.data?.entity.id], queryFn: () => service.entity(overview.data!.entity.id), enabled: !!overview.data });
- return <div className="page reading-width"><PageHeading title="Search your workspace" description="Find evidence across the sources you can access." />
+ return <div className="page reading-width"><PageHeading title={legacy ? "Search your workspace" : "Knowledge Base Search"}
+   description={legacy ? "Find evidence across the sources you can access." : "Find evidence in synchronized company sources."} />
  <form className="intelligence-search" onSubmit={(e) => { e.preventDefault(); if (input.trim()) { const next = new URLSearchParams(params); next.set("q", input.trim()); next.delete("offset"); setParams(next); } }}>
  <SearchField className="library-search" aria-label="Search workspace" value={input} onChange={(e) => setInput(e.target.value)} maxLength={500} placeholder="Search projects, people, decisions…" />
  <Button type="submit" disabled={!input.trim()}>Search</Button></form>
- <div className="search-filters"><label>Source<select aria-label="Source" value={params.get("document_id") ?? ""} onChange={(e) => filter("document_id", e.target.value)}><option value="">All sources</option>
- {jobs.data?.filter((j) => j.current_version_id === j.version_id).map((j) => <option key={j.document_id} value={j.document_id}>{j.filename}</option>)}</select></label>
+ <div className="search-filters"><label>Source<select aria-label="Source" value={params.get(sourceFilter) ?? ""} onChange={(e) => filter(sourceFilter, e.target.value)}><option value="">All sources</option>
+ {legacy ? documents.data?.filter(job => job.current_version_id === job.version_id).map(job =>
+   <option key={job.document_id} value={job.document_id}>{job.filename}</option>) :
+   sources.data?.map(source => <option key={source.id} value={source.id}>{source.name}</option>)}</select></label>
  <label>Entity type<select aria-label="Entity type" value={params.get("kind") ?? ""} onChange={(e) => filter("kind", e.target.value)}><option value="">All types</option>{["project", "person", "team", "task", "decision", "system", "technology", "event"].map((kind) => <option key={kind}>{kind}</option>)}</select></label>
- </div><RepositoryFilters params={params} onChange={filter} />
+ </div>
+ {legacy && <RepositoryFilters params={params} onChange={filter} />}
  {!q && <Feedback>Enter a project name, identifier, or question to search your workspace.</Feedback>}
  {q && <><QueryState query={results} />
  {overview.isSuccess && overview.data && entity.isSuccess && <EntityOverviewCard entity={overview.data.entity} graph={overview.data.graph} claims={entity.data.claims} />}
  {results.isSuccess && <><div className="result-meta"><span>{passages.length} relevant passages</span>
- <Link className="text-action" to={"/?q=" + encodeURIComponent(q)}>Ask AI about this <ArrowRight size={14} /></Link></div>
+ <Link className="text-action" to={"/?q=" + encodeURIComponent(q)}>Ask with live sources <ArrowRight size={14} /></Link></div>
  {results.data.semantic_status === "failed" && <Feedback>Semantic search is temporarily unavailable. Showing text matches.</Feedback>}
- {passages.some(p => p.embedding_status !== "ready") && <p className="muted">Some sources are searchable by text while their semantic index is unavailable.</p>}
  {!passages.length && <Feedback>No matching evidence. Try an exact project identifier or a different phrase.</Feedback>}
  <div className="knowledge-stack">{passages.map((p) => <article className="search-result" key={p.id}>
- <small className="eyebrow">{location(p.locator)}</small><h2>{p.filename}</h2><p className="passage-excerpt" dir="auto">{p.text}</p>
- <EvidenceAction id={p.id} title="Open source passage" /></article>)}</div>
+ <small className="eyebrow">{location(p.locator)}</small><h2>{p.source_title || p.filename}</h2><p className="passage-excerpt" dir="auto">{p.text}</p>
+ <div className="action-row"><EvidenceAction id={p.id} title="Open source passage" />
+ {p.record_id && <Link className="text-action" to={"/content/records/" + p.record_id + "?version=" + p.version_id}>Read full record<ArrowRight size={14} /></Link>}</div>
+ </article>)}</div>
  <div className="action-row"><Button variant="outline" disabled={offset === 0} onClick={() => { const next = new URLSearchParams(params); next.set("offset", String(Math.max(0, offset - 20))); setParams(next); }}>Previous</Button>
  <span className="muted">Page {Math.floor(offset / 20) + 1}</span><Button variant="outline" disabled={passages.length < 20 || offset >= 200} onClick={() => { const next = new URLSearchParams(params); next.set("offset", String(offset + 20)); setParams(next); }}>Next</Button></div></>}</>}
  </div>;

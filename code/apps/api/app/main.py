@@ -19,7 +19,8 @@ from app.parsers import validate_file,SUPPORTED
 from app.retrieval import ACCESS,CURRENT,PASSAGES,search,dependencies_allowed,selected_context
 from app.providers import answer,configured,ProviderUnavailable
 from app import source_discovery,chat_trace,source_policy
-from app import repository
+from app import content_domains as domains, retrieval
+from app import knowledge_records, repository
 from app.source_evidence import local_evidence
 from app.query_limits import question_limits,QueryLimitReached
 from app.query_language import explain
@@ -69,6 +70,8 @@ def authenticate(credentials:Annotated[HTTPAuthorizationCredentials|None,Depends
 Identity=Annotated[Viewer,Depends(authenticate)]
 from app.connectors import install as install_connectors
 install_connectors(app,Identity)
+from app.knowledge_sync import install as install_knowledge_sync
+install_knowledge_sync(app,Identity)
 from app.source_answers import install as install_source_answers
 install_source_answers(app,Identity)
 
@@ -100,7 +103,8 @@ def me(viewer:Identity): return viewer
 @app.get(PREFIX+"/runtime")
 def runtime_status(viewer:Identity):
     from app.inference_budget import status
-    return dict(provider="bedrock" if configured() else "mock",budget=status() if viewer.role=="admin" else None)
+    return dict(provider="bedrock" if configured() else "mock",budget=status() if viewer.role=="admin" else None,
+        knowledge_base=domains.enabled())
 
 JOB_QUERY="""SELECT j.*,v.document_id,v.filename,v.created_at AS uploaded_at,v.processed_at,v.search_ready_at,
   CASE WHEN v.search_ready_at IS NOT NULL THEN 'ready'
@@ -131,9 +135,10 @@ def job_params(viewer):
 def find_job(conn,viewer,id):
     row=sql(conn,JOB_QUERY+f" WHERE {ACCESS} AND j.id=:id",**job_params(viewer),id=id).mappings().first()
     if not row: raise HTTPException(404,"Job not found.")
-    return dict(row)
+    return {**dict(row),**({'can_reprocess':False} if domains.enabled() else {})}
 def owned_document(conn,viewer,id):
-    row=sql(conn,f"SELECT d.* FROM documents d WHERE {ACCESS} AND d.id=:id FOR UPDATE",
+    domains.require_admin(viewer)
+    row=sql(conn,f"SELECT d.* FROM documents d WHERE {ACCESS}{domains.manual()} AND d.id=:id FOR UPDATE",
             **viewer.access(),id=id).mappings().first()
     if not row: raise HTTPException(404,"Document not found.")
     if row.owner_id!=viewer.id and viewer.role!="admin":
@@ -317,27 +322,31 @@ def add_version(conn,viewer,document,filename,content,checksum,*,enrichment_requ
 @app.post(PREFIX+"/sources/upload",status_code=202)
 def upload(viewer:Identity,file:Annotated[UploadFile,File()],
            visibility:Annotated[Literal["private","team"],Form()]="team"):
+    domains.require_admin(viewer)
     filename,content,checksum=read_upload(file)
+    if domains.enabled() and not filename.lower().endswith(('.txt','.pdf')):
+        raise HTTPException(415,'Documents accepts TXT or PDF files.')
     with engine.begin() as conn:
         sql(conn,"SELECT pg_advisory_xact_lock(hashtextextended(:key,0))",key=f"{viewer.organization_id}:{viewer.id}:{checksum}")
-        existing=sql(conn,JOB_QUERY+f" WHERE {ACCESS} AND j.owner_id=:viewer AND j.checksum=:checksum ORDER BY j.created_at DESC LIMIT 1",
+        existing=sql(conn,JOB_QUERY+f" WHERE {ACCESS}{domains.manual()} AND j.owner_id=:viewer AND j.checksum=:checksum ORDER BY j.created_at DESC LIMIT 1",
             **job_params(viewer),checksum=checksum).mappings().first()
         if existing:
             if existing.visibility!=visibility: raise HTTPException(409,"This file was already uploaded with different access.")
             return dict(existing)
         did=uuid4()
-        sql(conn,"""INSERT INTO documents(id,organization_id,owner_id,filename,visibility)
-            VALUES(:id,:org,:owner,:filename,:visibility)""",
+        sql(conn,"""INSERT INTO documents(id,organization_id,owner_id,filename,visibility,content_domain)
+            VALUES(:id,:org,:owner,:filename,:visibility,'manual_document')""",
             id=did,org=viewer.organization_id,owner=viewer.id,filename=filename,visibility=visibility)
         return add_version(conn,viewer,did,filename,content,checksum)
 
 @app.get(PREFIX+"/documents")
 def document_catalog(viewer:Identity,q:str=Query(default="",max_length=500),
                      id:list[UUID]|None=Query(default=None,max_length=30),
+                     chat_eligible:bool=False,
                      limit:int=Query(default=20,ge=1,le=40),offset:int=Query(default=0,ge=0,le=100000)):
     # One current revision per source, independent of the bounded processing-job list.
     params={**viewer.access(),"limit":30 if id else limit,"offset":0 if id else offset}
-    where=CURRENT
+    where=CURRENT+(domains.CHAT_DOCUMENTS+' AND v.search_ready_at IS NOT NULL' if domains.enabled() and chat_eligible else domains.manual())
     if id:
         where+=" AND d.id=ANY(:ids)"
         params["ids"]=id
@@ -351,12 +360,19 @@ def document_catalog(viewer:Identity,q:str=Query(default="",max_length=500),
             WHERE {where} ORDER BY v.created_at DESC,d.id LIMIT :limit OFFSET :offset""",
             **params).mappings()]
 
+@app.get(PREFIX+"/documents/search")
+def search_uploaded_documents(viewer:Identity,q:str=Query(...,min_length=1,max_length=500),limit:int=Query(20,ge=1,le=40)):
+    return retrieval.search_manual(viewer,q,limit=limit) if domains.enabled() else search(viewer,q,limit=limit,semantic=False)
+
+
 @app.get(PREFIX+"/sources")
 @app.get(PREFIX+"/processing")
 def sources(viewer:Identity,document_id:UUID|None=None):
     with engine.connect() as conn:
-        return [dict(r) for r in sql(conn,JOB_QUERY+f" WHERE {ACCESS}"+(' AND d.id=:document' if document_id else '')+" ORDER BY v.created_at DESC LIMIT 200",
-                                    **job_params(viewer),document=document_id).mappings()]
+        rows=sql(conn,JOB_QUERY+f" WHERE {ACCESS}{domains.manual()}"+(' AND d.id=:document' if document_id else '')+" ORDER BY v.created_at DESC LIMIT 200",
+                 **job_params(viewer),document=document_id).mappings()
+        return [{**dict(row),**({'can_reprocess':False,'can_manage':viewer.role=='admin' and row.can_manage}
+            if domains.enabled() else {})} for row in rows]
 
 
 @app.get(PREFIX+"/repository/resources")
@@ -379,6 +395,21 @@ def repository_sources(viewer:Identity):
         return repository.source_catalog(conn,viewer)
 
 
+@app.get(PREFIX+"/knowledge-base/sources")
+def knowledge_sources(viewer:Identity):
+    with engine.connect() as conn:
+        return repository.source_catalog(conn,viewer,corpus=domains.knowledge())
+
+@app.get(PREFIX+"/knowledge-base/records")
+def knowledge_catalog(viewer:Identity,q:str=Query('',max_length=200),
+                      kind:str|None=Query(None,max_length=40),offset:int=Query(0,ge=0)):
+    return knowledge_records.catalog(viewer,q.strip(),kind,offset,6)
+
+@app.get(PREFIX+"/knowledge-base/records/{id}")
+def knowledge_record(id:UUID,viewer:Identity,version:UUID|None=None):
+    return knowledge_records.read(viewer,id,version)
+
+
 @app.get(PREFIX+"/repository/groups")
 def repository_groups(viewer:Identity,kind:Literal['project','team']|None=None,
     q:str=Query('',max_length=120),limit:int=Query(100,ge=1,le=100),offset:int=Query(0,ge=0,le=100000)):
@@ -388,6 +419,7 @@ def repository_groups(viewer:Identity,kind:Literal['project','team']|None=None,
 
 @app.post(PREFIX+"/repository/groups",status_code=201)
 def create_repository_group(body:repository.GroupCreate,viewer:Identity):
+    domains.require_admin(viewer)
     with engine.begin() as conn:
         # Identical names deliberately do not merge identities.
         id=uuid4()
@@ -401,7 +433,7 @@ def create_repository_group(body:repository.GroupCreate,viewer:Identity):
 def document_metadata(id:UUID,viewer:Identity):
     with engine.connect() as conn:
         row=sql(conn,f"""SELECT {repository.FIELDS} {repository.JOINS}
-            WHERE {ACCESS} AND {source_discovery.CATALOG_VERSION} AND d.id=:document""",
+            WHERE {ACCESS}{domains.manual()} AND {source_discovery.CATALOG_VERSION} AND d.id=:document""",
             **viewer.access(),admin=viewer.role=='admin',document=id).mappings().first()
     if not row: raise HTTPException(404,'Document not found.')
     return dict(row)
@@ -428,13 +460,15 @@ def update_document_metadata(id:UUID,body:repository.MetadataChange,viewer:Ident
 @app.get(PREFIX+"/documents/{id}/versions")
 def document_versions(id:UUID,viewer:Identity,limit:int=Query(20,ge=1,le=40),offset:int=Query(0,ge=0,le=100000)):
     with engine.connect() as conn:
-        if not sql(conn,f'SELECT 1 FROM documents d WHERE {ACCESS} AND d.id=:id',**viewer.access(),id=id).first():
+        if not sql(conn,f'SELECT 1 FROM documents d WHERE {ACCESS}{domains.manual()} AND d.id=:id',**viewer.access(),id=id).first():
             raise HTTPException(404,'Document not found.')
         return repository.versions(conn,viewer,id,limit=limit,offset=offset)
 @app.get(PREFIX+"/jobs/{id}")
 def job(id:UUID,viewer:Identity):
     with engine.connect() as conn:
         result=find_job(conn,viewer,id)
+        if domains.enabled() and not sql(conn,"SELECT 1 FROM documents WHERE id=:id AND content_domain='manual_document'",id=result['document_id']).first():
+            raise HTTPException(404,'Document processing job not found.')
         result["attempt_history"]=[dict(r) for r in sql(conn,"SELECT * FROM processing_attempts WHERE job_id=:id ORDER BY started_at",id=id).mappings()]
         result["enrichment_history"]=[dict(r) for r in sql(conn,"""SELECT id,activation_state,created_at,verified_at,processed_at,
             extraction_provider FROM document_versions WHERE source_version_id=:source ORDER BY created_at DESC,id DESC LIMIT 20""",
@@ -458,6 +492,8 @@ def queue_staged_enrichment(conn,viewer,job):
 
 @app.post(PREFIX+"/jobs/{id}/reprocess",status_code=202)
 def reprocess(id:UUID,viewer:Identity):
+    domains.require_admin(viewer)
+    if domains.enabled():raise HTTPException(409,'Documents are indexed without knowledge enrichment.')
     with engine.connect() as conn:
         if sql(conn,'''SELECT 1 FROM processing_jobs j JOIN document_versions v ON v.id=j.version_id
             JOIN connected_resources cr ON cr.document_id=v.document_id WHERE j.id=:id''',id=id).scalar():
@@ -470,9 +506,12 @@ def reprocess(id:UUID,viewer:Identity):
 
 @app.post(PREFIX+"/jobs/{id}/retry",status_code=202)
 def retry(id:UUID,viewer:Identity):
+    domains.require_admin(viewer)
     with engine.begin() as conn:
         # Match the worker/revision lock order and read job status after locking.
         job=find_job(conn,viewer,id)
+        if domains.enabled() and not sql(conn,"SELECT 1 FROM documents WHERE id=:id AND content_domain='manual_document'",id=job['document_id']).first():
+            raise HTTPException(409,'Retry synchronized content through Knowledge Sync.')
         sql(conn,"SELECT id FROM documents WHERE id=:id FOR UPDATE",id=job["document_id"])
         sql(conn,"SELECT id FROM processing_jobs WHERE id=:id FOR UPDATE",id=id)
         job=find_job(conn,viewer,id)
@@ -494,6 +533,8 @@ def retry(id:UUID,viewer:Identity):
 @app.post(PREFIX+"/documents/{id}/revisions",status_code=202)
 def revision(id:UUID,viewer:Identity,file:Annotated[UploadFile,File()]):
     filename,content,checksum=read_upload(file)
+    if domains.enabled() and not filename.lower().endswith(('.txt','.pdf')):
+        raise HTTPException(415,'Documents accepts TXT or PDF files.')
     with engine.begin() as conn:
         owned_document(conn,viewer,id)
         existing=sql(conn,"SELECT j.id FROM processing_jobs j JOIN document_versions v ON v.id=j.version_id WHERE v.document_id=:id AND v.checksum=:checksum",
@@ -528,7 +569,7 @@ def delete(id:UUID,viewer:Identity):
 
 ENTITY_JOIN="FROM live_entities e JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id"
 def entity_detail(conn,viewer,id):
-    occurrence=sql(conn,f"SELECT e.canonical_id {ENTITY_JOIN} WHERE {ACCESS} AND e.id=:id",
+    occurrence=sql(conn,f"SELECT e.canonical_id {ENTITY_JOIN} WHERE {ACCESS}{domains.knowledge(current=False)} AND e.id=:id",
                    **viewer.access(),id=id).scalar_one_or_none()
     if occurrence:
         id=occurrence
@@ -537,21 +578,21 @@ def entity_detail(conn,viewer,id):
         if not target: break
         id=target
     row=sql(conn,f"""SELECT e.canonical_id AS id,e.kind,e.name,v.id AS version_id,v.filename
-        {ENTITY_JOIN} WHERE {CURRENT} AND (e.canonical_id=:id OR e.id=:id)
+        {ENTITY_JOIN} WHERE {CURRENT}{domains.knowledge()} AND (e.canonical_id=:id OR e.id=:id)
         ORDER BY v.created_at DESC,e.id LIMIT 1""",**viewer.access(),id=id).mappings().first()
     if not row: raise HTTPException(404,"Entity not found.")
     claims=sql(conn,f"""SELECT c.*,k.line_number,k.locator,k.text AS quote,v.filename
         {ENTITY_JOIN} JOIN live_claims c ON c.entity_id=e.id JOIN chunks k ON k.id=c.chunk_id
-        WHERE {CURRENT} AND e.canonical_id=:id ORDER BY v.created_at,c.id""",**viewer.access(),id=row.id).mappings().all()
+        WHERE {CURRENT}{domains.knowledge()} AND e.canonical_id=:id ORDER BY v.created_at,c.id""",**viewer.access(),id=row.id).mappings().all()
     result={**dict(row),"claims":[]}
     result["sources"]=[dict(x) for x in sql(conn,f"""SELECT DISTINCT v.id AS version_id,v.filename,
-       v.created_at,(d.current_version_id=v.id) AS current FROM live_entities e
+        v.created_at,d.id AS document_id,d.title,d.content_domain,(d.current_version_id=v.id) AS current FROM live_entities e
        JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.id=v.document_id
-       WHERE {ACCESS} AND e.canonical_id=:id ORDER BY v.created_at DESC""",**viewer.access(),id=row.id).mappings()]
+       WHERE {ACCESS}{domains.knowledge(current=False)} AND e.canonical_id=:id ORDER BY v.created_at DESC""",**viewer.access(),id=row.id).mappings()]
     result["entity_evidence"]=[dict(x) for x in sql(conn,f"""SELECT ee.chunk_id,ee.quote,k.locator,v.filename,
        v.id AS version_id FROM entity_evidence ee JOIN live_entities e ON e.id=ee.entity_id
        JOIN chunks k ON k.id=ee.chunk_id JOIN document_versions v ON v.id=e.version_id
-       JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND e.canonical_id=:id""",
+       JOIN documents d ON d.id=v.document_id WHERE {CURRENT}{domains.knowledge()} AND e.canonical_id=:id""",
        **viewer.access(),id=row.id).mappings()]
     from app.resolution import candidates
     result["uncertain_matches"]=sum(1 for x in candidates(conn,viewer) if x["status"]=="open" and
@@ -560,7 +601,7 @@ def entity_detail(conn,viewer,id):
         evidence=sql(conn,f"""SELECT ce.chunk_id,ce.quote,ce.span_start,ce.span_end,k.locator,v.filename,v.id AS version_id
             FROM claim_evidence ce JOIN chunks k ON k.id=ce.chunk_id
             JOIN document_versions v ON v.id=k.version_id JOIN documents d ON d.id=v.document_id
-            WHERE {CURRENT} AND ce.claim_id=:id""",**viewer.access(),id=claim.id).mappings()
+            WHERE {CURRENT}{domains.knowledge()} AND ce.claim_id=:id""",**viewer.access(),id=claim.id).mappings()
         result["claims"].append({**dict(claim),"evidence":[dict(x) for x in evidence]})
     return result
 @app.get(PREFIX+"/entities/{id}")
@@ -571,7 +612,7 @@ def entity(id:UUID,viewer:Identity):
 def wiki(viewer:Identity):
     with engine.connect() as conn:
         return [dict(r) for r in sql(conn,f"""SELECT DISTINCT ON(e.canonical_id) e.canonical_id AS id,e.name,e.kind,
-            v.filename,v.id AS version_id {ENTITY_JOIN} WHERE {CURRENT}
+            v.filename,v.id AS version_id {ENTITY_JOIN} WHERE {CURRENT}{domains.knowledge()}
             ORDER BY e.canonical_id,v.created_at DESC LIMIT 200""",**viewer.access()).mappings()]
 
 @app.get(PREFIX+"/graph/explore")
@@ -615,21 +656,21 @@ def graph(viewer:Identity,root:UUID|None=None,q:str=Query("",max_length=200),kin
         condition=f""" AND e.canonical_id IN (
           SELECT :root UNION SELECT t.canonical_id FROM live_relationships r JOIN live_entities s ON s.id=r.source_id
           JOIN live_entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
-          JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND s.canonical_id=:root
+          JOIN documents d ON d.id=v.document_id WHERE {CURRENT}{domains.knowledge()} AND s.canonical_id=:root
           UNION SELECT s.canonical_id FROM live_relationships r JOIN live_entities s ON s.id=r.source_id
           JOIN live_entities t ON t.id=r.target_id JOIN document_versions v ON v.id=r.version_id
-          JOIN documents d ON d.id=v.document_id WHERE {CURRENT} AND t.canonical_id=:root)"""
+          JOIN documents d ON d.id=v.document_id WHERE {CURRENT}{domains.knowledge()} AND t.canonical_id=:root)"""
     with engine.begin() as conn:
         sql(conn,"SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
         nodes=sql(conn,f"""SELECT DISTINCT ON(e.canonical_id) e.canonical_id AS id,e.name,e.kind,
-             v.filename,v.id AS version_id {ENTITY_JOIN} WHERE {CURRENT}
+             v.filename,v.id AS version_id {ENTITY_JOIN} WHERE {CURRENT}{domains.knowledge()}
              AND e.name ILIKE :q AND (CAST(:kind AS text) IS NULL OR e.kind=:kind) {condition}
              ORDER BY e.canonical_id,v.created_at DESC LIMIT :limit""",**params).mappings().all()
         ids=[r.id for r in nodes]
         edges=sql(conn,f"""SELECT r.id,s.canonical_id AS source,t.canonical_id AS target,r.predicate AS label,r.effective_from,r.effective_to,r.chunk_id
              FROM live_relationships r JOIN live_entities s ON s.id=r.source_id JOIN live_entities t ON t.id=r.target_id
              JOIN document_versions v ON v.id=r.version_id JOIN documents d ON d.id=v.document_id
-             WHERE {CURRENT} AND s.canonical_id=ANY(:ids) AND t.canonical_id=ANY(:ids) ORDER BY r.id""",
+             WHERE {CURRENT}{domains.knowledge()} AND s.canonical_id=ANY(:ids) AND t.canonical_id=ANY(:ids) ORDER BY r.id""",
              **viewer.access(),ids=ids).mappings() if ids else []
         conflicts=sql(conn,CONFLICT_QUERY+" AND f.status IN ('open','needs_evidence')",**viewer.access()).mappings().all()
         return dict(nodes=[{**dict(r),"conflict_count":sum(c.canonical_id==r.id for c in conflicts)} for r in nodes],edges=[dict(r) for r in edges])
@@ -642,7 +683,7 @@ def evidence(id:UUID,viewer:Identity):
     if document: refresh_access(viewer,[document])
     with engine.connect() as conn:
         row=sql(conn,f"""SELECT k.id,k.line_number,k.locator,k.text AS quote,v.id AS version_id,v.filename,v.dataset_id,
-            d.organization_id,d.source_instance_id,d.native_id,v.created_at AS uploaded_at
+            d.organization_id,d.source_instance_id,d.native_id,d.id AS document_id,d.title,d.content_domain,v.created_at AS uploaded_at
             {PASSAGES} WHERE {ACCESS} AND k.id=:id""",**viewer.access(),id=id).mappings().first()
         external=sql(conn,'''SELECT r.*,s.kind FROM connected_revisions r JOIN source_instances s ON s.id=r.connection_id
             WHERE r.version_id=(SELECT version_id FROM chunks WHERE id=:id) ORDER BY r.observed_at DESC LIMIT 1''',id=id).mappings().first() if row else None
@@ -652,14 +693,18 @@ def evidence(id:UUID,viewer:Identity):
     if external:
         provenance.update(original_url=external.original_url,source_revision=external.source_revision,
             synthetic=bool(external.payload.get('synthetic')),
-            source_updated_at=external.source_updated_at.isoformat(),observed_at=external.observed_at.isoformat())
-        provenance['identity']['resource_type']='issue' if external.kind=='jira' else 'page' if external.kind=='confluence' else 'document'
+            source_updated_at=external.source_updated_at.isoformat() if external.source_updated_at else None,
+            observed_at=external.observed_at.isoformat())
+        provenance['identity']['resource_type']='issue' if external.kind=='jira' else 'page' if external.kind in {'confluence','notion'} else 'document'
         for dependency in provenance['access_dependencies']:
             dependency['resource_type']=provenance['identity']['resource_type']
         if external.fields:
             provenance.update(excerpt=None,fields=external.fields)
     result['provenance']=provenance
-    for key in ('organization_id','native_id','source_instance_id','uploaded_at'):
+    if external and row.content_domain=='synced_knowledge':
+        result['record_id']=row.document_id
+        result['source_title']=row.title
+    for key in ('organization_id','native_id','source_instance_id','uploaded_at','document_id','title','content_domain'):
         result.pop(key)
     return result
 @app.get(PREFIX+"/documents/{id}/download")
@@ -690,7 +735,11 @@ def enterprise_search(viewer:Identity,response:Response,q:str=Query(...,min_leng
         raise HTTPException(422,"Date filters must use YYYY-MM-DD.") from None
     try:
         diagnostics={}
-        results=search(viewer,q,[document_id] if document_id else None,filters=filters,limit=limit,offset=offset,diagnostics=diagnostics)
+        results=search(viewer,q,[document_id] if document_id else None,filters=filters,limit=limit,offset=offset,diagnostics=diagnostics,
+            **({'corpus':domains.knowledge(),'semantic':False} if domains.enabled() else {}))
+        if domains.enabled():
+            for result in results:
+                result["record_id"]=result["document_id"]
         response.headers["X-Linkmind-Semantic-Status"]=diagnostics.get("semantic_status","unavailable")
         return results
     except Exception as exc:
@@ -751,6 +800,7 @@ def review_history(id:UUID,viewer:Identity):
 
 @app.get(PREFIX+"/chat/source-options")
 def chat_source_options(viewer:Identity):
+    if domains.enabled():return dict(default_policy='auto',policies=['auto','live','stored'])
     with engine.connect() as conn:policy=source_policy.default(conn,viewer)
     return dict(default_policy=policy,policies=['auto','live','stored','combined'])
 
@@ -771,9 +821,11 @@ def conversation(conn,viewer,id):
 @app.post(PREFIX+"/conversations",status_code=201)
 def create_conversation(body:NewConversation,viewer:Identity):
     with engine.begin() as conn:
-        policy=body.source_policy or source_policy.default(conn,viewer,body.document_ids)
+        policy=body.source_policy or ('auto' if domains.enabled() else source_policy.default(conn,viewer,body.document_ids))
         if policy=="live" and body.document_ids:raise HTTPException(422,"Live Only cannot include stored documents.")
         for id in body.document_ids:
+            if domains.enabled() and not retrieval.manual_ids_allowed(conn,viewer,[id]):
+                raise HTTPException(404,'Selected manual document not found.')
             if not sql(conn,f"SELECT d.id FROM documents d WHERE {ACCESS} AND d.id=:id",**viewer.access(),id=id).first():
                 raise HTTPException(404,"Selected source not found.")
         id=uuid4()
@@ -794,7 +846,7 @@ def history(id:UUID,viewer:Identity):
         row=conversation(conn,viewer,id)
         output=dict(row)
         visible=[]
-        for document in output.get("attachment_document_ids",[]):
+        for document in (() if domains.enabled() else output.get("attachment_document_ids",[])):
             try:visible.extend(accessible(conn,viewer,[document]))
             except HTTPException:pass
         output["attachments"]=visible
@@ -818,6 +870,8 @@ def ask(id:UUID,body:Question,viewer:Identity):
 
 @app.post(PREFIX+"/conversations/{id}/answers/stream")
 async def stream_answer(id:UUID,body:Question,viewer:Identity,request:Request):
+    if domains.enabled() and body.attachment_document_ids:
+        raise HTTPException(422,'Upload files in Documents before asking about them.')
     with engine.connect() as conn:conversation(conn,viewer,id)
     async def events():
         queue=asyncio.Queue();cancelled=Event();loop=asyncio.get_running_loop()
@@ -858,6 +912,7 @@ def _ask(id,body,viewer):
     from app.conversational import response as conversational_response
     from app.inference_budget import BudgetStopped
     previous=[]
+    separated=domains.enabled()
     live_cache={}
     chat_trace.checkpoint()
     # Explicit fresh topics do not need remote reauthorization of unrelated turns.
@@ -871,17 +926,25 @@ def _ask(id,body,viewer):
     from app.chat_attachments import accessible
     with engine.connect() as conn:
         row=conversation(conn,viewer,id)
+        if separated and body.attachment_document_ids:
+            raise HTTPException(422,'Upload files in Documents before asking about them.')
+        if separated and body.source_document_id and not retrieval.manual_ids_allowed(conn,viewer,[body.source_document_id],ready=True):
+            raise HTTPException(404,'Selected manual document not found.')
+        focus_ids=[]
+        if separated and row.source_policy!='live':
+            focus_ids=[document for document in row.document_ids if retrieval.manual_ids_allowed(conn,viewer,[document],ready=True)]
+            if body.source_document_id:focus_ids=[body.source_document_id]
         if body.attachment_document_ids and row.source_policy!="auto":
             raise HTTPException(422,"Start a new chat to attach documents.")
         accessible(conn,viewer,body.attachment_document_ids,ready=True)
         attachments=[]
-        for document in row.attachment_document_ids:
+        for document in (() if separated else row.attachment_document_ids):
             try:attachments.extend(d["document_id"] for d in accessible(conn,viewer,[document],ready=True))
             except HTTPException:pass
         attachments=list(dict.fromkeys(attachments+[str(x) for x in body.attachment_document_ids]))[-30:]
         for turn in sql(conn,"SELECT question,response,dependency_ids FROM conversation_turns WHERE conversation_id=:id AND validation_version=:policy ORDER BY created_at DESC,id DESC LIMIT 3",id=id,policy=ANSWER_VALIDATION_VERSION).mappings():
             if not need_previous:break
-            if row.source_policy=="auto":
+            if separated or row.source_policy=="auto":
                 # Resolve only user-authored topics/identifiers. Old answer bodies
                 # never enter synthesis; new source reads enforce current access.
                 previous.append(dict(question=turn.question,response=dict(topic=turn.response.get('topic',{}))))
@@ -892,19 +955,19 @@ def _ask(id,body,viewer):
                 previous.append(dict(turn))
     try:
         with question_limits() as limits:
-            if row.source_policy=="auto":
-                limits.max_model_calls=2
-                limits.max_planner_calls=0
             if row.source_policy=="legacy":raise HTTPException(409,"This chat used the previous mixed-source policy. Start a new conversation and choose Live Only, Stored knowledge, or Combined.")
             if row.source_policy=="live" and body.source_document_id:raise HTTPException(422,"Choose Stored knowledge in a new conversation to use an uploaded document.")
             with source_policy.scope(row.source_policy,selected=bool(row.document_ids)):
-                if row.source_policy=="auto":
+                if separated or row.source_policy=="auto":
                     from app.auto_agent import response as auto_response
-                    response,dependencies=auto_response(viewer,body.question,previous,engine,search,configured,row.document_ids,attachments)
+                    response,dependencies=auto_response(viewer,body.question,previous,engine,search,configured,
+                        focus_ids if separated else row.document_ids,attachments,policy=row.source_policy if separated else 'auto')
                 else:
                     response,dependencies=conversational_response(viewer,body.question,previous,row.document_ids,
                         engine,search,answer,configured,body.source_document_id)
             with engine.connect() as conn:
+                if separated and not retrieval.manual_passages_allowed(conn,viewer,dependencies):
+                    raise HTTPException(409,'The answer exceeded the manual document corpus.')
                 source_policy.annotate(conn,response)
             source_policy.enforce(row.source_policy,response,dependencies)
             limits.checkpoint()
@@ -919,7 +982,7 @@ def _ask(id,body,viewer):
         if code=="ThrottlingException":
             raise HTTPException(429,"Bedrock is temporarily rate limited. Please wait and retry.",headers={"Retry-After":"10"}) from exc
         raise HTTPException(503,"Answer unavailable ("+code+"). No unverified answer was saved. Retry or check the provider.") from exc
-    if row.source_policy=='auto':
+    if separated or row.source_policy=='auto':
         from app.auto_agent import assert_live
         assert_live(viewer,response.get('live_dependencies',[]),engine)
     elif not chat_agent.allowed(viewer,response.get('live_dependencies',[]),engine):

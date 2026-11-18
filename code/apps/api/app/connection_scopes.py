@@ -32,6 +32,10 @@ def discover(viewer,id,parent_id='',drive_id=''):
     spec=ConnectionSpec(**row.config)
     if row.auth_state not in {'mock_authenticated','oauth_authenticated','server_credential'}:raise HTTPException(409,'Sign in before discovering accessible scopes.')
     if spec.execution=='mock':return dict(items=[dict(id='demo-scope',name='Demo scope — synthetic content only',kind='scope',drive_id='',selectable=True)],synthetic=True,truncated=False)
+    if spec.kind=='notion':
+        from app.connector_providers import notion_page_id
+        return dict(items=[dict(id=notion_page_id(page.url),name=page.title,kind='page',drive_id='',selectable=False)
+                           for page in spec.notion_pages],synthetic=False,truncated=False,manual=True)
     if spec.kind=='custom_mcp' or spec.transport!='native':return dict(items=[dict(id=spec.scope_id,name='Explicitly configured MCP scope',kind='scope',drive_id='',selectable=True)],synthetic=False,truncated=False,manual=True)
     try:
         provider=Provider(spec,active() or ReadLimits(max_calls=5,seconds=20),row.id)
@@ -73,6 +77,7 @@ def select(viewer,id,body):
     if row.generation!=body.expected_generation:raise HTTPException(409,'Configuration changed. Reload the scopes.')
     if row.auth_state not in {'mock_authenticated','oauth_authenticated','server_credential'}:raise HTTPException(409,'Authenticate this source first.')
     old=ConnectionSpec(**row.config)
+    if old.kind=='notion':raise HTTPException(409,'Edit the connection to choose Notion pages.')
     try:spec=ConnectionSpec(**(row.config|dict(scope_id=body.scope_id,drive_id=body.drive_id or old.drive_id)))
     except ValueError:raise HTTPException(422,'Choose a valid scope for this source.') from None
     if spec.scope_id=='pending-scope':raise HTTPException(422,'Choose a scope before saving.')

@@ -17,6 +17,8 @@ import type { Conversation } from "./contracts";
 const Assistant = lazy(() => import("./Assistant").then(m => ({ default: m.Assistant })));
 const SourceQuestion = lazy(() => import('./SourceQuestion'));
 const Knowledge = lazy(() => import("./Knowledge").then(m => ({ default: m.Knowledge })));
+const KnowledgeRecord = lazy(() => import("./KnowledgeRecord").then(m => ({ default: m.KnowledgeRecordRoute })));
+const KnowledgeSync = lazy(() => import('./KnowledgeSync'));
 const Repository = lazy(() => import("./Repository").then(m => ({ default: m.Repository })));
 const Connections = lazy(() => import('./Connections'));
 const SearchPage = lazy(() => import("./IntelligencePages").then(m => ({ default: m.SearchPage })));
@@ -26,7 +28,7 @@ const ChatDiagnostics = lazy(() => import("./ChatDiagnostics").then(m => ({ defa
 const Usage = lazy(() => import("./IntelligencePages").then(m => ({ default: m.UsageDashboard })));
 const Graph = lazy(() => import("./GraphWorkspace").then(m => ({ default: m.GraphWorkspace })));
 const primary = [{ path: "/", title: "Home", icon: House }, { path: "/search", title: "Search", icon: Search }, { path: "/graph", title: "Graph", icon: Network }, { path: "/people", title: "People", icon: Users }, { path: "/content", title: "Content", icon: BookOpen }];
-const administration = [{ path: "/admin/sources", title: "Data Sources" }, {path:'/admin/connections',title:'Sources & Connections'}, { path: "/admin/processing", title: "Processing" }, { path: "/admin/conflicts", title: "Conflicts" }, { path: "/admin/usage", title: "AI Usage" }, { path: "/admin/chat-diagnostics", title: "Chat diagnostics" }, { path: "/admin/settings", title: "Settings" }];
+const administration = [{ path: "/admin/sources", title: "Data Sources" }, {path:'/admin/connections',title:'Sources & Connections'}, {path:'/admin/knowledge-sync',title:'Knowledge Sync'}, { path: "/admin/processing", title: "Processing" }, { path: "/admin/conflicts", title: "Conflicts" }, { path: "/admin/usage", title: "AI Usage" }, { path: "/admin/chat-diagnostics", title: "Chat diagnostics" }, { path: "/admin/settings", title: "Settings" }];
 
 function LegacyRoute({ to }: { to?: string }) {
   const location = useLocation();
@@ -85,8 +87,10 @@ function Workspace({ token, onSwitch }: { token: string; onSwitch: (token: strin
           <Route path="/ask/sources" element={<SourceQuestion />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/admin/connections" element={<Connections />} />
+          <Route path="/admin/knowledge-sync" element={<KnowledgeSync />} />
           <Route path="/people" element={<Knowledge people />} /><Route path="/people/:entityId" element={<Knowledge people />} />
           <Route path="/content" element={<Knowledge />} /><Route path="/content/:entityId" element={<Knowledge />} />
+          <Route path="/content/records/:recordId" element={<KnowledgeRecord />} />
           <Route path="/content/documents" element={<Repository />} /><Route path="/content/graph" element={<LegacyRoute to="/graph" />} /><Route path="/graph" element={<Graph />} />
           <Route path="/admin" element={<Navigate replace to="/admin/sources" />} />
           <Route path="/admin/sources" element={<Sources />} /><Route path="/admin/processing" element={<Processing />} />

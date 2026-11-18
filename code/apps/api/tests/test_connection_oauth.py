@@ -54,6 +54,17 @@ def callback(state,cookie,code='fictional-code',error=None):
     return response.headers['location']
 
 
+def test_personal_onedrive_consent_uses_the_consumer_endpoint_and_read_scope(local,monkeypatch):
+    registration=dict(client_id='fictional-client',client_secret='fictional-client-secret',tenant_id='consumers')
+    monkeypatch.setenv('LINKMIND_OAUTH_PROVIDERS_JSON',json.dumps(dict(onedrive=registration,sharepoint=registration)))
+    _,_,data=begin(create('onedrive'))
+    url=urlsplit(data['authorization_url'])
+    assert url.netloc=='login.microsoftonline.com' and url.path=='/consumers/oauth2/v2.0/authorize'
+    assert set(parse_qs(url.query)['scope'][0].split())=={'offline_access','https://graph.microsoft.com/Files.Read'}
+    with pytest.raises(HTTPException) as exc:begin(create('sharepoint'))
+    assert exc.value.detail['code']=='oauth_not_configured'
+
+
 @pytest.fixture
 def upstream(monkeypatch):
     calls=[];state=dict(refreshes=0,deny=False)

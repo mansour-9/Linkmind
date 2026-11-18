@@ -24,6 +24,7 @@ MESSAGES = {
     'rate_limited': 'The source is rate limited. Collection will back off; try again later.',
     'source_outage': 'The source is unavailable. Access could not be confirmed; retained evidence is hidden.',
     'scope_limit': 'This scope exceeds the local 25-resource limit. Choose a smaller project, space or folder.',
+    'sharepoint_sample_required': 'Add a readable file to the selected SharePoint folder and test again.',
     'checkpoint_expired': 'The source checkpoint expired. Start a fresh collection; retained history is preserved.',
 }
 
@@ -54,6 +55,9 @@ def Provider(spec,limits=None,connection_id=None):
         return DemoProvider(spec,limits)
     from app.connection_oauth import runtime_spec
     spec=runtime_spec(spec,connection_id)
+    if spec.kind=='notion':
+        from app.notion_mcp import NotionProvider
+        return NotionProvider(spec,limits)
     if spec.kind=='custom_mcp':
         from app.custom_mcp import CustomMCPProvider
         return CustomMCPProvider(spec,limits)
@@ -111,9 +115,25 @@ def create(viewer, spec):
 
 def change_mode(viewer, id, body):
     admin(viewer)
+    from app import content_domains as domains, knowledge_sync
+    if domains.enabled() and body.mode=='sync':
+        with engine.connect() as conn:source=owned(conn,viewer,id)
+        if (source.generation==body.expected_generation and source.tested_generation==source.generation
+                and source.tested_at and source.tested_at>=now()-timedelta(minutes=15)
+                and source.config.get('execution')=='real' and knowledge_sync.supports(source.config)):
+            try:
+                provider=Provider(source.config,ReadLimits(seconds=25),source.id)
+                collect=getattr(provider,'sync_page',None)
+                if collect:collect({},None)
+                else:provider.page({})
+            except SourceFailure as exc:
+                raise HTTPException(409,dict(code=exc.code,message='Scoped collection could not be verified. Check the source’s collection permissions; live reads remain available.')) from None
     with engine.begin() as conn:
         row = owned(conn, viewer, id, True)
         if row.generation != body.expected_generation: raise HTTPException(409, 'Connection changed. Reload before saving.')
+        if body.mode=='sync' and ((not domains.enabled() and row.kind=='notion') or
+                (domains.enabled() and not knowledge_sync.supports(row.config))):
+            raise HTTPException(409,'This connection does not support scoped knowledge synchronization.')
         if body.mode!='disconnected' and (row.tested_generation!=row.generation or not row.tested_at or row.tested_at<now()-timedelta(minutes=15)):
             raise HTTPException(409,'Authenticate and test this configuration before enabling it.')
         sql(conn, '''UPDATE source_connections SET mode=:mode,generation=generation+1,cursor='{}',
@@ -138,7 +158,10 @@ def list_connections(viewer):
     for row in rows:
         row['message'] = MESSAGES.get(row['error_code'], 'The source response could not be safely used. Test the selected scope and supported read interface.' if row['error_code'] else 'No source read has completed yet.' if row['health'] == 'awaiting_read' else None)
         row['scope'] = row['config']['scope_id']
-        row['capabilities'] = dict(read_only=True, live=True, sync=True, resource_limit=25)
+        from app import content_domains as domains, knowledge_sync
+        row['capabilities'] = dict(read_only=True, live=True,
+            sync=knowledge_sync.supports(row['config']) if domains.enabled() else row['kind']!='notion',
+            resource_limit=6 if row['kind']=='notion' else 25)
         row['execution']=row['config'].get('execution','real')
         from app.connection_oauth import configured
         row['oauth_ready']=configured(ConnectionSpec(**row['config'])) if row['execution']=='real' else False
@@ -164,7 +187,7 @@ def live(viewer, id, body):
         provider = Provider(row.config, limits, row.id)
         record = provider.get(body.native_id, mcp=True)
         identity = ResourceIdentity(organization_id=viewer.organization_id, source_instance_id=id,
-            resource_type='issue' if row.kind == 'jira' else 'page' if row.kind == 'confluence' else 'document', native_id=record.native_id)
+            resource_type='issue' if row.kind == 'jira' else 'page' if row.kind in {'confluence','notion'} else 'document', native_id=record.native_id)
         from app.parsers import parse_document
         from app.chat_retrieval import select_passages,pack_passages
         passages = parse_document(record.filename, record.content)
@@ -214,20 +237,22 @@ def live(viewer, id, body):
 
 def retain(conn, connection, record):
     from app.main import add_version, Viewer
+    from app import content_domains as domains
     viewer = Viewer(id=connection.owner_id, organization_id=connection.organization_id, role='admin', name='Collector', organization='Local')
     row = sql(conn, '''SELECT r.*,v.checksum,v.id AS version_id FROM connected_resources r JOIN documents d ON d.id=r.document_id
         LEFT JOIN document_versions v ON v.id=d.current_version_id WHERE r.connection_id=:id AND r.native_id=:native FOR UPDATE OF r''',
         id=connection.id, native=record.native_id).mappings().first()
-    if row and record.updated < row.source_updated_at: return
+    if row and record.updated and row.source_updated_at and record.updated < row.source_updated_at:return 'skipped',row.version_id
     checksum = hashlib.sha256(record.content).hexdigest()
-    if row and record.updated == row.source_updated_at and record.revision != row.source_revision:
+    if row and record.updated is not None and record.updated == row.source_updated_at and record.revision != row.source_revision:
         raise SourceFailure('source_version_ambiguous')
     if not row:
         count = sql(conn, 'SELECT count(*) FROM connected_resources WHERE connection_id=:id', id=connection.id).scalar_one()
-        if count >= 25: raise SourceFailure('scope_limit')
+        if not domains.enabled() and count >= 25: raise SourceFailure('scope_limit')
         did = uuid4()
-        sql(conn, '''INSERT INTO documents(id,organization_id,owner_id,filename,visibility,source_instance_id,native_id)
-            VALUES(:id,:org,:owner,:filename,'private',:source,:native)''', id=did, org=connection.organization_id,
+        sql(conn, '''INSERT INTO documents(id,organization_id,owner_id,filename,title,visibility,source_instance_id,native_id,content_domain)
+            VALUES(:id,:org,:owner,:filename,:title,'private',:source,:native,'synced_knowledge')''', id=did, org=connection.organization_id,
+            title=record.display_title.strip()[:240] or None,
             owner=connection.owner_id, filename=record.filename, source=connection.id, native=record.native_id)
         sql(conn, '''INSERT INTO connected_resources(connection_id,native_id,document_id,source_revision,source_updated_at,observed_at,
             original_url,generation,access_until) VALUES(:id,:native,:doc,:revision,:updated,now(),:url,:generation,now()+interval '2 minutes')''',
@@ -244,6 +269,11 @@ def retain(conn, connection, record):
             version = add_version(conn, viewer, did, record.filename, record.content, checksum)['version_id']
         version = version or row.version_id
         if not version: raise SourceFailure('publication_pending')
+        if domains.enabled():
+            sql(conn,"""UPDATE processing_jobs SET status='queued',available_at=now(),attempts=0,error=NULL,error_code=NULL
+                WHERE version_id=:version AND status='failed'""",version=version)
+            if record.display_title.strip():
+                sql(conn,'UPDATE documents SET title=:title WHERE id=:id',id=did,title=record.display_title.strip()[:240])
         sql(conn, '''UPDATE connected_resources SET source_revision=:revision,source_updated_at=:updated,observed_at=now(),
             original_url=:url,generation=:generation,access_until=now()+interval '2 minutes',revoked=false
             WHERE connection_id=:id AND native_id=:native''', id=connection.id, native=record.native_id,
@@ -257,9 +287,14 @@ def retain(conn, connection, record):
             VALUES(:id,:version,:source,:native,:revision,:updated,:url,CAST(:payload AS jsonb),CAST(:fields AS jsonb))''',
             id=uuid4(), version=version, source=connection.id, native=record.native_id, revision=record.revision,
             updated=record.updated, url=record.original_url, payload=payload, fields=json.dumps(record.fields))
+    return ('imported' if not row else 'skipped' if row.source_revision==record.revision else 'updated'),version
 
 
 def process_one():
+    from app import content_domains as domains
+    if domains.enabled():
+        from app.knowledge_sync import process_one as sync_one
+        return sync_one()
     with engine.begin() as conn:
         row = sql(conn, '''SELECT c.*,s.kind,s.name FROM source_connections c JOIN source_instances s ON s.id=c.id
             WHERE c.mode='sync' AND c.removed_at IS NULL AND (c.sync_requested OR c.next_sync_at<=now())
@@ -306,7 +341,7 @@ def process_one():
     return True
 
 
-def refresh_access(viewer, documents=None, query=None):
+def refresh_access(viewer, documents=None, query=None, *, reuse_recent=False, source_instance_id=None):
     """Relevant local candidate IDs first; bounded original-source authorization before exposure."""
     params = viewer.access()
     where = ''
@@ -318,12 +353,19 @@ def refresh_access(viewer, documents=None, query=None):
             WHERE v.document_id=d.id AND v.id=d.current_version_id AND
             (k.search_text@@websearch_to_tsquery('english',:query) OR k.search_simple@@websearch_to_tsquery('simple',:query)))'''
         params['query'] = query
+    if reuse_recent:
+        where += ''' AND (r.access_until IS NULL OR r.access_until<=clock_timestamp()
+            OR r.generation<>c.generation OR r.revoked)'''
+    if source_instance_id:
+        where+=' AND c.id=:source_instance_id'
+        params['source_instance_id']=source_instance_id
+    params['batch_size']=6 if reuse_recent else 30
     with engine.connect() as conn:
         rows = sql(conn, '''SELECT c.id,c.config,c.generation,r.native_id,r.document_id FROM connected_resources r
             JOIN source_connections c ON c.id=r.connection_id JOIN documents d ON d.id=r.document_id
             WHERE c.owner_id=:viewer AND c.organization_id=:org AND c.mode='sync' AND d.deleted_at IS NULL''' + where +
-            ' ORDER BY r.access_until NULLS FIRST,r.document_id LIMIT 30', **params).mappings().all()
-    limits = active() or ReadLimits(max_calls=40, seconds=25)
+            ' ORDER BY r.access_until NULLS FIRST,r.document_id LIMIT :batch_size', **params).mappings().all()
+    limits = ReadLimits(max_calls=28, seconds=9) if reuse_recent else active() or ReadLimits(max_calls=40, seconds=25)
     for row in rows:
         try:
             Provider(row.config, limits, row.id).authorize(row.native_id)
@@ -331,9 +373,14 @@ def refresh_access(viewer, documents=None, query=None):
                 sql(conn, '''UPDATE connected_resources SET revoked=false,access_until=now()+interval '2 minutes',generation=:generation
                     WHERE document_id=:document AND EXISTS(SELECT 1 FROM source_connections WHERE id=:id
                     AND generation=:generation AND mode='sync')''', id=row.id, document=row.document_id, generation=row.generation)
+                if reuse_recent:
+                    sql(conn,"""UPDATE source_connections SET health='ready',error_code=NULL
+                        WHERE id=:id AND generation=:generation AND error_code='source_limit'""",id=row.id,generation=row.generation)
         except SourceFailure as exc:
+            if reuse_recent and exc.code=='source_limit':break
             with engine.begin() as conn:
                 sql(conn, 'UPDATE connected_resources SET access_until=NULL WHERE document_id=:id', id=row.document_id)
+            if reuse_recent and exc.code in {'access_denied','outside_scope','resource_missing'}:continue
             failure(row.id, row.generation, exc.code)
 
 
@@ -342,10 +389,25 @@ def refresh_request(viewer, request):
     if request.method != 'GET' or request.url.path.startswith('/api/v1/connections'):
         return
     path = request.url.path
+    from app import content_domains as domains
+    if domains.enabled() and (path=='/api/v1/search' or path.startswith(('/api/v1/evidence/','/api/v1/knowledge-base/records'))):return
+    if domains.enabled() and path.startswith(('/api/v1/knowledge-sync','/api/v1/repository','/api/v1/documents','/api/v1/processing','/api/v1/sources')):
+        # Generic evidence and version downloads have their own item-scoped checks.
+        if not path.endswith('/download'):return
     if not path.startswith('/api/v1/') or path in {'/api/v1/me', '/api/v1/runtime', '/api/v1/usage'}: return
     import re
     ids = re.findall(r'[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}', str(request.url))
     if ids:
+        if domains.enabled() and path.startswith(('/api/v1/wiki/','/api/v1/entities/','/api/v1/graph')):
+            with engine.connect() as conn:
+                documents = sql(conn, """SELECT DISTINCT d.id FROM live_entities e
+                    JOIN document_versions v ON v.id=e.version_id JOIN documents d ON d.current_version_id=v.id
+                    WHERE d.organization_id=:org AND d.owner_id=:viewer
+                    AND d.content_domain='synced_knowledge' AND (e.canonical_id=ANY(:ids) OR e.id=ANY(:ids))""",
+                    **viewer.access(), ids=[UUID(x) for x in ids]).scalars().all()
+            if documents:
+                refresh_access(viewer, documents, reuse_recent=True)
+                return
         with engine.connect() as conn:
             documents = sql(conn, '''SELECT DISTINCT d.id FROM documents d LEFT JOIN document_versions v ON v.document_id=d.id
                 LEFT JOIN chunks k ON k.version_id=v.id LEFT JOIN processing_jobs j ON j.version_id=v.id
@@ -354,9 +416,10 @@ def refresh_request(viewer, request):
                 **viewer.access(), ids=[UUID(x) for x in ids]).scalars().all()
         refresh_access(viewer, documents)
     elif request.query_params.get('q'):
-        refresh_access(viewer, query=request.query_params['q'])
-    elif path in {'/api/v1/documents', '/api/v1/sources', '/api/v1/processing', '/api/v1/repository/resources', '/api/v1/repository/sources'}:
-        refresh_access(viewer)
+        refresh_access(viewer, query=request.query_params['q'],reuse_recent=domains.enabled())
+    elif path in {'/api/v1/documents', '/api/v1/sources', '/api/v1/processing', '/api/v1/repository/resources', '/api/v1/repository/sources',
+            '/api/v1/knowledge-base/sources','/api/v1/wiki','/api/v1/graph'}:
+        refresh_access(viewer,reuse_recent=domains.enabled())
 
 
 class ConfigurationEdit(BaseModel):
@@ -379,13 +442,19 @@ def edit(viewer,id,body):
         key=hashlib.sha256(identity.encode()).hexdigest()
         if sql(conn,'SELECT 1 FROM source_instances WHERE organization_id=:org AND kind=:kind AND instance_key=:key AND id<>:id',
                org=viewer.organization_id,kind=new.kind,key=key,id=id).scalar():raise HTTPException(409,'That source scope is already configured.')
+        keep_notion_grant=(old.kind=='notion' and old.execution==new.execution=='real' and row.auth_state=='oauth_authenticated')
         sql(conn,'UPDATE source_instances SET name=:name,instance_key=:key WHERE id=:id',id=id,name=new.name,key=key)
         sql(conn,'''UPDATE source_connections SET config=CAST(:config AS jsonb),credential_ref=:ref,generation=generation+1,
-            mode='disconnected',health='not_connected',auth_state='unconfigured',tested_generation=NULL,tested_at=NULL,
+            mode='disconnected',health='not_connected',auth_state=:auth_state,tested_generation=NULL,tested_at=NULL,
             cursor='{}',sync_requested=false,lease_token=NULL,lease_until=NULL WHERE id=:id''',
-            id=id,config=new.model_dump_json(),ref=new.credential_ref)
+            id=id,config=new.model_dump_json(),ref=new.credential_ref,
+            auth_state='oauth_authenticated' if keep_notion_grant else 'unconfigured')
         sql(conn,'UPDATE connected_resources SET access_until=NULL WHERE connection_id=:id',id=id)
-        sql(conn,'DELETE FROM connection_oauth_grants WHERE connection_id=:id',id=id)
+        if keep_notion_grant:
+            sql(conn,'UPDATE connection_oauth_grants SET generation=:generation WHERE connection_id=:id AND generation=:old',
+                id=id,generation=row.generation+1,old=row.generation)
+        else:
+            sql(conn,'DELETE FROM connection_oauth_grants WHERE connection_id=:id',id=id)
         sql(conn,'DELETE FROM connection_oauth_states WHERE connection_id=:id',id=id)
         audit(conn,viewer,id,'connection_edited')
     return dict(status='saved',requires_test=True)
@@ -423,10 +492,14 @@ def test_connection(viewer,id,native_id=None):
         provider=Provider(spec,active() or ReadLimits(),row.id)
         if native_id:
             records=[provider.get(native_id,mcp=True)]
+        elif spec.kind=='notion' and spec.execution=='real':
+            records=[provider.get(page_id) for page_id in provider.pages]
         elif spec.transport=='atlassian_mcp':
             raise SourceFailure('test_resource_required')
         else:
             records,_,_=provider.page({})
+        if spec.kind=='sharepoint' and not records:
+            raise SourceFailure('sharepoint_sample_required')
         for record in records:
             from app.parsers import parse_document
             parse_document(record.filename,record.content)
@@ -481,7 +554,7 @@ def install(app, Identity):
         admin(viewer)
         return [dict(kind=kind,name=name,mock_scopes=[dict(id='demo-scope',name='Demo scope — synthetic content only')],
             auth_methods=['mock','server_owned']+([] if kind=='custom_mcp' else ['oauth']),read_only=True) for kind,name in [('jira','Jira'),('confluence','Confluence'),
-            ('onedrive','OneDrive'),('sharepoint','SharePoint'),('custom_mcp','Custom MCP Server')]]
+            ('onedrive','OneDrive'),('sharepoint','SharePoint'),('notion','Notion'),('custom_mcp','Custom MCP Server')]]
 
     @app.get('/api/v1/connections')
     def listing(viewer: Identity): return list_connections(viewer)
@@ -507,6 +580,11 @@ def install(app, Identity):
     @app.post('/api/v1/connections/{id}/sync', status_code=202)
     def sync(id: UUID, viewer: Identity):
         admin(viewer)
+        from app import content_domains as domains
+        if domains.enabled():
+            from app.knowledge_sync import start
+            with engine.connect() as conn:owned(conn,viewer,id)
+            return start(viewer)
         with engine.begin() as conn:
             row = owned(conn, viewer, id, True)
             if row.mode != 'sync': raise HTTPException(409, 'Choose Live + Sync before collecting.')

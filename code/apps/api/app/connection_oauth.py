@@ -20,6 +20,7 @@ from app.connector_transport import SourceFailure, ReadClient, ReadLimits
 
 CALLBACK='/api/v1/connections/oauth/callback'
 COOKIE='linkmind_source_consent'
+NOTION_ISSUER='https://mcp.notion.com'
 
 
 def digest(value):return hashlib.sha256(value.encode()).hexdigest()
@@ -59,6 +60,9 @@ def origin():
 
 def settings(spec):
     if spec.kind=='custom_mcp' or spec.transport!='native':raise SourceFailure('oauth_not_configured')
+    if spec.kind=='notion':
+        return dict(client_id=None,client_secret=None,scope='default',provider='notion',
+                    authorize_url=NOTION_ISSUER+'/authorize',token_url=NOTION_ISSUER+'/token')
     try:
         raw=json.loads(os.getenv('LINKMIND_OAUTH_PROVIDERS_JSON','{}'))[spec.kind]
         client_id=raw['client_id'];secret=raw['client_secret']
@@ -67,7 +71,8 @@ def settings(spec):
             scopes='offline_access '+('read:jira-work' if spec.kind=='jira' else 'read:confluence-content.all read:confluence-space.summary')
             return dict(client_id=client_id,client_secret=secret,scope=scopes,provider='atlassian',
                 authorize_url='https://auth.atlassian.com/authorize',token_url='https://auth.atlassian.com/oauth/token')
-        tenant=str(UUID(raw['tenant_id']))
+        authority=raw['tenant_id']
+        tenant='consumers' if spec.kind=='onedrive' and authority=='consumers' else str(UUID(authority))
         scopes='offline_access https://graph.microsoft.com/Files.Read' if spec.kind=='onedrive' else 'offline_access https://graph.microsoft.com/Files.Read.All https://graph.microsoft.com/Sites.Read.All'
         base=f'https://login.microsoftonline.com/{tenant}/oauth2/v2.0/'
         return dict(client_id=client_id,client_secret=secret,scope=scopes,provider='microsoft',authorize_url=base+'authorize',token_url=base+'token')
@@ -86,13 +91,30 @@ def network():
 def oauth_client(config):
     return OAuth2Client(client_id=config['client_id'],client_secret=config['client_secret'],
         scope=config['scope'],redirect_uri=origin()+CALLBACK,code_challenge_method='S256',
-        token_endpoint_auth_method='client_secret_post',timeout=10,follow_redirects=False,trust_env=False)
+        token_endpoint_auth_method='none' if config['provider']=='notion' else 'client_secret_post',
+        timeout=10,follow_redirects=False,trust_env=False)
+
+
+def register_notion(callback_url):
+    try:
+        with httpx.Client(timeout=10,follow_redirects=False,trust_env=False) as client:
+            response=client.post(NOTION_ISSUER+'/register',json=dict(client_name='Linkmind',
+                redirect_uris=[callback_url],grant_types=['authorization_code','refresh_token'],
+                response_types=['code'],token_endpoint_auth_method='none'))
+        if response.status_code not in (200,201) or len(response.content)>65536:
+            raise ValueError()
+        client_id=response.json()['client_id']
+        if not isinstance(client_id,str) or not re.fullmatch(r'[A-Za-z0-9_.-]{1,240}',client_id):
+            raise ValueError()
+        return client_id
+    except (KeyError,TypeError,ValueError,httpx.HTTPError):
+        raise SourceFailure('notion_registration_failed') from None
 
 
 def exchange(config, *, code=None, verifier=None, refresh=None):
     network()
     try:
-        if config['provider']=='microsoft':
+        if config['provider'] in {'microsoft','notion'}:
             with oauth_client(config) as client:
                 result=(client.refresh_token(config['token_url'],refresh_token=refresh) if refresh else
                     client.fetch_token(config['token_url'],code=code,code_verifier=verifier))
@@ -125,8 +147,15 @@ def start(viewer,id,response):
     try:
         config=settings(spec);public_origin=origin();network()
         state=secrets.token_urlsafe(32);binding=secrets.token_urlsafe(32);verifier=secrets.token_urlsafe(48)
-        encrypted=seal(dict(verifier=verifier,connection_id=str(id)))
-    except SourceFailure as exc:raise HTTPException(409,dict(code=exc.code,message='Provider sign-in is not configured on this server yet. No external account was contacted.')) from None
+        pending=dict(verifier=verifier,connection_id=str(id))
+        if config['provider']=='notion':
+            config['client_id']=register_notion(public_origin+CALLBACK)
+            pending['notion_client_id']=config['client_id']
+        encrypted=seal(pending)
+    except SourceFailure as exc:
+        message=('Notion could not register the sign-in callback. Check the Linkmind address and try again.'
+                 if exc.code=='notion_registration_failed' else 'Provider sign-in is not configured on this server yet.')
+        raise HTTPException(409,dict(code=exc.code,message=message)) from None
     with engine.begin() as conn:
         current=owned(conn,viewer,id,True)
         if current.generation!=row.generation:raise HTTPException(409,'Configuration changed. Try sign-in again.')
@@ -139,7 +168,7 @@ def start(viewer,id,response):
             VALUES(:state,:id,:owner,:org,:generation,:cookie,:verifier)''',state=digest(state),id=id,owner=viewer.id,
             org=viewer.organization_id,generation=row.generation+1,cookie=digest(binding),verifier=encrypted)
         audit(conn,viewer,id,'connection_sign_in_started')
-    if config['provider']=='microsoft':
+    if config['provider'] in {'microsoft','notion'}:
         with oauth_client(config) as client:url,_=client.create_authorization_url(config['authorize_url'],state=state,code_verifier=verifier)
     else:
         url=config['authorize_url']+'?'+urlencode(dict(audience='api.atlassian.com',client_id=config['client_id'],
@@ -173,6 +202,7 @@ def callback(request,state,code=None,error=None):
         data=unseal(row.encrypted_verifier)
         if data.get('connection_id')!=str(row.connection_id):raise SourceFailure('invalid_oauth_state')
         spec=ConnectionSpec(**row.config);config=settings(spec)
+        if config['provider']=='notion':config['client_id']=data['notion_client_id']
         token=exchange(config,code=code,verifier=data['verifier'])
         if config['provider']=='atlassian':
             network()
@@ -184,6 +214,7 @@ def callback(request,state,code=None,error=None):
             if len(selected)!=1:raise SourceFailure('outside_scope')
             spec=spec.model_copy(update=dict(cloud_id=str(UUID(selected[0]['id']))))
         token.update(connection_id=str(row.connection_id),provider=config['provider'])
+        if config['provider']=='notion':token['notion_client_id']=config['client_id']
         with engine.begin() as conn:
             current=sql(conn,'SELECT generation FROM source_connections WHERE id=:id AND removed_at IS NULL FOR UPDATE',id=row.connection_id).scalar()
             if current!=row.generation:raise SourceFailure('configuration_changed')
@@ -217,13 +248,17 @@ def token_authorization(ref,host):
             AND c.auth_state='oauth_authenticated' FOR UPDATE OF g''',id=id).mappings().first()
         if row is None:raise SourceFailure('authentication_expired')
         spec=ConnectionSpec(**row.config)
-        expected='api.atlassian.com' if spec.kind in {'jira','confluence'} else 'graph.microsoft.com'
+        expected={'jira':'api.atlassian.com','confluence':'api.atlassian.com','notion':'mcp.notion.com'}.get(spec.kind,'graph.microsoft.com')
         if host!=expected:raise SourceFailure('credential_audience_mismatch')
         token=unseal(row.encrypted_token)
         if token.get('connection_id')!=str(id):raise SourceFailure('credentials_invalid')
         if token.get('expires_at',0)<=time.time()+60:
             if not token.get('refresh_token'):raise SourceFailure('authentication_expired')
-            refreshed=exchange(settings(spec),refresh=token['refresh_token'])
+            config=settings(spec)
+            if config['provider']=='notion':
+                config['client_id']=token.get('notion_client_id')
+                if not config['client_id']:raise SourceFailure('authentication_expired')
+            refreshed=exchange(config,refresh=token['refresh_token'])
             token.update(refreshed)
             sql(conn,'UPDATE connection_oauth_grants SET encrypted_token=:token,updated_at=now() WHERE connection_id=:id',id=id,token=seal(token))
         return 'Bearer '+token['access_token']

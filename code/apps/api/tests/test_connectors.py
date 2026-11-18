@@ -1,4 +1,5 @@
 ﻿import json
+import os
 from datetime import timedelta
 from uuid import UUID, uuid4
 
@@ -6,7 +7,7 @@ import httpx
 import pytest
 from fastapi import HTTPException
 
-from app import connectors, main, processing, retrieval, providers
+from app import connectors, main, processing, retrieval, providers, content_domains
 from app.connector_providers import ConnectionSpec, Provider
 from app.connector_transport import SourceFailure, ReadClient, ReadLimits, AtlassianMCP
 from app.db import sql
@@ -30,6 +31,8 @@ def spec(kind='jira', **changes):
 
 @pytest.fixture
 def wire(monkeypatch):
+    if os.getenv('LINKMIND_LEGACY_CORPUS_TESTS')=='1':
+        monkeypatch.setattr(content_domains,'enabled',lambda:False)
     monkeypatch.setenv('LINKMIND_CONNECTOR_NETWORK','1')
     monkeypatch.setenv('RF4_FIXTURE',json.dumps({'authorization':'Bearer fictional-secret'}))
     client = httpx.Client

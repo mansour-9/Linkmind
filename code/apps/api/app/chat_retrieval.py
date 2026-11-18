@@ -15,7 +15,7 @@ def purpose(query):
     return 'overview'
 
 HINTS={
-    'overview':['overview','scope','purpose','customer portal','product','features'],
+    'overview':['overview','scope','purpose','customer portal','product','features','company and teams'],
     'directory':['company and teams','company overview','department directory','operating departments','organization','directory','people directory','department contacts'],
     'policy':['approved','policy','retention','standard','decision'],
     'ownership':['ownership','accountability','scope','overview','register'],

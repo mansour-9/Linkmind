@@ -36,7 +36,7 @@ export function DocumentUpload({ compact = false, onChange, dropped }: {
   useEffect(() => { if (dropped?.length && dropped !== droppedRef.current) { droppedRef.current = dropped; void upload(dropped); } }, [dropped]);
   return <div className={'document-uploader' + (compact ? ' compact' : '')}>
     <div className={'document-dropzone' + (dragging ? ' is-dragging' : '')} onDragOver={e => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDragging(true); } }} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); e.stopPropagation(); setDragging(false); void upload(Array.from(e.dataTransfer.files)); }}>
-      <input ref={input} aria-label={compact ? 'Attach documents' : 'Upload documents'} type="file" accept=".pdf,.docx,.md,.txt" multiple hidden onChange={e => { void upload(Array.from(e.target.files ?? [])); e.target.value = ''; }} />
+      <input ref={input} aria-label="Upload documents" type="file" accept=".pdf,.txt" multiple hidden onChange={e => { void upload(Array.from(e.target.files ?? [])); e.target.value = ''; }} />
       {compact ? <Button variant="ghost" type="button" onClick={() => input.current?.click()}><Paperclip size={17} />Attach files</Button> : <><UploadCloud size={25} /><div><strong>Drop documents here</strong><p>Text PDF, DOCX, TXT or Markdown · up to 20 MiB each</p></div><Button type="button" onClick={() => input.current?.click()}>Choose files</Button></>}
     </div>
     <p className="muted document-sharing-note">Added to your organization's Documents. Your team can search and ask questions about these files.</p>

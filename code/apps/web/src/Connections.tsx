@@ -5,13 +5,13 @@ import { Plus, Plug, ShieldCheck } from 'lucide-react';
 import { useSession, useViewer } from './session';
 import { Button, Feedback, PageHeading, Sheet } from './ui';
 import './connections.css';
-type Spec={kind:string;execution:'mock'|'real';name:string;site_url:string;scope_id:string;space_key?:string;drive_id:string;cloud_id:string;transport:string;auth_method:'server'|'oauth';credential_ref:string;mcp_credential_ref:string|null;mcp_url:string;read_tool:string};
-type Connection={id:string;kind:string;name:string;scope:string;mode:string;health:string;generation:number;execution:string;auth_state:string;oauth_ready:boolean;tested_generation:number|null;message:string|null;retained_resources:number;last_successful_sync_at:string|null;config:Spec};
+type Spec={kind:string;execution:'mock'|'real';name:string;site_url:string;scope_id:string;space_key?:string;drive_id:string;cloud_id:string;transport:string;auth_method:'server'|'oauth';credential_ref:string;mcp_credential_ref:string|null;mcp_url:string;read_tool:string;notion_pages?:{title:string;url:string}[]};
+type Connection={id:string;kind:string;name:string;scope:string;mode:string;health:string;generation:number;execution:string;auth_state:string;oauth_ready:boolean;tested_generation:number|null;message:string|null;retained_resources:number;last_successful_sync_at:string|null;capabilities:{sync:boolean};config:Spec};
 type ScopeItem={id:string;name:string;kind:string;drive_id:string;selectable:boolean};
 type Scopes={items:ScopeItem[];synthetic:boolean;truncated:boolean;manual?:boolean};
 type Observation={evidence:{original_url:string;source_updated_at:string;observed_at:string;excerpt:string|null;fields:{field:string;value:unknown}[];coverage:{description:string}};provider?:string;answer?:{statements:{text:string;evidence:{quote:string}[]}[];insufficient_evidence:boolean}};
 type Option={kind:string;name:string;mock_scopes:{id:string;name:string}[]};
-const kinds:Record<string,string>={jira:'Jira',confluence:'Confluence',onedrive:'OneDrive',sharepoint:'SharePoint',custom_mcp:'Custom MCP Server'};
+const kinds:Record<string,string>={jira:'Jira',confluence:'Confluence',onedrive:'OneDrive',sharepoint:'SharePoint',notion:'Notion',custom_mcp:'Custom MCP Server'};
 const modes:Record<string,string>={disconnected:'Not Connected',live:'Live Only',sync:'Live + Sync'};
 const empty:Spec={kind:'jira',execution:'mock',name:'',site_url:'',scope_id:'demo-scope',drive_id:'',cloud_id:'',transport:'native',auth_method:'server',credential_ref:'RF4_UNCONFIGURED',mcp_credential_ref:null,mcp_url:'',read_tool:'fetch_resource'};
 export default function Connections(){
@@ -20,6 +20,7 @@ export default function Connections(){
  const options=useQuery({queryKey:['connection-options'],queryFn:()=>service.json<Option[]>('/connection-options'),enabled});
  const [form,setForm]=useState<Spec|null>(null);const [editing,setEditing]=useState<Connection|null>(null);const [remove,setRemove]=useState<Connection|null>(null);const [selected,setSelected]=useState<Connection|null>(null);const [observation,setObservation]=useState<Observation|null>(null);const [notice,setNotice]=useState('');
  const [testSource,setTestSource]=useState<Connection|null>(null);
+ const [notionPages,setNotionPages]=useState('');
  const [scopeSource,setScopeSource]=useState<Connection|null>(null);const [scopePath,setScopePath]=useState<{parent_id:string;drive_id:string}>({parent_id:'',drive_id:''});
  const scopes=useQuery({queryKey:['connection-scopes',scopeSource?.id,scopePath],enabled:!!scopeSource,queryFn:()=>service.json<Scopes>('/connections/'+scopeSource!.id+'/scopes?'+new URLSearchParams(scopePath))});
  const chooseScope=useMutation({mutationFn:(item:ScopeItem)=>service.json('/connections/'+scopeSource!.id+'/scope',{method:'POST',body:JSON.stringify({expected_generation:scopeSource!.generation,scope_id:item.id,drive_id:item.drive_id})}),onSuccess:()=>{setScopeSource(null);setNotice('Scope saved. Test the connection before enabling access.');refresh();}});
@@ -29,12 +30,24 @@ export default function Connections(){
  const save=useMutation({mutationFn:(configuration:Spec)=>service.json(editing?'/connections/'+editing.id:'/connections',{method:editing?'PATCH':'POST',body:JSON.stringify(editing?{configuration,expected_generation:editing.generation}:configuration)}),onSuccess:()=>{setForm(null);setEditing(null);setNotice('Configuration saved. Authenticate and test before enabling this source.');refresh();}});
  const read=useMutation({mutationFn:({id,body}:{id:string;body:unknown})=>service.json<Observation>('/connections/'+id+'/live',{method:'POST',body:JSON.stringify(body)}),onSuccess:value=>{setObservation(value);refresh();}});
  const update=(key:keyof Spec,value:string)=>setForm(current=>current?{...current,[key]:value}:null);
- function submit(event:FormEvent){event.preventDefault();if(form)save.mutate(form);}
- function configure(c?:Connection){save.reset();setEditing(c??null);setForm(c?{...empty,...c.config}:{...empty});}
+ function submit(event:FormEvent){
+  event.preventDefault();
+  if(!form)return;
+  if(form.kind!=='notion'){save.mutate(form);return;}
+  const pages=notionPages.split(/\r?\n/).filter(line=>line.trim()).map(line=>{
+   const [title='',url='']=line.split('|',2);
+   return {title:title.trim(),url:url.trim()};
+  });
+  save.mutate({...form,execution:'real',auth_method:'oauth',scope_id:'pending-scope',notion_pages:pages});
+ }
+ function configure(c?:Connection){
+  save.reset();setEditing(c??null);setForm(c?{...empty,...c.config}:{...empty});
+  setNotionPages((c?.config.notion_pages??[]).map(page=>page.title+' | '+page.url).join('\n'));
+ }
  if(viewer.isSuccess&&!enabled)return <div className="page"><PageHeading title="Sources & MCP Connections" description="Source administration is restricted to authorized administrators."/><Feedback>Use Search or the assistant to retrieve sources available to your identity.</Feedback></div>;
  return <div className="page connection-page">
  <PageHeading title="Sources & MCP Connections" description="Choose source access, verify a connection, then enable only the scope you need." action={enabled?<Button onClick={()=>configure()}><Plus size={17}/>Add Source</Button>:undefined}/>
- <div className="connection-intro"><ShieldCheck size={20}/><p>Read-only by default. Live Only leaves content in its source. Live + Sync retains selected content for search without automatic graph enrichment.</p></div>
+ <div className="connection-intro"><ShieldCheck size={20}/><p>Live Only reads at question time. Live + Sync also collects this scope into Company Knowledge. <Link to="/admin/knowledge-sync">Open Knowledge Sync</Link></p></div>
  {new URLSearchParams(window.location.search).has('auth')&&<Feedback error={new URLSearchParams(window.location.search).get('auth')!=='connected'}>{new URLSearchParams(window.location.search).get('auth')==='connected'?'Provider sign-in completed. Choose an accessible scope and test it before enabling access.':'Sign-in was cancelled, expired, or could not be verified. You can start again.'}</Feedback>}
  {signIn.isError&&<Feedback error>{signIn.error.message}</Feedback>}
  {notice&&<Feedback>{notice}</Feedback>}{action.isError&&<Feedback error>{action.error.message}</Feedback>}
@@ -45,15 +58,16 @@ export default function Connections(){
  <p className="muted">Scope: {c.scope} · {c.retained_resources} available retained resources</p>
  <dl className="connection-status"><div><dt>Status</dt><dd>{c.health.replaceAll('_',' ')}</dd></div><div><dt>Authentication</dt><dd>{c.auth_state==='mock_authenticated'?'Demo authenticated':c.auth_state==='server_credential'?'Server credential available':c.auth_state==='oauth_authenticated'?'Provider signed in':c.auth_state==='sign_in_pending'?'Sign-in pending':'Not configured'}</dd></div><div><dt>Last sync</dt><dd>{c.last_successful_sync_at?new Date(c.last_successful_sync_at).toLocaleString():'Not completed'}</dd></div></dl>
  {c.message&&<Feedback>{c.message}</Feedback>}{c.execution==='real'&&c.config.auth_method==='oauth'&&!c.oauth_ready&&<Feedback>Provider registration is pending on this server. Your source is saved; sign-in will be available after server setup.</Feedback>}
- <label className="connection-mode">Connection mode<select aria-label={'Connection mode for '+c.name} value={c.mode} disabled={action.isPending} onChange={e=>action.mutate({c,operation:'mode',data:{mode:e.target.value,expected_generation:c.generation}})}>{Object.entries(modes).map(([value,label])=><option key={value} value={value} disabled={value!=='disconnected'&&!tested}>{label}</option>)}</select></label>
+ <label className="connection-mode">Connection mode<select aria-label={'Connection mode for '+c.name} value={c.mode} disabled={action.isPending} onChange={e=>action.mutate({c,operation:'mode',data:{mode:e.target.value,expected_generation:c.generation}})}>{Object.entries(modes).filter(([value])=>value!=='sync'||c.capabilities.sync||c.mode==='sync').map(([value,label])=><option key={value} value={value} disabled={value!=='disconnected'&&!tested}>{label}</option>)}</select></label>
  {!tested&&<p className="muted">Authenticate and test this configuration before enabling it.</p>}
  <div className="connection-actions"><Button variant="outline" disabled={action.isPending} onClick={()=>c.execution==='real'&&c.config.auth_method==='oauth'?signIn.mutate(c):action.mutate({c,operation:'authenticate'})}>{c.execution==='mock'?'Authenticate demo':c.config.auth_method==='oauth'?'Sign in securely':'Set up authentication'}</Button><Button variant="outline" disabled={!['mock_authenticated','oauth_authenticated','server_credential'].includes(c.auth_state)} onClick={()=>{chooseScope.reset();setScopePath({parent_id:'',drive_id:''});setScopeSource(c);}}>Choose accessible scope</Button><Button variant="outline" disabled={action.isPending||!['mock_authenticated','oauth_authenticated','server_credential'].includes(c.auth_state)||c.scope==='pending-scope'} onClick={()=>{action.reset();if(c.execution==='real'&&c.config.transport==='atlassian_mcp')setTestSource(c);else action.mutate({c,operation:'test'});}}>Test connection</Button><Button variant="ghost" onClick={()=>configure(c)}>Edit</Button><Button variant="ghost" onClick={()=>{action.reset();setRemove(c);}}>Remove</Button>
- {c.mode!=='disconnected'&&<Button variant="outline" onClick={()=>{read.reset();setObservation(null);setSelected(c);}}>Read live resource</Button>}{c.mode==='sync'&&<Button variant="outline" disabled={action.isPending} onClick={()=>action.mutate({c,operation:'sync'})}>Sync selected scope</Button>}</div>
+ {c.mode!=='disconnected'&&<Button variant="outline" onClick={()=>{read.reset();setObservation(null);setSelected(c);}}>Read live resource</Button>}</div>
  </section>;})}</div>
  <Sheet title={editing?'Edit source':'Add Source'} description="Configure, authenticate, and test before enabling access." open={!!form} onOpenChange={open=>{if(!open){setForm(null);setEditing(null);}}}>
  {form&&<form className="connection-form" onSubmit={submit}>
  <label>Source type<select aria-label="Source type" value={form.kind} disabled={!!editing} onChange={e=>{update('kind',e.target.value);update('transport','native');if(e.target.value==='custom_mcp')update('auth_method','server');}}>{Object.entries(kinds).map(([v,label])=><option key={v} value={v}>{label}</option>)}</select></label>
  <label>Connection name<input value={form.name} onChange={e=>update('name',e.target.value)} required maxLength={120} placeholder="e.g. Product delivery knowledge"/></label>
+ {form.kind==='notion'?<label>Notion handbook pages<textarea value={notionPages} onChange={event=>setNotionPages(event.target.value)} rows={5} required/><small>Enter up to six pages, one per line, as Title | Notion URL. Linkmind reads only these pages.</small></label>:<>
  {form.kind==='confluence'&&form.execution==='real'&&<label>Space key for search<input value={form.space_key??''} onChange={e=>update('space_key',e.target.value)} maxLength={150} placeholder="e.g. TEAM"/><small>The space ID still verifies each original page. The key limits Confluence search to the same space.</small></label>}
  <label>Integration environment<select aria-label="Integration environment" value={form.execution} onChange={e=>{update('execution',e.target.value);update('scope_id',e.target.value==='mock'?'demo-scope':form.kind==='custom_mcp'?'':'pending-scope');update('auth_method',e.target.value==='real'&&form.kind!=='custom_mcp'?'oauth':'server');}}><option value="mock">Demo — synthetic content, no external account</option><option value="real">Real source — requires provider authentication</option></select></label>
  {form.execution==='mock'?<Feedback>Demo connectors use a fixed synthetic fixture. They never contact the URLs you enter.</Feedback>:<Feedback>Provider authentication must be configured before this real source can pass its connection test. Credentials stay on the server.</Feedback>}
@@ -66,6 +80,7 @@ export default function Connections(){
  {form.execution==='real'&&form.auth_method==='server'&&(form.kind==='jira'||form.kind==='confluence')&&<label>Read transport<select aria-label="Read transport" value={form.transport} onChange={e=>update('transport',e.target.value)}><option value="native">Native API</option><option value="atlassian_mcp">Official Atlassian MCP</option></select></label>}
  {form.execution==='real'&&form.transport==='atlassian_mcp'&&<label>Atlassian cloud ID<input value={form.cloud_id} onChange={e=>update('cloud_id',e.target.value)} required/></label>}
  {form.execution==='real'&&form.auth_method==='server'&&<details><summary>Server-managed authentication binding</summary><p className="muted">Optional deployment binding. Never enter a token or password.</p><label>Credential reference<input value={form.credential_ref} onChange={e=>update('credential_ref',e.target.value)} pattern="RF4_[A-Z0-9_]+"/></label>{form.transport==='atlassian_mcp'&&<label>MCP credential reference<input value={form.mcp_credential_ref??''} onChange={e=>setForm(f=>f?{...f,mcp_credential_ref:e.target.value}:f)} pattern="RF4_[A-Z0-9_]+" required/></label>}</details>}
+ </>}
  {save.isError&&<Feedback error>{save.error.message}</Feedback>}<Button type="submit" disabled={save.isPending}>{save.isPending?'Saving…':'Save configuration'}</Button>
  </form>}
  </Sheet>
@@ -95,6 +110,6 @@ export default function Connections(){
  {read.isError&&<Feedback error>{read.error.message}</Feedback>}
  {observation&&!read.isPending&&!read.isError&&<div className="live-observation">{selected?.execution==='mock'?<strong>Synthetic demonstration fixture</strong>:<a href={observation.evidence.original_url} target="_blank" rel="noopener noreferrer">Open original source</a>}<p>Source updated: {new Date(observation.evidence.source_updated_at).toLocaleString()}</p><p>Observed: {new Date(observation.evidence.observed_at).toLocaleString()}</p><p className="muted">Live observation · not added to the repository. {observation.evidence.coverage.description}</p>{observation.evidence.excerpt&&<blockquote dir="auto">{observation.evidence.excerpt}</blockquote>}{!!observation.evidence.fields.length&&<dl>{observation.evidence.fields.map(f=><div key={f.field}><dt>{f.field}</dt><dd>{typeof f.value==='string'?f.value:JSON.stringify(f.value)}</dd></div>)}</dl>}
  {observation.answer&&<section><p>{observation.provider==='bedrock'?(observation.answer.statements.length?'Sonnet · cited source answer':'Sonnet · no verified answer'):'Demo · verbatim source excerpts'}</p>{observation.answer.statements.map((s,i)=><div key={i}><p dir="auto">{s.text}</p>{s.evidence.map((e,n)=><blockquote key={n} dir="auto">{e.quote}</blockquote>)}</div>)}{observation.answer.insufficient_evidence&&<Feedback>The evidence did not establish a complete verified answer.</Feedback>}</section>}</div>}
- </Sheet><p className="muted connection-footer">Source permissions are preserved. <Link to="/content/documents">Browse retained documents</Link>.</p>
+ </Sheet><p className="muted connection-footer">Source permissions are preserved. <Link to="/search">Search synchronized knowledge</Link>.</p>
  </div>;
 }

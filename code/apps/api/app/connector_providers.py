@@ -3,19 +3,41 @@ import json
 import re
 import threading
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import PurePosixPath
 from typing import Literal
-from urllib.parse import quote, urlsplit
+from urllib.parse import parse_qs, quote, urlsplit
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.connector_transport import ReadClient, ReadLimits, SourceFailure, AtlassianMCP, safe_url, active
 
 
+NOTION_HOSTS = {'app.notion.com','www.notion.com','notion.com','www.notion.so','notion.so'}
+
+
+def notion_page_id(url):
+    parsed=urlsplit(url)
+    host=parsed.hostname or ''
+    if host not in NOTION_HOSTS and not host.endswith('.notion.site'):
+        raise ValueError('Use a Notion page link.')
+    try:safe_url(url,host)
+    except SourceFailure:raise ValueError('Use a valid HTTPS Notion page link.') from None
+    match=re.search(r'([a-f0-9]{32}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})/?$',parsed.path,re.I)
+    if not match:raise ValueError('The Notion page link must include a page ID.')
+    return UUID(match[1]).hex
+
+
+class NotionPage(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    title: str = Field(min_length=1,max_length=240)
+    url: str = Field(min_length=1,max_length=1000)
+
+
 class ConnectionSpec(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    kind: Literal['jira', 'confluence', 'onedrive', 'sharepoint', 'custom_mcp']
+    kind: Literal['jira', 'confluence', 'onedrive', 'sharepoint', 'notion', 'custom_mcp']
     execution: Literal['mock','real'] = 'real'
     name: str = Field(min_length=1, max_length=120)
     site_url: str = ''
@@ -29,6 +51,7 @@ class ConnectionSpec(BaseModel):
     mcp_credential_ref: str | None = Field(default=None, pattern=r'^RF4_[A-Z0-9_]{1,100}$')
     mcp_url: str = ''
     read_tool: str = Field(default='fetch_resource',pattern=r'^[A-Za-z][A-Za-z0-9_]{0,80}$')
+    notion_pages: list[NotionPage] = Field(default_factory=list,max_length=6)
 
     @model_validator(mode='after')
     def valid(self):
@@ -45,6 +68,16 @@ class ConnectionSpec(BaseModel):
             # Fixed labelled fixtures are the only synthetic content; URLs are optional
             # in demo setup and are never contacted.
             if self.site_url and not self.site_url.startswith('https://'): raise ValueError('Use HTTPS for a source URL.')
+            return self
+        if self.kind=='notion':
+            if self.auth_method!='oauth' or self.transport!='native':
+                raise ValueError('Notion uses secure sign-in to the official MCP service.')
+            if not self.notion_pages:raise ValueError('Add at least one Notion handbook page.')
+            ids=[notion_page_id(page.url) for page in self.notion_pages]
+            if len(set(ids))!=len(ids):raise ValueError('Enter each Notion page only once.')
+            if any(not page.title.strip() for page in self.notion_pages):
+                raise ValueError('Enter a title for each Notion page.')
+            self.scope_id=ids[0]
             return self
         if self.kind=='custom_mcp':
             if self.auth_method=='oauth':raise ValueError('Custom MCP uses its explicit server-managed authentication contract.')
@@ -76,7 +109,7 @@ class ConnectionSpec(BaseModel):
 class Record:
     native_id: str
     revision: str
-    updated: datetime
+    updated: datetime | None
     original_url: str
     filename: str
     content: bytes
@@ -338,11 +371,82 @@ class Provider:
         return Record(str(data['id']), data['eTag'], timestamp(data.get('lastModifiedDateTime')),
             original, name, content, payload, [])
 
-    def page(self, cursor):
+    def sync_page(self,cursor,since):
+        """Use an MCP pagination contract when advertised, otherwise scoped native reads."""
+        if self.spec.transport!='atlassian_mcp':return self.page(cursor,since=since)
+        channel=cursor.get('channel')
+        if channel!='native':
+            try:
+                records,next_cursor,done=self.mcp_page(cursor,since)
+                return records,({**next_cursor,'channel':'mcp'} if not done else {}),done
+            except SourceFailure as exc:
+                if channel or exc.code not in {'sync_pagination_unavailable','mcp_tool_unavailable','mcp_schema_changed'}:raise
+        if self.spec.credential_ref=='RF4_UNCONFIGURED':raise SourceFailure('sync_pagination_unavailable')
+        records,next_cursor,done=self.page({k:v for k,v in cursor.items() if k!='channel'},since=since)
+        return records,({**next_cursor,'channel':'native'} if not done else {}),done
+
+    def jira_collection_query(self,since):
+        base=f'project = "{self.spec.scope_id}"'
+        if since:
+            boundary=timestamp(since)-timedelta(days=1)
+            base+=f' AND updated >= "{boundary.date().isoformat()}"'
+        return base+' ORDER BY id ASC'
+
+    def mcp_page(self,cursor,since):
+        client=self.mcp_client()
+        if self.spec.kind=='jira':
+            tool='searchJiraIssuesUsingJql'
+            if 'nextPageToken' not in client.tools.get(tool,{}).get('properties',{}):
+                raise SourceFailure('sync_pagination_unavailable')
+            args=dict(cloudId=self.spec.cloud_id,jql=self.jira_collection_query(since),maxResults=15,
+                fields=['summary','description','status','assignee','updated','project'],view='full')
+            if cursor.get('token'):args['nextPageToken']=cursor['token']
+            data=self.mcp_record(client.call(tool,args))
+            token=data.get('nextPageToken')
+            if not isinstance(data.get('issues'),list) or (not token and data.get('isLast') is not True):
+                raise SourceFailure('sync_pagination_unavailable')
+            return [self.jira(item) for item in data['issues']],({'token':token} if token else {}),not token
+        tool=next((name for name in ('searchConfluence','searchConfluenceUsingCql')
+            if {'cursor','start'} & client.tools.get(name,{}).get('properties',{}).keys()),None)
+        if not tool or not self.spec.space_key:raise SourceFailure('sync_pagination_unavailable')
+        offset=cursor.get('start',0)
+        uses_cursor='cursor' in client.tools[tool].get('properties',{})
+        args=dict(cloudId=self.spec.cloud_id,
+            cql='space = '+json.dumps(self.spec.space_key)+' AND type = page ORDER BY id ASC',limit=8)
+        if uses_cursor:
+            if cursor.get('confluence_cursor'):args['cursor']=cursor['confluence_cursor']
+        else:args['start']=offset
+        data=self.mcp_record(client.call(tool,args))
+        items=data.get('results');total=data.get('totalSize',data.get('total'))
+        if not isinstance(items,list) or not isinstance(total,int) or (not items and offset<total):
+            raise SourceFailure('sync_pagination_unavailable')
+        next_offset=offset+len(items)
+        done=next_offset>=total
+        next_state={'start':next_offset}
+        if uses_cursor:
+            # Resubmit only the opaque cursor to the same scoped MCP tool.
+            # A provider-supplied pagination URL is never requested directly.
+            next_link=data.get('_links',{}).get('next')
+            token=parse_qs(urlsplit(next_link).query).get('cursor',[''])[0] if isinstance(next_link,str) else ''
+            if token:
+                if len(token)>4096 or token==cursor.get('confluence_cursor') or not items:
+                    raise SourceFailure('incomplete_page')
+                next_state['confluence_cursor']=token
+                done=False
+            elif not done or next_link:
+                raise SourceFailure('incomplete_page')
+        records=[]
+        for item in items:
+            native=str(item.get('content',item).get('id',''))
+            if not native.isdigit():raise SourceFailure('malformed_source')
+            records.append(self.get(native,mcp=True))
+        return records,({} if done else next_state),done
+
+    def page(self, cursor, *, since=None):
         """One page only. Cursor advances atomically with its retained records."""
         s = self.spec
         if s.kind == 'jira':
-            params = {'jql': f'project = "{s.scope_id}" ORDER BY id ASC', 'maxResults': 25,
+            params = {'jql': self.jira_collection_query(since), 'maxResults': 25,
                 'fields': 'summary,description,status,assignee,updated,project'}
             if cursor.get('token'): params['nextPageToken'] = cursor['token']
             data = self.client.get(self.base + '/rest/api/3/search/jql', params)

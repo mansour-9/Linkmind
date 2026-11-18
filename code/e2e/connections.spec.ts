@@ -2,6 +2,29 @@
 const headers={Authorization:'Bearer demo-amal'};
 test.beforeAll(async({request})=>{expect(process.env.BRAIN_E2E_DISPOSABLE).toBe('1');expect((await(await request.get('/api/v1/runtime',{headers})).json()).provider).toBe('mock');});
 
+test('Notion uses explicit handbook pages and offers only live access',async({page,request})=>{
+ const name='Notion handbook '+Date.now();
+ await page.goto('/admin/connections');
+ await page.getByRole('button',{name:'Add Source',exact:true}).click();
+ await page.getByLabel('Source type',{exact:true}).selectOption('notion');
+ await page.getByLabel('Connection name',{exact:true}).fill(name);
+ await page.getByLabel('Notion handbook pages').fill('Annual leave | https://app.notion.com/p/82103dfedad64d708d0006374a0d21ff');
+ await page.getByRole('button',{name:'Save configuration',exact:true}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ const items=await (await request.get('/api/v1/connections',{headers})).json();
+ const connection=items.find((item:{name:string})=>item.name===name);
+ try{
+  expect(connection.config.auth_method).toBe('oauth');
+  expect(connection.config.notion_pages).toHaveLength(1);
+  const card=page.locator('.connection-card').filter({hasText:name});
+  await expect(card.getByRole('button',{name:'Sign in securely'})).toBeVisible();
+  await expect(card.getByRole('option',{name:'Live Only'})).toHaveCount(1);
+  await expect(card.getByRole('option',{name:'Live + Sync'})).toHaveCount(0);
+ }finally{
+  await request.delete('/api/v1/connections/'+connection.id+'?expected_generation='+connection.generation,{headers});
+ }
+});
+
 test('five source types complete admin configuration, demo authentication, test and mode lifecycle',async({page,request})=>{
  const marker='SourceManagement'+Date.now();await page.goto('/admin/settings');
  await page.getByRole('link',{name:'Manage sources and connections'}).click();

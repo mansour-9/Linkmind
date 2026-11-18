@@ -13,6 +13,7 @@ from app.parsers import parse_document
 from app.providers import configured, extract_bedrock_batches, embed, ProviderUnavailable
 from app.inference_budget import BudgetStopped
 from app import enrichment_staging as staging
+from app import content_domains as domains
 
 log=logging.getLogger(__name__)
 MAX_ATTEMPTS=3
@@ -87,11 +88,19 @@ def set_stage(job,stage):
 
 def canonical(conn,job,item):
     found=set()
+    identifiers=[]
     for identifier in item.identifiers:
+        value=identifier.value.strip().casefold()
+        if getattr(job,'knowledge_host',None) and identifier.namespace in {'project_key','issue_key'}:
+            value=job.knowledge_host+':'+value
+        identifiers.append((identifier.namespace,value))
+    native=getattr(job,'knowledge_source_ids',{}).get(item.key)
+    if native:identifiers.append(('source_person',native))
+    for namespace,value in identifiers:
         existing=sql(conn,"""SELECT canonical_id FROM entity_identifiers
             WHERE organization_id=:org AND kind=:kind AND namespace=:namespace AND value=:value""",
-            org=job.organization_id,kind=item.kind,namespace=identifier.namespace,
-            value=identifier.value.strip().casefold()).scalar_one_or_none()
+            org=job.organization_id,kind=item.kind,namespace=namespace,
+            value=value).scalar_one_or_none()
         if existing:
             found.add(existing)
     if not found and not item.identifiers and getattr(job,"staged_version_id",None):
@@ -111,11 +120,11 @@ def canonical(conn,job,item):
         sql(conn,"INSERT INTO canonical_entities(id,organization_id,kind) VALUES(:id,:org,:kind)",
             id=entity_id,org=job.organization_id,kind=item.kind)
     if len(found)<=1:
-        for identifier in item.identifiers:
+        for namespace,value in identifiers:
             sql(conn,"""INSERT INTO entity_identifiers(organization_id,canonical_id,kind,namespace,value)
                  VALUES(:org,:id,:kind,:namespace,:value) ON CONFLICT DO NOTHING""",
-                 org=job.organization_id,id=entity_id,kind=item.kind,namespace=identifier.namespace,
-                 value=identifier.value.strip().casefold())
+                 org=job.organization_id,id=entity_id,kind=item.kind,namespace=namespace,
+                 value=value)
     return entity_id
 
 def publication_guard(conn,job,require_search=False):
@@ -251,7 +260,7 @@ def process_one():
                 WHEN staged_version_id IS NOT NULL THEN 'enrichment_staged_failed' ELSE 'failed' END,
                 lease_token=NULL,error='Worker lease expired.',error_code='lease_expired'
                 WHERE id=ANY(:ids)""",ids=expired)
-        row=sql(conn,"""SELECT j.*,v.artifact_key,v.filename,v.document_id,v.search_ready_at,v.processed_at,v.embedding_status FROM processing_jobs j
+        row=sql(conn,"""SELECT j.*,v.artifact_key,v.filename,v.document_id,v.search_ready_at,v.processed_at,v.embedding_status,d.content_domain FROM processing_jobs j
             JOIN document_versions v ON v.id=j.version_id JOIN documents d ON d.id=v.document_id
             WHERE j.status='queued' AND j.available_at<=clock_timestamp() AND d.deleted_at IS NULL
             ORDER BY j.available_at,j.created_at LIMIT 1 FOR UPDATE OF j SKIP LOCKED""").mappings().first()
@@ -294,7 +303,11 @@ def process_one():
                 index_passages(job,passages,scope,is_graph_demo)
         else:
             passages=prepare_content(job,content,scope,is_graph_demo)
-        if job.enrichment_requested and (not job.processed_at or job.staged_version_id):
+        if domains.enabled() and job.content_domain=='synced_knowledge' and not job.processed_at:
+            from app.knowledge_projection import project
+            with engine.begin() as conn:
+                publish(conn,job,project(conn,job,passages),passages,'source_fields')
+        elif not (domains.enabled() and job.content_domain in {'manual_document','synced_knowledge'}) and job.enrichment_requested and (not job.processed_at or job.staged_version_id):
             enrich(job,content,passages,scope,use_bedrock,is_graph_demo)
     except (ProviderUnavailable,BudgetStopped) as exc:
         status="extraction_unavailable"
@@ -358,6 +371,11 @@ def prepare_content(job,content,scope,is_graph_demo):
 def index_passages(job,passages,scope,is_graph_demo):
     """Resume indexing and reuse compatible unchanged text only within this document."""
     set_stage(job,"embedding")
+    if domains.enabled() and getattr(job,'content_domain',None) in {'manual_document','synced_knowledge'}:
+        with engine.begin() as conn:
+            publication_guard(conn,job,require_search=True)
+            sql(conn,"UPDATE document_versions SET embedding_status='unavailable' WHERE id=:version",version=job.version_id)
+        return
     embedding_failed=False
     embedded=0
     model=None if is_graph_demo else os.getenv("BEDROCK_EMBEDDING_MODEL")

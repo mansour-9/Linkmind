@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, FileText, Plus } from 'lucide-react';
-import { useSession } from './session';
+import { useSession, useViewer } from './session';
 import { Button, Feedback, PageHeading, SearchField, Sheet } from './ui';
 import { EvidenceAction } from './Evidence';
 import { DocumentUpload } from './DocumentUpload';
@@ -133,6 +133,7 @@ function DocumentDetails({ id }: { id: string }) {
 
 export function Repository() {
   const { service } = useSession();
+  const viewer = useViewer();
   const [params, setParams] = useSearchParams();
   const [input, setInput] = useState(params.get('q') ?? '');
   useEffect(() => setInput(params.get('q') ?? ''), [params]);
@@ -145,8 +146,8 @@ export function Repository() {
   const sources = useQuery({ queryKey: ['repository-sources'], queryFn: () => service.json<Source[]>('/repository/sources'), refetchInterval: 5000 });
   function filter(key: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(key, value); else next.delete(key); next.delete('offset'); setParams(next); }
   function page(value: number) { const next = new URLSearchParams(params); next.set('offset', String(value)); setParams(next); }
-  return <div className="page repository-page"><PageHeading title="Documents" description="Upload files, find information and ask questions with supporting sources."
-    action={<Button ref={addDocumentButton} type="button" onClick={()=>setUploadOpen(true)}><Plus size={18}/>Add document</Button>} />
+  return <div className="page repository-page"><PageHeading title="Documents" description="Find manually uploaded files and ask Linkmind about their contents."
+    action={viewer.data?.role==='admin' ? <Button ref={addDocumentButton} type="button" onClick={()=>setUploadOpen(true)}><Plus size={18}/>Add document</Button> : undefined} />
     <Sheet title="Add documents" description="Upload files to your organization's Documents." side="center" open={uploadOpen} onOpenChange={setUploadOpen} returnFocus={addDocumentButton}>
       <DocumentUpload/>
     </Sheet>

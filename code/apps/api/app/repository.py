@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from app.db import sql
 from app.source_access import ACCESS, CATALOG_VERSION
+from app import content_domains as domains
 
 
 class ResourceFilters(BaseModel):
@@ -82,7 +83,7 @@ def filter_clause(filters, params):
 
 def resources(conn, viewer, *, query='', filters=None, limit=20, offset=0):
     params = {**viewer.access(), 'admin': viewer.role == 'admin', 'limit': limit, 'offset': offset}
-    where = ACCESS + ' AND ' + CATALOG_VERSION + filter_clause(filters or {}, params)
+    where = ACCESS + domains.manual() + ' AND ' + CATALOG_VERSION + filter_clause(filters or {}, params)
     if query.strip():
         params['pattern'] = '%' + query.strip().replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_') + '%'
         params['query'] = query.strip()
@@ -110,17 +111,17 @@ def groups(conn, viewer, *, kind=None, query='', limit=100, offset=0):
         where += ' AND g.name ILIKE :pattern'
         params['pattern'] = '%' + query.strip().replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_') + '%'
     return [dict(r) for r in sql(conn, f"""SELECT g.id,g.kind,g.name,u.name AS created_by_name,
-        (SELECT count(*) FROM documents d WHERE {ACCESS} AND (d.project_id=g.id OR d.team_id=g.id)) AS resource_count
+        (SELECT count(*) FROM documents d WHERE {ACCESS}{domains.manual()} AND (d.project_id=g.id OR d.team_id=g.id)) AS resource_count
         FROM repository_groups g JOIN users u ON u.id=g.created_by AND u.organization_id=g.organization_id
         WHERE {where} ORDER BY g.name,g.created_at,g.id LIMIT :limit OFFSET :offset""", **params).mappings()]
 
 
-def source_catalog(conn, viewer):
+def source_catalog(conn, viewer, *, corpus=None):
     # Only sources with visible retained documents. No connector registry/credentials.
     rows = sql(conn, f"""SELECT s.id,s.name,s.kind,count(*) AS resource_count,
         count(*) FILTER(WHERE v.search_ready_at IS NOT NULL) AS searchable_count,
         max(v.created_at) AS last_received_at,max(v.search_ready_at) AS last_indexed_at
-        {JOINS} WHERE {ACCESS} AND {CATALOG_VERSION}
+        {JOINS} WHERE {ACCESS}{domains.manual() if corpus is None else corpus} AND {CATALOG_VERSION}
         GROUP BY s.id,s.name,s.kind ORDER BY s.name,s.id""", **viewer.access()).mappings()
     result=[dict(**r, scope='Accessible uploaded documents' if r.kind=='upload' else 'Authorized retained source records', mode='stored',
                  capabilities=dict(indexed_search=True, live=False, history=True,
